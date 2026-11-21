@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+
+# Local data, indexes, models — never committed
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite*
+models/
+eval_runs/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+rag.toml
+!rag.example.toml
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+.venv-runtime/
+requirements-audit.txt

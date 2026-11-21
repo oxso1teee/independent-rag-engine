@@ -1,0 +1,34 @@
+# Copy to rag.toml (ignored by Git) and adjust. Environment variables prefixed with
+# RAG_ override these values, e.g. RAG_PROFILE=standard or RAG_LLM__CONTEXT_WINDOW=8192.
+
+# Resource profile: "low" (default) or "standard".
+profile = "low"
+
+# Explicit overrides of the profile's limits (all optional).
+[limits]
+# llm_concurrency = 1
+# embed_concurrency = 1
+# embed_batch = 16
+# ingest_workers = 1
+# max_loaded_vectors_mb = 512
+
+[storage]
+db_path = "data/rag.db"
+
+# A provider that is enabled must name its model; the LLM also needs its context window.
+[embedding]
+enabled = false
+# provider = "local"
+# model = "your-embedding-model"
+
+[llm]
+enabled = false
+# provider = "local"
+# model = "your-chat-model"
+# context_window = 8192
+# max_new_tokens = 512
+# api_key_env = "RAG_LLM_API_KEY"   # name of the environment variable holding the key
+
+[logging]
+level = "INFO"
+json_output = true

@@ -1,0 +1,87 @@
+[importlinter]
+root_package = rag_engine
+include_external_packages = True
+
+# Dependency direction: every layer may import only the layers below it.
+# Layers in one row (separated by "|") are independent of each other.
+[importlinter:contract:layers]
+name = Layered architecture: cli > adapters > ports > domain
+type = layers
+layers =
+    rag_engine.cli
+    rag_engine.testing | rag_engine.observability | rag_engine.config
+    rag_engine.ports
+    rag_engine.domain
+
+# Inside the domain: invariants > models > ids > errors, without cycles.
+[importlinter:contract:domain-internal-layers]
+name = Domain modules form an acyclic stack
+type = layers
+containers =
+    rag_engine.domain
+layers =
+    invariants
+    models
+    ids
+    errors
+
+[importlinter:contract:domain-purity]
+name = The domain performs no I/O and uses no third-party libraries
+type = forbidden
+source_modules =
+    rag_engine.domain
+forbidden_modules =
+    rag_engine.ports
+    rag_engine.config
+    rag_engine.observability
+    rag_engine.testing
+    rag_engine.cli
+    numpy
+    pydantic
+    pydantic_settings
+    structlog
+    sqlite3
+    socket
+    http
+    urllib
+    subprocess
+    asyncio
+    threading
+    os
+    sys
+    shutil
+    tempfile
+
+[importlinter:contract:ports-are-contracts]
+name = Ports hold no infrastructure
+type = forbidden
+source_modules =
+    rag_engine.ports
+forbidden_modules =
+    rag_engine.config
+    rag_engine.observability
+    rag_engine.testing
+    rag_engine.cli
+    pydantic
+    pydantic_settings
+    structlog
+    sqlite3
+    socket
+    http
+    urllib
+    subprocess
+    os
+    sys
+
+[importlinter:contract:core-excludes-application]
+name = The core never imports the command line or test doubles
+type = forbidden
+source_modules =
+    rag_engine.domain
+    rag_engine.ports
+    rag_engine.config
+    rag_engine.observability
+forbidden_modules =
+    rag_engine.cli
+    rag_engine.testing
+    rag_engine.__main__

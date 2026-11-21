@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_FROZEN: "1"
+
+jobs:
+  quality:
+    name: Lint, types, architecture, tests (Python 3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Lock file is up to date
+        run: uv lock --check
+      - name: Ruff lint
+        run: uv run ruff check .
+      - name: Ruff format
+        run: uv run ruff format --check .
+      - name: Mypy (strict)
+        run: uv run mypy
+      - name: Import boundaries
+        run: uv run lint-imports
+      - name: Tests with coverage (no network)
+        run: uv run pytest --cov=rag_engine --cov-report=term-missing
+      - name: Domain coverage gate (>= 90 %)
+        run: uv run coverage report --include="src/rag_engine/domain/*" --fail-under=90
+
+  compatibility:
+    name: Tests (Python 3.13)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --frozen
+      - run: uv run pytest -q
+
+  supply-chain:
+    name: Licenses and vulnerabilities
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Install tooling and runtime-only environment
+        run: |
+          uv sync --frozen
+          UV_PROJECT_ENVIRONMENT=.venv-runtime uv sync --frozen --no-dev
+      - name: Dependency licenses (runtime)
+        run: >
+          uv run pip-licenses --python .venv-runtime/bin/python
+          --ignore-packages independent-rag-engine
+          --partial-match --fail-on="GPL;AGPL;SSPL;Proprietary;Non-Commercial;UNKNOWN"
+          --format=plain
+      - name: Known vulnerabilities
+        run: |
+          uv export --frozen --all-groups --no-emit-project --format requirements-txt -o requirements-audit.txt
+          uv run pip-audit -r requirements-audit.txt --disable-pip --no-deps
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
