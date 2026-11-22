@@ -11,7 +11,18 @@ from collections.abc import Sequence
 
 from rag_engine.domain.errors import require
 from rag_engine.domain.ids import ChunkId
-from rag_engine.domain.models import Chunk, ChunkPolicy, Document, DocumentVersion
+from rag_engine.domain.models import (
+    Chunk,
+    ChunkPolicy,
+    Document,
+    DocumentStatus,
+    DocumentVersion,
+    EmbeddingModel,
+    IndexMetadata,
+    ModelStatus,
+    SyncState,
+    SyncStatus,
+)
 
 
 def check_chunk_span(chunk: Chunk, normalized_text: str) -> None:
@@ -66,3 +77,33 @@ def check_current_version(document: Document, version: DocumentVersion) -> None:
     """A document's current version belongs to that document."""
     require(version.document_id == document.id, "version belongs to another document")
     require(document.current_version_id == version.id, "version is not the current one")
+
+
+def check_single_active_model(models: Sequence[EmbeddingModel], *, indexing_started: bool) -> None:
+    """At most one embedding model is active; exactly one once indexing has started."""
+    active = [m for m in models if m.status is ModelStatus.ACTIVE]
+    require(len(active) <= 1, "more than one active embedding model", count=len(active))
+    if indexing_started:
+        require(len(active) == 1, "indexing started without an active embedding model")
+
+
+def check_generation_monotonic(old: IndexMetadata, new: IndexMetadata) -> None:
+    """I8: the index generation never decreases."""
+    require(
+        new.index_generation >= old.index_generation,
+        "index generation went backwards",
+        old=old.index_generation,
+        new=new.index_generation,
+    )
+
+
+def check_sync_state_matches_document(document: Document, state: SyncState) -> None:
+    """A sync state belongs to its document's source entry and agrees with its status."""
+    require(
+        state.source_id == document.source_id and state.source_key == document.source_key,
+        "sync state belongs to another source entry",
+    )
+    require(
+        (state.status is SyncStatus.MISSING) == (document.status is DocumentStatus.MISSING),
+        "sync state and document disagree about a missing entry",
+    )

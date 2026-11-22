@@ -10,17 +10,19 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
 
-from rag_engine.domain.errors import require
+from rag_engine.domain.errors import ContextValue, ErrorCode, freeze_context, require
 from rag_engine.domain.ids import (
     ChunkId,
     ContentHash,
     DocumentId,
     DocumentVersionId,
     EmbeddingModelId,
+    JobId,
     RequestId,
     Sha256Hex,
     SourceId,
@@ -102,6 +104,7 @@ class Source:
 
 
 class DocumentStatus(StrEnum):
+    PENDING = "pending"  # discovered, not yet ingested: has no version
     ACTIVE = "active"
     MISSING = "missing"
     DELETED = "deleted"
@@ -125,6 +128,8 @@ class Document:
     def __post_init__(self) -> None:
         if self.status is DocumentStatus.ACTIVE:
             require(self.current_version_id is not None, "an active document needs a version")
+        if self.status is DocumentStatus.PENDING:
+            require(self.current_version_id is None, "a pending document has no version yet")
         require(self.duplicate_of != self.id, "a document cannot duplicate itself")
         require(
             (self.status is DocumentStatus.MISSING) == (self.missing_since is not None),
@@ -159,6 +164,152 @@ class DocumentVersion:
         require(self.seq >= 1, "version sequence starts at 1", seq=self.seq)
         require(self.size_bytes >= 0 and self.mtime_ns >= 0, "negative size or mtime")
         _require_utc(self.created_at, "created_at")
+
+
+# ------------------------------------------------------------- synchronisation
+
+
+@dataclass(frozen=True, slots=True)
+class SourceRevision:
+    """Cheap change signal of one source entry."""
+
+    size_bytes: int
+    mtime_ns: int
+
+    def __post_init__(self) -> None:
+        require(self.size_bytes >= 0 and self.mtime_ns >= 0, "negative revision values")
+
+
+class SyncStatus(StrEnum):
+    OK = "ok"  # in sync with the last processed content
+    CHANGED = "changed"  # change detected, processing pending
+    FAILED = "failed"  # the entry could not be read or is not supported
+    MISSING = "missing"  # the entry disappeared from the source
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SyncState:
+    """Last observation of one source entry; drives change detection."""
+
+    source_id: SourceId
+    source_key: SourceKey
+    last_revision: SourceRevision | None
+    last_content_hash: ContentHash | None
+    last_seen_at: datetime
+    status: SyncStatus
+    attempts: int = 0
+    last_error_code: ErrorCode | None = None
+    next_retry_at: datetime | None = None
+
+    def __post_init__(self) -> None:
+        require(self.attempts >= 0, "attempts must be non-negative")
+        if self.status is SyncStatus.FAILED:
+            require(self.last_error_code is not None, "a failed sync state needs an error code")
+        require(
+            self.next_retry_at is None or self.status is SyncStatus.FAILED,
+            "next_retry_at is only meaningful for a failed state",
+        )
+        _require_utc(self.last_seen_at, "last_seen_at")
+        if self.next_retry_at is not None:
+            _require_utc(self.next_retry_at, "next_retry_at")
+
+
+# ------------------------------------------------------------------------ jobs
+
+
+class JobKind(StrEnum):
+    SCAN = "scan"
+    INGEST_DOC = "ingest_doc"
+    REINDEX = "reindex"
+    GC = "gc"
+
+
+class JobStage(StrEnum):
+    DISCOVERED = "discovered"
+    PARSED = "parsed"
+    CHUNKED = "chunked"
+    EMBEDDED = "embedded"
+    COMMITTED = "committed"
+
+
+class JobStatus(StrEnum):
+    QUEUED = "queued"
+    LEASED = "leased"
+    DONE = "done"
+    FAILED = "failed"  # last attempt failed; waits for ``available_at`` to be retried
+    DEAD = "dead"  # gave up: needs operator attention
+
+    @property
+    def is_active(self) -> bool:
+        """Whether the job can still be processed (used for de-duplication)."""
+        return self in (JobStatus.QUEUED, JobStatus.LEASED, JobStatus.FAILED)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class IngestionJob:
+    id: JobId
+    kind: JobKind
+    source_id: SourceId
+    document_id: DocumentId | None
+    stage: JobStage = JobStage.DISCOVERED
+    status: JobStatus = JobStatus.QUEUED
+    lease_until: datetime | None = None
+    attempts: int = 0
+    error_code: ErrorCode | None = None
+    payload: Mapping[str, ContextValue] = field(default_factory=dict)
+    available_at: datetime
+    created_at: datetime
+    finished_at: datetime | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "payload", freeze_context(self.payload))
+        require(self.attempts >= 0, "attempts must be non-negative")
+        require(
+            (self.status is JobStatus.LEASED) == (self.lease_until is not None),
+            "lease_until is set exactly while the job is leased",
+        )
+        require(
+            (self.status in (JobStatus.DONE, JobStatus.DEAD)) == (self.finished_at is not None),
+            "finished_at is set exactly for done and dead jobs",
+        )
+        require(
+            self.kind is not JobKind.INGEST_DOC or self.document_id is not None,
+            "an ingest_doc job needs a document",
+        )
+        require(
+            self.error_code is None or self.status in (JobStatus.FAILED, JobStatus.DEAD),
+            "error_code is only kept for failed and dead jobs",
+        )
+        for name in ("available_at", "created_at", "lease_until", "finished_at"):
+            value: datetime | None = getattr(self, name)
+            if value is not None:
+                _require_utc(value, name)
+
+
+# ----------------------------------------------------------------- index state
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class IndexMetadata:
+    """Singleton describing the derived indexes of one store."""
+
+    schema_version: int
+    index_generation: int
+    active_embedding_model_id: EmbeddingModelId | None
+    lexical_analyzer_id: str
+    chunker_default_fingerprint: str
+    vector_store_kind: str
+    calibration: Mapping[str, ContextValue] = field(default_factory=dict)
+    created_at: datetime
+    last_gc_at: datetime | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "calibration", freeze_context(self.calibration))
+        require(self.schema_version >= 1, "schema_version starts at 1")
+        require(self.index_generation >= 0, "index_generation must be non-negative")
+        _require_utc(self.created_at, "created_at")
+        if self.last_gc_at is not None:
+            _require_utc(self.last_gc_at, "last_gc_at")
 
 
 # ---------------------------------------------------------------------- parsing
