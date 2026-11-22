@@ -3,8 +3,8 @@
 State of the model as implemented through Phase 2 (schema version 2). Domain objects are
 frozen dataclasses that validate their own invariants; SQLite holds their persistent form
 (`storage/migrations/0001_core.sql` and `0002_align_data_model.sql`, mapping in
-`storage/sqlite/codec.py`). Where this differs from the original design, the reason is in
-[ADR 0005](adr/0005-data-model-alignment.md).
+`storage/sqlite/codec.py`). The rules behind documents, versions and jobs are in
+[ADR 0005](adr/0005-documents-versions-and-schema-v2.md).
 
 Identifiers are typed UUIDv7 values (`SourceId`, `DocumentId`, `DocumentVersionId`, `JobId`,
 `RequestId`); content hashes are SHA-256 hex. Timestamps are UTC, stored as fixed-width ISO-8601

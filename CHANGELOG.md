@@ -1,11 +1,11 @@
 # Changelog
 
 Format: [Keep a Changelog](https://keepachangelog.com/); versions follow the phases of the
-roadmap until a release is cut.
+project until a release is cut.
 
 ## [Unreleased]
 
-### Phase 2 compliance corrections (review against the specification)
+### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
   `normalized_text`, `UNIQUE (document_id, content_hash)`, no `pending` status. Documents
   without a version are `active` and not searchable until their first commit. Phase 4's
@@ -23,7 +23,7 @@ roadmap until a release is cut.
   `core.py`, `uow.py`, `backup.py`; tests reorganised into `perf`, `chaos`, `integrity`; PR CI
   excludes `perf`.
 - New tests: `SIGKILL` at every stage, invariants at teardown, a model-based ingestion test.
-- ADRs 0005-0007; ADR 0004 amended.
+- ADRs 0005-0007; ADR 0004 refined.
 
 ## Phase 2: SQLite core and document ingestion
 

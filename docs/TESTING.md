@@ -37,7 +37,7 @@ unversioned documents are not searchable, sync state and documents agree, one ac
 document, index state mirrors the migrations). They run at teardown of every test that uses the
 `workspace` fixture. `test_ingestion_model.py` is a Hypothesis state machine: random sequences
 of create/modify/delete/rename/wait/rescan (including steps around the 30-day grace boundary)
-are compared with a naive model of the specification after every rescan; identities must not
+are compared with a naive model of the ingestion rules after every rescan; identities must not
 change. Changing the grace period in the model by one day makes it fail.
 
 ## NFR-04

@@ -24,7 +24,7 @@ from rag_engine.domain import (
 )
 from rag_engine.ports import Clock, MetadataReader, MetadataWriter, Store
 
-# Mass-delete guard (ARCHITECTURE §A, plus two owner-approved safety rules). A scan that makes
+# Mass-delete guard (ADR 0006). A scan that makes
 # documents vanish is refused, and nothing is changed, when ANY of these holds:
 #   * empty_scan:     the scan found no document at all;
 #   * all_known_gone: every known document vanished at once (a swapped or wrong root);
