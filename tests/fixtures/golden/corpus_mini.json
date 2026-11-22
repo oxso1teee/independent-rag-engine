@@ -20,13 +20,13 @@
   "author": null,
   "blocks": ["heading", "paragraph", "paragraph", "heading", "paragraph", "paragraph", "heading", "paragraph", "paragraph", "paragraph", "heading", "paragraph", "code", "heading", "table", "heading", "list_item", "list_item", "list_item", "paragraph", "paragraph"],
   "chunker": ["structure_aware", "1", "fc93c3d1870786de"],
-  "content_hash": "de862b78e4368b19",
+  "content_hash": "8e9239c36aeea0b8",
   "encoding": "utf_8",
   "language": "en",
   "mime": "text/markdown",
   "parser": ["md", "1", "norm/1"],
-  "text_chars": 6675,
-  "text_hash": "8663823c55bd0ab4",
+  "text_chars": 6671,
+  "text_hash": "09d36c5b400826c8",
   "title": "Backup guide",
   "warnings": [],
   "chunks": [
@@ -40,15 +40,15 @@
    [7, 0, 6, "paragraph", 163, 2035, 2523, "1edbc44628cd", ["Backup guide", "Preparing the volume", "Checking free space"], "en", null, null, false],
    [8, 0, 6, "paragraph", 187, 2456, 3015, "d0eba7b4b021", ["Backup guide", "Preparing the volume", "Checking free space"], "en", null, null, false],
    [9, 0, 6, "paragraph", 190, 2956, 3530, "943458d37e1f", ["Backup guide", "Preparing the volume", "Checking free space"], "en", null, null, false],
-   [10, 1, null, "mixed", 363, 3532, 4535, "770d5b7f948a", ["Backup guide", "Running a backup"], "en", null, null, false],
+   [10, 1, null, "mixed", 363, 3532, 4531, "6b16e8191b76", ["Backup guide", "Running a backup"], "en", null, null, false],
    [11, 0, 10, "paragraph", 161, 3550, 4035, "e915e3cadd7f", ["Backup guide", "Running a backup"], "en", null, null, false],
-   [12, 0, 10, "code", 198, 4037, 4535, "78e2eade276b", ["Backup guide", "Running a backup"], "en", null, null, false],
-   [13, 1, null, "mixed", 395, 4537, 5616, "7e5a63874f15", ["Backup guide", "Settings"], "en", null, null, false],
-   [14, 0, 13, "table", 243, 4547, 5215, "80aac8ecb128", ["Backup guide", "Settings"], "en", null, null, false],
-   [15, 0, 13, "table", 150, 5216, 5616, "57b4e929678b", ["Backup guide", "Settings"], "en", null, null, false],
-   [16, 1, null, "mixed", 348, 5618, 6675, "6a77558196c2", ["Backup guide", "Restore"], "en", null, null, false],
-   [17, 0, 16, "mixed", 189, 5627, 6198, "03b88dbfb5c1", ["Backup guide", "Restore"], "en", null, null, false],
-   [18, 0, 16, "paragraph", 181, 6131, 6675, "d47117063641", ["Backup guide", "Restore"], "en", null, null, false]
+   [12, 0, 10, "code", 198, 4037, 4531, "e0b57ebb396f", ["Backup guide", "Running a backup"], "en", null, null, false],
+   [13, 1, null, "mixed", 395, 4533, 5612, "7e5a63874f15", ["Backup guide", "Settings"], "en", null, null, false],
+   [14, 0, 13, "table", 243, 4543, 5211, "80aac8ecb128", ["Backup guide", "Settings"], "en", null, null, false],
+   [15, 0, 13, "table", 150, 5212, 5612, "57b4e929678b", ["Backup guide", "Settings"], "en", null, null, false],
+   [16, 1, null, "mixed", 348, 5614, 6671, "6a77558196c2", ["Backup guide", "Restore"], "en", null, null, false],
+   [17, 0, 16, "mixed", 189, 5623, 6194, "03b88dbfb5c1", ["Backup guide", "Restore"], "en", null, null, false],
+   [18, 0, 16, "paragraph", 181, 6127, 6671, "d47117063641", ["Backup guide", "Restore"], "en", null, null, false]
   ]
  },
  "en_changelog.md": {
@@ -235,6 +235,35 @@
    [3, 0, 0, "paragraph", 198, 913, 1502, "c16c9d2ede33", ["Service status"], "en", null, null, false],
    [4, 0, 0, "paragraph", 182, 1439, 1978, "df489d5b82cd", ["Service status"], "en", null, null, false],
    [5, 0, null, "mixed", 75, 1980, 2196, "4df371f1a9f9", ["Service status", "Components"], "en", null, null, false]
+  ]
+ },
+ "en_stub_notes.md": {
+  "author": null,
+  "blocks": ["heading", "paragraph", "heading", "paragraph", "paragraph", "paragraph", "heading", "paragraph", "paragraph", "heading", "paragraph", "paragraph", "paragraph", "heading", "paragraph", "paragraph", "heading", "paragraph", "paragraph", "paragraph", "heading", "paragraph", "paragraph"],
+  "chunker": ["structure_aware", "1", "fc93c3d1870786de"],
+  "content_hash": "13dd955fe411efdd",
+  "encoding": "utf_8",
+  "language": "en",
+  "mime": "text/markdown",
+  "parser": ["md", "1", "norm/1"],
+  "text_chars": 4165,
+  "text_hash": "57b4a8d4a6d7ac61",
+  "title": "Service notes",
+  "warnings": [],
+  "chunks": [
+   [0, 0, null, "paragraph", 19, 0, 57, "e7d624f725d6", ["Service notes"], "en", null, null, false],
+   [1, 1, null, "mixed", 348, 59, 1104, "a18d41d79612", ["Service notes", "Procedure 1"], "en", null, null, false],
+   [2, 0, 1, "paragraph", 165, 72, 563, "2cb3d7d8f8b6", ["Service notes", "Procedure 1"], "en", null, null, false],
+   [3, 0, 1, "paragraph", 203, 500, 1104, "845386cd8be9", ["Service notes", "Procedure 1"], "en", null, null, false],
+   [4, 0, null, "paragraph", 100, 1106, 1425, "716b91104e3a", ["Service notes", "Disclaimer"], "en", null, null, false],
+   [5, 1, null, "mixed", 357, 1427, 2503, "da0573732d64", ["Service notes", "Procedure 2"], "en", null, null, false],
+   [6, 0, 5, "paragraph", 166, 1440, 1935, "f6c52cd97f27", ["Service notes", "Procedure 2"], "en", null, null, false],
+   [7, 0, 5, "paragraph", 212, 1869, 2503, "7124e297bcf7", ["Service notes", "Procedure 2"], "en", null, null, false],
+   [8, 0, null, "paragraph", 100, 2505, 2824, "716b91104e3a", ["Service notes", "Disclaimer"], "en", null, null, true],
+   [9, 1, null, "mixed", 338, 2826, 3844, "4bc36e47875d", ["Service notes", "Procedure 3"], "en", null, null, false],
+   [10, 0, 9, "paragraph", 158, 2839, 3313, "4a74dbfa20da", ["Service notes", "Procedure 3"], "en", null, null, false],
+   [11, 0, 9, "paragraph", 200, 3248, 3844, "9a86ea25d56c", ["Service notes", "Procedure 3"], "en", null, null, false],
+   [12, 0, null, "paragraph", 100, 3846, 4165, "716b91104e3a", ["Service notes", "Disclaimer"], "en", null, null, true]
   ]
  },
  "mixed_api_notes.md": {

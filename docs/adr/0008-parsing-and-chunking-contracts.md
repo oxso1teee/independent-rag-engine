@@ -1,6 +1,6 @@
 # 0008. Parsing and chunking contracts
 
-Status: Accepted (2026-11-22). Implemented task by task; the changelog lists what is in place.
+Status: Accepted (2026-11-22). Implemented; see the architecture document and the changelog.
 
 ## Context
 

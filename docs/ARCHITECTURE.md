@@ -206,6 +206,45 @@ Queue parameters are settings (`[ingest]`); safety rules are fixed.
 | Maximum file size | 50 MiB (per source) | `SourcePolicy.max_file_bytes` |
 | Attempts / base / factor / cap / jitter / lease | 5 / 30 s / 2 / 1 h / 20 % / 300 s | `[ingest]` |
 
+## Parsing and chunking (`rag_engine.parsing`, `rag_engine.chunking`)
+
+`DocumentProcessor` (in `ingestion`) reads a document within its size limit, identifies the
+format from the content, picks the parser, and chunks the result; nothing is stored. The
+contracts are in [ADR 0008](adr/0008-parsing-and-chunking-contracts.md).
+
+- **One text per version.** A parser returns a `ParsedDocument`: `normalized_text` plus typed
+  blocks (heading, paragraph, list item, quote, code, table) with offsets into that text, their
+  heading path and, for PDF, their page. `TextAssembler` builds text, offsets and heading paths
+  together, so `normalized_text[start:end]` equals the block text by construction.
+- **Normalisation** is idempotent (NFC, line breaks, whitespace, invisible characters); markup
+  entities are decoded once by the parser that owns the markup; per-source cleaners drop
+  whole lines and are part of `normalizer_version`.
+- **Parsers.** Markdown, HTML and plain text are built in; PDF (`pdf` extra) reads the text
+  layer page by page, joins lines into paragraphs and drops running titles and page numbers;
+  DOCX (`docx` extra) reads styles, lists, tables, quotes and code after checking the archive
+  against entry, size and ratio limits. Every refusal is `E_PARSE_FAILED` with a reason
+  (`corrupt`, `encrypted`, `no_text_layer`, `too_large`, `too_many_pages`, `too_many_blocks`,
+  `too_deep`, `zip_bomb`, `timeout`, `memory`, `worker_failed`, `encoding`) or
+  `E_UNSUPPORTED_FORMAT`.
+- **Isolation.** PDF, DOCX and HTML run in one long-lived worker process by default: minimal
+  environment, data-segment cap, no core dumps, JSON messages, a kill at the time limit and a
+  fresh worker after any failure.
+- **Token counting.** `TokenCounter` is a port with a script-aware heuristic and an exact
+  counter over a local `tokenizer.json`; the counter id is part of the chunker fingerprint.
+- **Chunking.** A chunk is an exact slice of the text. The packer joins sentences, lines and
+  word groups up to the target size, repeats whole sentences as overlap between prose chunks,
+  keeps tables and code intact when they fit and never exceeds `max_tokens`. Strategies:
+  `structure_aware` (sections cut at headings, parent chunks for sections with several leaves,
+  tiny sections merged), `recursive`, `fixed`; `auto` chooses by document structure. Repeated
+  leaf texts inside a version are marked duplicates and not indexed. Chunk ids derive from the
+  version, the fingerprint and the ordinal.
+- **Duplicates between documents.** After every ingest that changed something, documents of a
+  source with identical raw bytes are linked (`duplicate_of`) to the active one with the
+  smallest id, in the same transaction.
+
+Parsing and chunking are pure computation: they depend on the domain and the ports only, and
+the import contracts keep them independent of each other.
+
 ## Command line
 
 `rag source add|list|rebase` (`add` takes repeatable `--cleaner` line patterns),

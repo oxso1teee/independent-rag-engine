@@ -58,6 +58,7 @@ packages = ["src/rag_engine"]
 line-length = 100
 target-version = "py312"
 src = ["src", "tests", "eval"]
+extend-exclude = ["tests/fixtures/corpus_mini"]  # generated documents must stay byte-exact
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "RUF", "PT", "TID", "S", "DTZ"]

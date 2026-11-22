@@ -28,15 +28,11 @@ def run_backup(source, target, keep=7):
     copy_files(snapshot, target)
     prune(target, keep=keep)
     return verify(target)
-
-
 def run_backup(source, target, keep=7):
     snapshot = take_snapshot(source)
     copy_files(snapshot, target)
     prune(target, keep=keep)
     return verify(target)
-
-
 def run_backup(source, target, keep=7):
     snapshot = take_snapshot(source)
     copy_files(snapshot, target)
