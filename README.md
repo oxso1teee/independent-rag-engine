@@ -6,8 +6,10 @@ generation, and reproducible evaluation.
 > **Status: early development.** The repository contains the core foundation (domain model,
 > error taxonomy, ports, configuration, logging, test doubles, CI) and document
 > ingestion: a SQLite store, source discovery, change detection, safe deletion and a
-> persistent job queue, driven by the `rag` command. Parsing, chunking, embeddings,
-> retrieval and generation are built on top in later phases.
+> persistent job queue, driven by the `rag` command, and document processing: parsers for
+> Markdown, HTML, text, PDF and DOCX and three chunking strategies, previewed with
+> `rag chunks`. Storing chunks, embeddings, retrieval and generation are built on top in later
+> phases.
 
 ## Design goals
 
@@ -69,7 +71,11 @@ src/rag_engine/
   domain/          identifiers, models, invariants, error taxonomy   (pure, no I/O)
   ports/           Protocol contracts: sources, parsing, chunking, embeddings, storage,
                    indexes, reranking, LLM, tokens, clock
-  ingestion/       filesystem source, change detection, identity, lifecycle, job queue, MIME
+  ingestion/       filesystem source, change detection, identity, lifecycle, duplicates, job
+                   queue, MIME, document processing (parse and chunk)
+  parsing/         normaliser, cleaners, parsers (md, html, txt, pdf, docx), isolated worker
+  chunking/        token counters, splitting, packing, the fixed, recursive and
+                   structure-aware chunkers
   storage/         SQLite store (WAL, single writer, unit of work) and SQL migrations
   system/          real clock and identifier entropy
   config/          validated settings and resource profiles
@@ -79,6 +85,7 @@ src/rag_engine/
   container.py     composition root and entry point
 tests/             unit, contract, architecture, integration, e2e, chaos, integrity and perf tests
 docs/              architecture and development notes
+eval/scripts/      reproducible reports (chunk-size grid)
 ```
 
 ## Documentation

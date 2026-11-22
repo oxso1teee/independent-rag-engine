@@ -46,7 +46,7 @@ change. Changing the grace period in the model by one day makes it fail.
   docx) over valid samples, empty and oversized input, arbitrary bytes and mutated samples;
   `test_chunker_contract.py` runs every chunking strategy over the same documents, policies and
   random documents; `test_token_counter_contract.py` covers both counters.
-- **Corpus.** `tests/fixtures/corpus_mini` holds twenty original Russian, English and mixed
+- **Corpus.** `tests/fixtures/corpus_mini` holds twenty-one original Russian, English and mixed
   documents (Markdown, HTML, text, a cp1251 file, PDF and DOCX). `generate_corpus_mini.py`
   recreates them byte for byte.
 - **Golden snapshot.** `tests/fixtures/golden/corpus_mini.json` records, for each document, the

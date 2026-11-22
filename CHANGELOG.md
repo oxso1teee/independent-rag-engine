@@ -5,7 +5,7 @@ project until a release is cut.
 
 ## [Unreleased]
 
-### Phase 3: parsing and chunking
+### Phase 3: parsing and chunking (complete)
 - Domain: `Block.attrs`, UTC check for `ParsedDocument.created`, `detect_language`,
   `check_block_provenance`, `check_duplicate_graph`; ADR 0008 defines the contracts.
 - Ports: `ParseLimits`, `ParseHints.encoding/limits`, `Parser.normalizer_version`; domain
@@ -91,6 +91,8 @@ project until a release is cut.
 - `eval/scripts/chunk_grid.py`: reports how a corpus is chunked at target sizes 192, 256 and 384
   tokens (chunk and section counts, token distribution, small and near-limit shares, overlap,
   duplicates, time) as Markdown or JSON. It describes shapes only and ranks nothing.
+- `corpus_mini` gains a service-line and repeated-disclaimer document; the fixtures are excluded
+  from the formatter so they stay byte-identical to the generator's output.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
