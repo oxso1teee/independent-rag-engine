@@ -85,6 +85,9 @@ project until a release is cut.
   update script), property tests of parse-then-chunk for generated Markdown, HTML and text under
   random size policies, and mutation fuzzing of every corpus file through the whole pipeline,
   including equality of isolated and in-process outcomes.
+- Performance budgets (`make perf`): token counting, parsing and chunking of 1 MB Markdown, HTML
+  and text, a 100-page PDF, a 2000-paragraph DOCX, the isolated worker and peak memory, with
+  three measured runs recorded in `docs/TESTING.md`.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
