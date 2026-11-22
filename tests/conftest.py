@@ -12,6 +12,7 @@ from rag_engine.domain import IdFactory
 from rag_engine.storage.sqlite import SqliteStore, open_store
 from rag_engine.testing import FakeClock
 from tests.factories import make_ids
+from tests.workspace import make_workspace, workspace
 
 settings.register_profile(
     "deterministic",
@@ -71,3 +72,6 @@ def ids() -> IdFactory:
 def store(tmp_path: Path, clock: FakeClock) -> Iterator[SqliteStore]:
     with open_store(tmp_path / "rag.db", clock) as opened:
         yield opened
+
+
+__all__ = ["make_workspace", "workspace"]  # fixtures shared by integration and performance tests

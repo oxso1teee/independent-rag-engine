@@ -22,6 +22,10 @@ DEFAULT_BUSY_TIMEOUT_MS = 5000
 _UNSET = "none"
 
 
+class StoreNotInitialised(RagError):
+    """The database file does not exist yet (nothing has been written so far)."""
+
+
 class _SqliteUnitOfWork:
     def __init__(self, store: SqliteStore) -> None:
         self._store = store
@@ -168,9 +172,9 @@ def open_store_read_only(
     """Open an existing, already migrated store without changing anything on disk."""
     migrator = Migrator(load_packaged_migrations() if migrations is None else migrations)
     if not path.is_file():
-        raise RagError(
+        raise StoreNotInitialised(
             ErrorCode.E_SOURCE_NOT_FOUND,
-            "the database does not exist",
+            "the database does not exist yet",
             context={"path": str(path)},
         )
     store = SqliteStore(path, read_only=True)
@@ -212,6 +216,7 @@ def _ensure_index_state(store: SqliteStore, now: datetime, schema_version: int) 
 
 __all__ = [
     "SqliteStore",
+    "StoreNotInitialised",
     "open_store",
     "open_store_read_only",
 ]

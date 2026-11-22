@@ -19,7 +19,7 @@ from rag_engine.domain import (
 )
 from rag_engine.ingestion.service import IngestReport
 from rag_engine.ports import ScanReport, SourceAdapter
-from tests.integration.conftest import Workspace, logical_dump
+from tests.workspace import Workspace, logical_dump
 
 
 class CountingAdapter:

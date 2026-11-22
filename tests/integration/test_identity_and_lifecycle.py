@@ -20,7 +20,7 @@ from rag_engine.domain import (
 )
 from rag_engine.ingestion.identity import match_moves
 from rag_engine.ingestion.service import IngestReport
-from tests.integration.conftest import Workspace, logical_dump
+from tests.workspace import Workspace, logical_dump
 
 
 def run(ws: Workspace, **options: bool) -> IngestReport:
