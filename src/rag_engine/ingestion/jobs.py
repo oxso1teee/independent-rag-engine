@@ -26,34 +26,56 @@ from rag_engine.domain import (
 from rag_engine.ports import Clock, Store
 
 
+def _no_randomness() -> float:
+    return 0.0
+
+
 @dataclass(frozen=True, slots=True)
 class RetryPolicy:
-    """Exponential backoff without jitter (deterministic): ``base * factor ** (attempt - 1)``."""
+    """Exponential backoff with jitter: ``min(cap, base * factor ** (attempt - 1))`` shortened
+    by a random share of up to ``jitter`` so that retries of many jobs do not align.
+
+    Jitter only ever shortens a delay, so the cap holds. Randomness is injected
+    (``rng() -> [0, 1)``), which keeps tests deterministic; ``jitter=0`` disables it.
+    """
 
     max_attempts: int = 5
     base_delay_s: float = 30.0
     factor: float = 2.0
     max_delay_s: float = 3600.0
+    jitter: float = 0.2
     lease_s: float = 300.0
 
     def __post_init__(self) -> None:
-        if self.max_attempts < 1 or self.base_delay_s < 0 or self.factor < 1 or self.lease_s <= 0:
+        if (
+            self.max_attempts < 1
+            or self.base_delay_s < 0
+            or self.factor < 1
+            or self.lease_s <= 0
+            or not 0.0 <= self.jitter <= 1.0
+        ):
             raise RagError(ErrorCode.E_CONFIG_INVALID, "invalid retry policy")
 
-    def delay_for(self, attempt: int) -> timedelta:
+    def delay_for(self, attempt: int, rng: Callable[[], float] = _no_randomness) -> timedelta:
         seconds = min(self.max_delay_s, self.base_delay_s * self.factor ** max(attempt - 1, 0))
-        return timedelta(seconds=seconds)
+        return timedelta(seconds=seconds * (1.0 - self.jitter * rng()))
 
 
 class JobQueue:
     """Operations on the persistent queue (the unit of work is opened per operation)."""
 
     def __init__(
-        self, store: Store, clock: Clock, ids: IdFactory, policy: RetryPolicy | None = None
+        self,
+        store: Store,
+        clock: Clock,
+        ids: IdFactory,
+        policy: RetryPolicy | None = None,
+        rng: Callable[[], float] = _no_randomness,
     ) -> None:
         self._store = store
         self._clock = clock
         self._ids = ids
+        self._rng = rng  # the composition root passes real randomness; tests pass a fake
         self.policy = policy or RetryPolicy()
 
     def enqueue(
@@ -105,7 +127,7 @@ class JobQueue:
         now = self._clock.now()
         retry_at = None
         if error.retryable and job.attempts < self.policy.max_attempts:
-            retry_at = now + self.policy.delay_for(job.attempts)
+            retry_at = now + self.policy.delay_for(job.attempts, self._rng)
         with self._store.unit_of_work().begin() as writer:
             writer.fail_job(job.id, job.attempts, error.code, now, retry_at)
         return JobStatus.DEAD if retry_at is None else JobStatus.FAILED

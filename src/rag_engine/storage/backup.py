@@ -6,7 +6,6 @@ import sqlite3
 from pathlib import Path
 
 from rag_engine.domain import ErrorCode, RagError
-from rag_engine.storage.sqlite.connection import connect
 
 
 def backup_database(source: Path, destination: Path) -> Path:
@@ -28,6 +27,8 @@ def backup_database(source: Path, destination: Path) -> Path:
             "the database to back up does not exist",
             context={"path": str(source)},
         )
+    from rag_engine.storage.sqlite.connection import connect  # lazy: avoids an import cycle
+
     destination.parent.mkdir(parents=True, exist_ok=True)
     partial = destination.with_name(destination.name + ".partial")
     partial.unlink(missing_ok=True)
@@ -56,6 +57,8 @@ def backup_database(source: Path, destination: Path) -> Path:
 
 
 def _verify(origin: sqlite3.Connection, copy_path: Path) -> None:
+    from rag_engine.storage.sqlite.connection import connect  # lazy: avoids an import cycle
+
     copy = connect(copy_path, busy_timeout_ms=5000, read_only=True)
     try:
         verdict = copy.execute("PRAGMA integrity_check").fetchall()

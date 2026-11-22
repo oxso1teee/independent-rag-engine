@@ -215,25 +215,54 @@ def test_one_missing_file_among_many_is_tombstoned(workspace: Workspace) -> None
 
 def test_a_few_missing_files_below_the_threshold_are_tombstoned(workspace: Workspace) -> None:
     populate(workspace, 20)
-    for i in range(4):  # exactly 20 %: not "more than 20 %"
+    for i in range(4):  # far below max(10, 20 %)
         (workspace.root / "dir" / f"doc{i:02d}.md").unlink()
     assert run(workspace).deleted == 4
 
 
-def test_more_than_twenty_percent_missing_is_blocked_and_changes_nothing(
-    workspace: Workspace,
+@pytest.mark.parametrize(
+    ("known", "vanished", "blocked"),
+    [
+        (40, 10, False),  # exactly max(10, 8): allowed
+        (40, 11, True),  # more than max(10, 8): blocked by the threshold
+        (100, 20, False),  # exactly 20 %
+        (100, 21, True),  # more than 20 %
+    ],
+)
+def test_threshold_is_max_of_ten_files_and_twenty_percent(
+    workspace: Workspace, known: int, vanished: int, blocked: bool
 ) -> None:
-    populate(workspace, 10)
-    for i in range(3):
+    populate(workspace, known)
+    for i in range(vanished):
         (workspace.root / "dir" / f"doc{i:02d}.md").unlink()
     before = logical_dump(workspace.store)
+    if blocked:
+        with pytest.raises(RagError) as info:
+            run(workspace)
+        assert info.value.code is ErrorCode.E_MASS_DELETE_GUARD
+        assert info.value.context["rule"] == "threshold"
+        assert info.value.context["vanished"] == vanished
+        assert logical_dump(workspace.store) == before  # nothing was touched
+        with pytest.raises(RagError):
+            workspace.ingest.plan("docs")  # a dry run reports the same verdict
+        assert run(workspace, accept_mass_delete=True).deleted == vanished
+    else:
+        assert run(workspace).deleted == vanished
+
+
+def test_every_known_document_vanishing_at_once_is_blocked_even_when_few(
+    workspace: Workspace,
+) -> None:
+    populate(workspace, 4)  # far below the threshold, but nothing known would remain
+    for i in range(4):
+        (workspace.root / "dir" / f"doc{i:02d}.md").unlink()
+    workspace.write("other/fresh.md", "an unrelated file shows up")  # not an empty scan
     with pytest.raises(RagError) as info:
         run(workspace)
-    assert info.value.code is ErrorCode.E_MASS_DELETE_GUARD
-    assert info.value.context["vanished"] == 3
-    assert logical_dump(workspace.store) == before
-    with pytest.raises(RagError):
-        workspace.ingest.plan("docs")  # a dry run reports the same verdict
+    assert info.value.context["rule"] == "all_known_gone"
+    assert (
+        workspace.store.reader().count_documents(workspace.source.id, DocumentStatus.MISSING) == 0
+    )
 
 
 def test_the_guard_can_be_overridden_explicitly_and_stays_reversible(
@@ -245,7 +274,7 @@ def test_the_guard_can_be_overridden_explicitly_and_stays_reversible(
     moved_away = workspace.root.parent / "elsewhere"
     hidden.rename(moved_away)
     workspace.write("keep.md", "keep")
-    result = run(workspace, allow_mass_delete=True)
+    result = run(workspace, accept_mass_delete=True)
     assert result.deleted == 10
     docs = workspace.store.reader().list_documents(workspace.source.id, DocumentStatus.MISSING)
     assert len(docs) == 10
@@ -261,6 +290,7 @@ def test_an_empty_scan_never_wipes_the_corpus(workspace: Workspace) -> None:
     with pytest.raises(RagError) as info:
         run(workspace)
     assert info.value.code is ErrorCode.E_MASS_DELETE_GUARD
+    assert info.value.context["rule"] == "empty_scan"
     assert len(workspace.store.reader().list_documents(workspace.source.id)) == 5
 
 

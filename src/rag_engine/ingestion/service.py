@@ -102,14 +102,14 @@ class IngestService:
 
     # -- public ----------------------------------------------------------------------
 
-    def plan(self, name: str, *, allow_mass_delete: bool = False) -> IngestReport:
+    def plan(self, name: str, *, accept_mass_delete: bool = False) -> IngestReport:
         """What a run would do; reads the store and the files, writes nothing."""
-        source, plan = self._detect(name, self._store.reader(), allow_mass_delete)
+        source, plan = self._detect(name, self._store.reader(), accept_mass_delete)
         return self._report(source, plan, dry_run=True, jobs=0, gc=0)
 
-    def run(self, name: str, *, allow_mass_delete: bool = False) -> IngestReport:
+    def run(self, name: str, *, accept_mass_delete: bool = False) -> IngestReport:
         reader = self._store.reader()
-        source, plan = self._detect(name, reader, allow_mass_delete)
+        source, plan = self._detect(name, reader, accept_mass_delete)
         jobs = 0
         if plan.mutates:
             with self._store.unit_of_work().begin() as writer:
@@ -120,7 +120,7 @@ class IngestService:
     # -- detection --------------------------------------------------------------------
 
     def _detect(
-        self, name: str, reader: MetadataReader, allow_mass_delete: bool
+        self, name: str, reader: MetadataReader, accept_mass_delete: bool
     ) -> tuple[Source, ChangePlan]:
         source = self._registry.get(name)
         adapter = self._adapter_factory(source)
@@ -135,7 +135,7 @@ class IngestService:
             vanished=len(plan.of_kind(ChangeKind.DELETED)),
             tracked=tracked,
             entries_seen=plan.entries_seen,
-            allow=allow_mass_delete,
+            accept=accept_mass_delete,
         )
         return source, plan
 

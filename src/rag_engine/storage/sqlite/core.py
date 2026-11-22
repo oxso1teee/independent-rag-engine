@@ -1,22 +1,22 @@
-"""SQLite ``Store``: connection lifecycle, single writer, unit of work."""
+"""SQLite ``Store``: connection lifecycle, opening, migration and index-state bootstrap."""
 
 from __future__ import annotations
 
 import sqlite3
 import threading
-from collections.abc import Callable, Iterator, Sequence
-from contextlib import contextmanager
+from collections.abc import Callable, Sequence
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from types import TracebackType
 
 from rag_engine.domain import ErrorCode, IndexMetadata, RagError
-from rag_engine.ports import Clock, MetadataReader, MetadataWriter, UnitOfWork
+from rag_engine.ports import Clock, MetadataReader, UnitOfWork
+from rag_engine.storage.backup import backup_database
 from rag_engine.storage.migrations import Migration, Migrator, load_packaged_migrations
-from rag_engine.storage.sqlite.backup import backup_database
 from rag_engine.storage.sqlite.connection import WriterLock, connect, enable_wal
-from rag_engine.storage.sqlite.repository import SqliteReader, SqliteWriter, translate
+from rag_engine.storage.sqlite.repository import SqliteReader, translate
+from rag_engine.storage.sqlite.uow import SqliteUnitOfWork
 
 DEFAULT_BUSY_TIMEOUT_MS = 5000
 
@@ -26,42 +26,6 @@ _UNSET = "none"
 
 class StoreNotInitialised(RagError):
     """The database file does not exist yet (nothing has been written so far)."""
-
-
-class _SqliteUnitOfWork:
-    def __init__(self, store: SqliteStore) -> None:
-        self._store = store
-
-    @contextmanager
-    def begin(self) -> Iterator[MetadataWriter]:
-        store = self._store
-        if store.read_only:
-            raise RagError(ErrorCode.E_INTEGRITY, "the store was opened read-only")
-        if getattr(store._local, "in_uow", False):
-            raise RagError(ErrorCode.E_INTEGRITY, "nested units of work are not allowed")
-        store._lock.acquire()
-        store._local.in_uow = True
-        try:
-            conn = store._writer_connection()
-            try:
-                conn.execute("BEGIN IMMEDIATE")
-            except sqlite3.Error as exc:
-                raise translate(exc) from exc
-            try:
-                yield SqliteWriter(conn)
-            except BaseException:
-                if conn.in_transaction:
-                    conn.execute("ROLLBACK")
-                raise
-            try:
-                conn.execute("COMMIT")
-            except sqlite3.Error as exc:
-                if conn.in_transaction:
-                    conn.execute("ROLLBACK")
-                raise translate(exc) from exc
-        finally:
-            store._local.in_uow = False
-            store._lock.release()
 
 
 class SqliteStore:
@@ -79,8 +43,8 @@ class SqliteStore:
         self.path = path
         self.read_only = read_only
         self._busy_timeout_ms = busy_timeout_ms
-        self._lock = WriterLock(path.with_name(path.name + ".writer.lock"), writer_timeout_s)
-        self._local = threading.local()
+        self.writer_lock = WriterLock(path.with_name(path.name + ".writer.lock"), writer_timeout_s)
+        self.local = threading.local()
         self._guard = threading.Lock()
         self._connections: list[sqlite3.Connection] = []
         self._writer: sqlite3.Connection | None = None
@@ -89,18 +53,18 @@ class SqliteStore:
     # -- Store port --------------------------------------------------------------------
 
     def reader(self) -> MetadataReader:
-        conn: sqlite3.Connection | None = getattr(self._local, "reader", None)
+        conn: sqlite3.Connection | None = getattr(self.local, "reader", None)
         if conn is None:
             self._ensure_open()
             conn = connect(self.path, busy_timeout_ms=self._busy_timeout_ms, read_only=True)
-            self._local.reader = conn
+            self.local.reader = conn
             with self._guard:
                 self._connections.append(conn)
         return SqliteReader(conn)
 
     def unit_of_work(self) -> UnitOfWork:
         self._ensure_open()
-        return _SqliteUnitOfWork(self)
+        return SqliteUnitOfWork(self)
 
     def close(self) -> None:
         with self._guard:
@@ -111,7 +75,7 @@ class SqliteStore:
             conn.close()
         if writer is not None:
             writer.close()
-        self._local = threading.local()
+        self.local = threading.local()
 
     # -- helpers -----------------------------------------------------------------------
 
@@ -119,7 +83,7 @@ class SqliteStore:
         if self._closed:
             raise RagError(ErrorCode.E_INTEGRITY, "the store is closed")
 
-    def _writer_connection(self) -> sqlite3.Connection:
+    def writer_connection(self) -> sqlite3.Connection:
         if self._writer is None:
             conn = connect(self.path, busy_timeout_ms=self._busy_timeout_ms)
             with self._guard:
@@ -152,9 +116,9 @@ def open_store(
     created = not path.exists()
     store = SqliteStore(path, busy_timeout_ms=busy_timeout_ms, writer_timeout_s=writer_timeout_s)
     try:
-        store._lock.acquire()
+        store.writer_lock.acquire()
         try:
-            conn = store._writer_connection()
+            conn = store.writer_connection()
             try:
                 enable_wal(conn)
                 if created:
@@ -165,7 +129,7 @@ def open_store(
             except sqlite3.Error as exc:
                 raise translate(exc) from exc
         finally:
-            store._lock.release()
+            store.writer_lock.release()
         _ensure_index_state(store, clock.now(), migrator.latest_version)
     except BaseException:
         store.close()

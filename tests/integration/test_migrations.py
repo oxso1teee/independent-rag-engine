@@ -8,13 +8,14 @@ from pathlib import Path
 import pytest
 
 from rag_engine.domain import ErrorCode, IdFactory, RagError, Sha256Hex
+from rag_engine.storage.backup import backup_database
 from rag_engine.storage.migrations import (
     Migration,
     Migrator,
     load_packaged_migrations,
     split_statements,
 )
-from rag_engine.storage.sqlite import backup_database, open_store
+from rag_engine.storage.sqlite import open_store
 from rag_engine.testing import FakeClock
 from tests.factories import T0, make_ids, make_source
 
@@ -195,7 +196,7 @@ def test_backup_refuses_to_overwrite_and_reports_missing_source(
 def test_backup_with_a_corrupt_copy_is_not_left_behind(
     tmp_path: Path, clock: FakeClock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import rag_engine.storage.sqlite.backup as backup_module
+    import rag_engine.storage.backup as backup_module
 
     def fail(*_: object) -> None:
         raise RagError(ErrorCode.E_INTEGRITY, "the backup failed its integrity check")
@@ -395,7 +396,7 @@ def test_content_hash_is_unique_per_document_after_the_upgrade(
 
 
 def test_backup_names_follow_the_real_versions_and_never_collide(tmp_path: Path) -> None:
-    from rag_engine.storage.sqlite.store import backup_path
+    from rag_engine.storage.sqlite import backup_path
 
     db = tmp_path / "rag.db"
     first = backup_path(db, 3, 5)

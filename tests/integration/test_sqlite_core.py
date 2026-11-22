@@ -196,8 +196,8 @@ def test_open_store_failure_does_not_leak_the_lock(tmp_path: Path, clock: FakeCl
         open_store(path, clock)
     other = SqliteStore(path)
     try:
-        other._lock.acquire()
-        other._lock.release()
+        other.writer_lock.acquire()
+        other.writer_lock.release()
     finally:
         other.close()
 

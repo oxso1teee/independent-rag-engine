@@ -161,15 +161,16 @@ def test_dry_run_without_a_database_fails_without_creating_one(cli: Cli, docs: P
 def test_mass_delete_guard_has_its_own_exit_code(cli: Cli, docs: Path) -> None:
     cli.run("source", "add", "notes", str(docs))
     cli.run("ingest")
-    for i in range(5):
+    for i in range(10):  # every known document vanishes
         (docs / "notes" / f"n{i}.md").unlink()
     code, _, err = cli.run("ingest", "notes")
-    assert code == 6 and "E_MASS_DELETE_GUARD" in err
+    assert code == 4 and "E_MASS_DELETE_GUARD" in err and "--accept-mass-delete" in err
     code, payload = cli.json("ingest", "notes")
-    assert code == 6 and payload["error"]["code"] == "E_MASS_DELETE_GUARD"
-    assert cli.run("ingest", "notes", "--dry-run")[0] == 6
-    code, out, _ = cli.run("ingest", "notes", "--allow-mass-delete")
-    assert code == 0 and "5 missing" in out
+    assert code == 4 and payload["error"]["code"] == "E_MASS_DELETE_GUARD"
+    assert cli.run("ingest", "notes", "--dry-run")[0] == 4
+    assert cli.run("ingest", "notes", "--allow-mass-delete")[0] == 2  # the old flag is gone
+    code, out, _ = cli.run("ingest", "notes", "--accept-mass-delete")
+    assert code == 0 and "10 missing" in out
 
 
 def test_ingesting_all_sources_reports_each_failure_and_keeps_going(
@@ -182,11 +183,11 @@ def test_ingesting_all_sources_reports_each_failure_and_keeps_going(
     cli.run("source", "add", "a-notes", str(docs))
     cli.run("source", "add", "b-other", str(other))
     cli.run("ingest")
-    for i in range(5):
+    for i in range(10):
         (docs / "notes" / f"n{i}.md").unlink()
     (other / "f0.md").write_text("changed", encoding="utf-8")
     code, payload = cli.json("ingest")
-    assert code == 6
+    assert code == 4
     (good,) = payload["results"]
     assert good["source"] == "b-other" and good["modified"] == 1
     assert payload["errors"][0]["code"] == "E_MASS_DELETE_GUARD"
@@ -210,10 +211,10 @@ def test_rebase_preview_and_apply(cli: Cli, docs: Path, tmp_path: Path) -> None:
 
 def test_error_codes_are_stable(cli: Cli, docs: Path, tmp_path: Path) -> None:
     cli.run("source", "add", "notes", str(docs))
-    assert cli.run("ingest", "unknown")[0] == 4  # E_SOURCE_NOT_FOUND
+    assert cli.run("ingest", "unknown")[0] == 4  # E_SOURCE_NOT_FOUND: category source
     assert cli.run("source", "add", "missing", str(tmp_path / "nope"))[0] == 4
-    assert cli.run("source", "add", "notes", str(tmp_path))[0] == 5  # E_SOURCE_LOCATOR_CHANGED
-    assert cli.run("source", "add", "bad", str(docs), "--include", "[x")[0] == 3  # E_CONFIG_INVALID
+    assert cli.run("source", "add", "notes", str(tmp_path))[0] == 4  # E_SOURCE_LOCATOR_CHANGED
+    assert cli.run("source", "add", "bad", str(docs), "--include", "[x")[0] == 3  # config
     assert cli.run("source", "add", "Bad Name", str(docs))[0] == 9  # E_INTEGRITY
     assert cli.run("source", "add")[0] == 2  # usage
     assert cli.run("ingest", "--bogus")[0] == 2
@@ -257,3 +258,14 @@ def test_real_process_entry_point_and_exit_codes(tmp_path: Path, docs: Path) -> 
     assert json.loads(second.stdout)["results"][0]["unchanged"] == 10
     assert rag("ingest", "ghost").returncode == 4
     assert (tmp_path / "real" / "rag.db").is_file()
+
+
+def test_a_second_writer_is_reported_as_a_storage_error(cli: Cli, docs: Path) -> None:
+    cli.run("source", "add", "notes", str(docs))
+    with (
+        open_store(cli.container.default_db, cli.container.clock) as holder,
+        holder.unit_of_work().begin(),
+    ):
+        code, _, err = cli.run("ingest", "notes")
+    assert code == 8 and "E_STORE_LOCKED" in err
+    assert cli.run("ingest", "notes")[0] == 0  # released: works again

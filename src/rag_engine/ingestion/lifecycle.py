@@ -24,11 +24,14 @@ from rag_engine.domain import (
 )
 from rag_engine.ports import Clock, MetadataReader, MetadataWriter, Store
 
-# Assumed defaults (the specification gives the 20 % threshold; the minimum count keeps a
-# tiny corpus usable): trip when more than 20 % of the tracked documents vanished at once
-# and at least two of them did, or when everything vanished from an empty scan.
+# Mass-delete guard (ARCHITECTURE §A, plus two owner-approved safety rules). A scan that makes
+# documents vanish is refused, and nothing is changed, when ANY of these holds:
+#   * empty_scan:     the scan found no document at all;
+#   * all_known_gone: every known document vanished at once (a swapped or wrong root);
+#   * threshold:      more than max(10 files, 20 % of the known documents) vanished.
+# ``--accept-mass-delete`` confirms the result explicitly.
+MASS_DELETE_FLOOR = 10
 MASS_DELETE_RATIO = 0.20
-MASS_DELETE_MIN_COUNT = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,29 +40,45 @@ class GcResult:
     removed_keys: tuple[SourceKey, ...] = ()
 
 
-def check_mass_delete(
-    *, vanished: int, tracked: int, entries_seen: int, allow: bool = False
-) -> None:
-    """Raise ``E_MASS_DELETE_GUARD`` when ``vanished`` of ``tracked`` documents look suspicious."""
-    if vanished == 0 or allow:
-        return
-    reason: str | None = None
+def mass_delete_rule(*, vanished: int, tracked: int, entries_seen: int) -> str | None:
+    """The guard rule that applies, or ``None`` when the disappearance looks ordinary."""
+    if vanished == 0:
+        return None
     if entries_seen == 0:
-        reason = "the scan found no documents at all"
-    elif vanished >= MASS_DELETE_MIN_COUNT and vanished / max(tracked, 1) > MASS_DELETE_RATIO:
-        reason = "more than 20% of the tracked documents disappeared at once"
-    if reason is not None:
-        raise RagError(
-            ErrorCode.E_MASS_DELETE_GUARD,
-            f"{reason}; nothing was changed. Check the source root and permissions, "
-            "or confirm explicitly",
-            context={
-                "vanished": vanished,
-                "tracked": tracked,
-                "entries_seen": entries_seen,
-                "threshold_percent": int(MASS_DELETE_RATIO * 100),
-            },
-        )
+        return "empty_scan"
+    if tracked > 0 and vanished >= tracked:
+        return "all_known_gone"
+    if vanished > max(MASS_DELETE_FLOOR, MASS_DELETE_RATIO * tracked):
+        return "threshold"
+    return None
+
+
+_RULE_TEXT = {
+    "empty_scan": "the scan found no documents at all",
+    "all_known_gone": "every known document disappeared at once",
+    "threshold": "more documents disappeared at once than the safety limit allows",
+}
+
+
+def check_mass_delete(
+    *, vanished: int, tracked: int, entries_seen: int, accept: bool = False
+) -> None:
+    """Raise ``E_MASS_DELETE_GUARD`` when ``vanished`` documents disappeared suspiciously."""
+    rule = mass_delete_rule(vanished=vanished, tracked=tracked, entries_seen=entries_seen)
+    if rule is None or accept:
+        return
+    raise RagError(
+        ErrorCode.E_MASS_DELETE_GUARD,
+        f"{_RULE_TEXT[rule]}; nothing was changed. Check the source root and permissions, "
+        "or confirm with --accept-mass-delete",
+        context={
+            "rule": rule,
+            "vanished": vanished,
+            "tracked": tracked,
+            "entries_seen": entries_seen,
+            "limit": int(max(MASS_DELETE_FLOOR, MASS_DELETE_RATIO * tracked)),
+        },
+    )
 
 
 def tombstone(writer: MetadataWriter, document: Document, now: datetime) -> None:
