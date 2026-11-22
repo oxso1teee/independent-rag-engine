@@ -9,7 +9,8 @@ name = Layered architecture: cli > adapters > ports > domain
 type = layers
 layers =
     rag_engine.cli
-    rag_engine.testing | rag_engine.observability | rag_engine.config
+    rag_engine.ingestion
+    rag_engine.storage | rag_engine.system | rag_engine.testing | rag_engine.observability | rag_engine.config
     rag_engine.ports
     rag_engine.domain
 
@@ -81,7 +82,25 @@ source_modules =
     rag_engine.ports
     rag_engine.config
     rag_engine.observability
+    rag_engine.storage
+    rag_engine.system
+    rag_engine.ingestion
 forbidden_modules =
     rag_engine.cli
     rag_engine.testing
     rag_engine.__main__
+
+[importlinter:contract:ingestion-uses-ports]
+name = Ingestion talks to storage only through ports
+type = forbidden
+source_modules =
+    rag_engine.ingestion
+forbidden_modules =
+    rag_engine.storage
+    rag_engine.system
+    sqlite3
+    structlog
+    pydantic
+    pydantic_settings
+    typer
+    click

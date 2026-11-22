@@ -124,6 +124,11 @@ class DocumentVersionId(_Uuid7Id):
 
 
 @dataclass(frozen=True, slots=True, order=True)
+class JobId(_Uuid7Id):
+    """Identifies one ingestion job."""
+
+
+@dataclass(frozen=True, slots=True, order=True)
 class RequestId(_Uuid7Id):
     """End-to-end identifier of a request or job, present in every log event."""
 
@@ -142,6 +147,9 @@ class IdFactory:
 
     def document_version_id(self) -> DocumentVersionId:
         return DocumentVersionId(self._generator.next())
+
+    def job_id(self) -> JobId:
+        return JobId(self._generator.next())
 
     def request_id(self) -> RequestId:
         return RequestId(self._generator.next())

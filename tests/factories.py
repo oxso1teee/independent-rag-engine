@@ -17,9 +17,17 @@ from rag_engine.domain import (
     DocumentVersion,
     DocumentVersionId,
     IdFactory,
+    IngestionJob,
+    JobKind,
     Language,
+    Sha256Hex,
+    Source,
     SourceId,
     SourceKey,
+    SourceKind,
+    SourcePolicy,
+    SyncState,
+    SyncStatus,
     TextHash,
     Uuid7Generator,
 )
@@ -108,3 +116,55 @@ def make_version(*, version_id: DocumentVersionId, document_id: DocumentId) -> D
         chunker_fingerprint=FINGERPRINT,
         created_at=T0,
     )
+
+
+def make_source(
+    ids: IdFactory,
+    *,
+    name: str = "notes",
+    locator: str = "/data/notes",
+    policy: SourcePolicy | None = None,
+) -> Source:
+    return Source(
+        id=ids.source_id(),
+        name=name,
+        kind=SourceKind.FS,
+        locator=locator,
+        locator_fingerprint=Sha256Hex.of_text(locator),
+        policy=policy or SourcePolicy(),
+        created_at=T0,
+        updated_at=T0,
+    )
+
+
+def make_sync_state(source_id: SourceId, key: str = "a.md", **changes: Any) -> SyncState:
+    state = SyncState(
+        source_id=source_id,
+        source_key=SourceKey(key),
+        last_revision=None,
+        last_content_hash=None,
+        last_seen_at=T0,
+        status=SyncStatus.OK,
+    )
+    return replace(state, **changes) if changes else state
+
+
+def make_job(
+    ids: IdFactory,
+    source_id: SourceId,
+    *,
+    document_id: DocumentId | None = None,
+    kind: JobKind = JobKind.INGEST_DOC,
+    **changes: Any,
+) -> IngestionJob:
+    job = IngestionJob(
+        id=ids.job_id(),
+        kind=kind,
+        source_id=source_id,
+        document_id=document_id
+        if document_id is not None or kind is not JobKind.INGEST_DOC
+        else ids.document_id(),
+        available_at=T0,
+        created_at=T0,
+    )
+    return replace(job, **changes) if changes else job

@@ -1,5 +1,6 @@
 """Ports: Protocol contracts between the core and its adapters. No implementations."""
 
+from rag_engine.ports.cache import EmbeddingCache, StoredEmbedding
 from rag_engine.ports.chunker import Chunker
 from rag_engine.ports.clock import Clock
 from rag_engine.ports.embedding import EmbeddingProvider, Vectors
@@ -17,12 +18,14 @@ from rag_engine.ports.llm import (
 from rag_engine.ports.parser import ParseHints, Parser
 from rag_engine.ports.rerank import Candidate, RerankBudget, RerankedCandidate, Reranker
 from rag_engine.ports.source import (
+    ScanIssue,
+    ScanReport,
     SourceAdapter,
     SourceEntry,
     SourceIdentity,
     SourceRevision,
 )
-from rag_engine.ports.store import Store
+from rag_engine.ports.store import MetadataReader, MetadataWriter, Store, UnitOfWork
 from rag_engine.ports.tokens import TokenCounter
 from rag_engine.ports.vector import VectorIndex
 
@@ -31,6 +34,7 @@ __all__ = [
     "Chunker",
     "Clock",
     "Delta",
+    "EmbeddingCache",
     "EmbeddingProvider",
     "FinishReason",
     "GenerationParams",
@@ -39,19 +43,25 @@ __all__ = [
     "LLMProvider",
     "LexicalDocument",
     "LexicalIndex",
+    "MetadataReader",
+    "MetadataWriter",
     "ModelLimits",
     "ParseHints",
     "Parser",
     "RerankBudget",
     "RerankedCandidate",
     "Reranker",
+    "ScanIssue",
+    "ScanReport",
     "SourceAdapter",
     "SourceEntry",
     "SourceIdentity",
     "SourceRevision",
     "Store",
+    "StoredEmbedding",
     "TokenCounter",
     "TokenUsage",
+    "UnitOfWork",
     "VectorIndex",
     "Vectors",
 ]

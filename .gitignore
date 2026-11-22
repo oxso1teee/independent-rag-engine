@@ -19,6 +19,7 @@ data/
 *.db-wal
 *.db-shm
 *.sqlite*
+*.writer.lock
 models/
 eval_runs/
 

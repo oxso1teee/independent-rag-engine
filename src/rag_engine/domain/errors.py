@@ -50,6 +50,17 @@ def _thaw(value: ContextValue) -> object:
     return value
 
 
+def freeze_context(value: Mapping[str, ContextValue]) -> Mapping[str, ContextValue]:
+    """Deeply immutable copy of a context mapping (shared by models that carry payloads)."""
+    return _freeze_mapping(value)
+
+
+def thaw_context(value: Mapping[str, ContextValue]) -> dict[str, object]:
+    """Plain, JSON-friendly copy of a frozen context mapping."""
+    thawed = _thaw(value)
+    return thawed if isinstance(thawed, dict) else {}
+
+
 class ErrorCategory(StrEnum):
     USER = "user"
     CONFIG = "config"

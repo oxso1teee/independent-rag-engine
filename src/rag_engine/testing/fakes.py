@@ -15,7 +15,7 @@ from rag_engine.domain import (
     normalize_source_key,
     require,
 )
-from rag_engine.ports import SourceEntry, SourceIdentity, SourceRevision
+from rag_engine.ports import ScanReport, SourceEntry, SourceIdentity, SourceRevision
 
 _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 
@@ -71,12 +71,17 @@ class InMemorySource:
     def identity(self) -> SourceIdentity:
         return SourceIdentity(kind=SourceKind.INLINE, locator_fingerprint=None)
 
-    def discover(self, previous: Mapping[SourceKey, SourceRevision]) -> tuple[SourceEntry, ...]:
+    def scan(self, previous: Mapping[SourceKey, SourceRevision]) -> ScanReport:
         del previous  # every entry is reported; nothing is expensive to compute here
-        return tuple(
-            SourceEntry(key=key, revision=revision)
-            for key, (_, revision) in sorted(self._files.items())
+        return ScanReport(
+            entries=tuple(
+                SourceEntry(key=key, revision=revision)
+                for key, (_, revision) in sorted(self._files.items())
+            )
         )
+
+    def discover(self, previous: Mapping[SourceKey, SourceRevision]) -> tuple[SourceEntry, ...]:
+        return self.scan(previous).entries
 
     def open(self, key: SourceKey) -> BinaryIO:
         try:
