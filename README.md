@@ -27,6 +27,15 @@ generation, and reproducible evaluation.
 - Python `>=3.12,<3.14`
 - [uv](https://docs.astral.sh/uv/)
 
+## Supported documents
+
+Markdown, HTML and plain text work out of the box. Optional formats are separate extras:
+
+| Format | Extra | Notes |
+|---|---|---|
+| PDF | `uv sync --extra pdf` | text layer only; a scan without text is refused (`no_text_layer`) |
+| exact token counting | `uv sync --extra tokenizers` | counts with a local `tokenizer.json` |
+
 ## Quick start
 
 ```bash

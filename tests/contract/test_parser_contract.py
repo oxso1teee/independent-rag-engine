@@ -18,8 +18,10 @@ from rag_engine.domain import ErrorCode, ParsedDocument, RagError
 from rag_engine.domain.invariants import check_block_provenance
 from rag_engine.parsing.html import HtmlParser
 from rag_engine.parsing.md import MarkdownParser
+from rag_engine.parsing.pdf import PdfParser
 from rag_engine.parsing.txt import TxtParser
 from rag_engine.ports import ParseHints, ParseLimits, Parser
+from tests.pdf_builder import build_pdf
 
 CLEAN_FAILURES = {ErrorCode.E_PARSE_FAILED, ErrorCode.E_UNSUPPORTED_FORMAT}
 
@@ -55,6 +57,17 @@ CASES: dict[str, Case] = {
             "---\ntitle: T\n---\n\n# Заголовок\n\nТекст `код` и **выделение**.\n".encode(),
             b"| a | b |\n|---|---|\n| 1 | 2 |\n\n```\ncode\n```\n\n> quote\n",
             b"plain text without any markup",
+        ),
+    ),
+    "pdf": Case(
+        make=PdfParser,
+        mime="application/pdf",
+        extension="pdf",
+        samples=(
+            build_pdf([["A short line of text."]]),
+            build_pdf([["Первая страница.", "Вторая строка."], ["Страница два."]], title="Т"),
+            build_pdf([["Page one has text."], None, ["Page three has text too."]]),
+            build_pdf([["x" * 200]]),
         ),
     ),
     "txt": Case(

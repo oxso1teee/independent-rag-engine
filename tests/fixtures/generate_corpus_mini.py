@@ -7,8 +7,14 @@ files are reproducible: ``python tests/fixtures/generate_corpus_mini.py`` rewrit
 
 from __future__ import annotations
 
+import sys
+import textwrap
 from collections.abc import Sequence
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parents[2]))
+
+from tests.pdf_builder import build_pdf
 
 OUT = Path(__file__).parent / "corpus_mini"
 
@@ -175,6 +181,7 @@ def english(rnd: Lcg) -> None:
         ),
     )
     write("en_single_paragraph.txt", " ".join(sentences(rnd, "en", 60, 40)))
+    write("en_report.pdf", pdf_report(rnd, "en", "Backup report", 100))
     write(
         "en_config_reference.md",
         "# Configuration reference\n\n"
@@ -230,6 +237,7 @@ def russian(rnd: Lcg) -> None:
     )
     legacy = "\n\n".join(paragraphs(rnd, "ru", 1, 4, tag=n) for n in range(90, 94))
     write("ru_legacy_cp1251.txt", legacy.encode("cp1251"))
+    write("ru_report.pdf", pdf_report(rnd, "ru", "Отчёт по резервному копированию", 200))
 
 
 def mixed(rnd: Lcg) -> None:
@@ -255,6 +263,19 @@ def mixed(rnd: Lcg) -> None:
         "empty_headings.md",
         "# One\n\n## Two\n\n### Three\n\n#### Four\n\nOnly the last heading has text.\n\n## Five\n",
     )
+
+
+def pdf_report(rnd: Lcg, lang: str, title: str, tag: int) -> bytes:
+    """Five pages with a running title and page numbers around two wrapped paragraphs."""
+    pages = []
+    for number in range(1, 6):
+        lines = [f"{title} {number}"]
+        for part in range(2):
+            text = " ".join(sentences(rnd, lang, 4, tag + number * 10 + part))
+            lines.extend(textwrap.wrap(text, width=72))
+        lines.append(f"{'Page' if lang == 'en' else 'Стр.'} {number}")
+        pages.append(lines)
+    return build_pdf(pages, title=title)
 
 
 def main() -> None:
