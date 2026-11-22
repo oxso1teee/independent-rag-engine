@@ -15,6 +15,10 @@ project until a release is cut.
   `normalized_text`, block offsets and heading paths together.
 - Plain-text parser (declared or detected encoding, blank-line paragraphs, empty documents) and a
   shared `Parser` contract suite.
+- Markdown parser: headings (ATX and setext), paragraphs, nested list items, quotes, fenced and
+  indented code, tables, raw HTML blocks reduced to text, front-matter metadata (title, author,
+  date) read without a YAML library; entities decoded once. Dependencies: `markdown-it-py`,
+  `selectolax`.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
