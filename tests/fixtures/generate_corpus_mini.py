@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[2]))
 
+from tests.docx_builder import build_docx
 from tests.pdf_builder import build_pdf
 
 OUT = Path(__file__).parent / "corpus_mini"
@@ -181,6 +182,7 @@ def english(rnd: Lcg) -> None:
         ),
     )
     write("en_single_paragraph.txt", " ".join(sentences(rnd, "en", 60, 40)))
+    write("en_handbook.docx", docx_handbook(rnd, "en", 300))
     write("en_report.pdf", pdf_report(rnd, "en", "Backup report", 100))
     write(
         "en_config_reference.md",
@@ -237,6 +239,7 @@ def russian(rnd: Lcg) -> None:
     )
     legacy = "\n\n".join(paragraphs(rnd, "ru", 1, 4, tag=n) for n in range(90, 94))
     write("ru_legacy_cp1251.txt", legacy.encode("cp1251"))
+    write("ru_handbook.docx", docx_handbook(rnd, "ru", 400))
     write("ru_report.pdf", pdf_report(rnd, "ru", "Отчёт по резервному копированию", 200))
 
 
@@ -276,6 +279,37 @@ def pdf_report(rnd: Lcg, lang: str, title: str, tag: int) -> bytes:
         lines.append(f"{'Page' if lang == 'en' else 'Стр.'} {number}")
         pages.append(lines)
     return build_pdf(pages, title=title)
+
+
+def docx_handbook(rnd: Lcg, lang: str, tag: int) -> bytes:
+    """A handbook with a title, two levels of headings, a list, a table and a code sample."""
+    ru = lang == "ru"
+    names = ("Параметр", "Значение") if ru else ("Setting", "Value")
+    rows = [list(names)] + [[f"option_{i}", str(i * 10)] for i in range(1, 7)]
+
+    def paragraph(n: int) -> tuple[str, str]:
+        return ("p", " ".join(sentences(rnd, lang, 4, tag + n)))
+
+    return build_docx(
+        [
+            ("title", "Руководство по эксплуатации" if ru else "Operations handbook"),
+            paragraph(1),
+            ("h1", "Установка" if ru else "Installation"),
+            paragraph(2),
+            ("li", "Остановите запись." if ru else "Stop the writers."),
+            ("li", "Скопируйте снимок." if ru else "Copy the snapshot."),
+            ("li2", "Проверьте сумму." if ru else "Verify the checksum."),
+            ("h2", "Параметры" if ru else "Settings"),
+            ("table", rows),
+            paragraph(3),
+            ("h1", "Восстановление" if ru else "Recovery"),
+            paragraph(4),
+            ("quote", "Сначала проверьте копию." if ru else "Check the copy first."),
+            ("code", "restore --from latest\nverify --all"),
+        ],
+        title="Руководство" if ru else "Handbook",
+        author="Команда" if ru else "The team",
+    )
 
 
 def main() -> None:

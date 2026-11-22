@@ -63,6 +63,13 @@ project until a release is cut.
   (`encrypted`), scans (`no_text_layer`), damaged files, page, text and block limits and a time
   limit end as `E_PARSE_FAILED` with a reason. Source cleaners run on the original lines. A
   test helper builds PDFs without fixtures or network; two PDF reports join `corpus_mini`.
+- DOCX parser (optional extra `docx`, `python-docx`): headings (a Title puts the Heading styles
+  one level below it), paragraphs, nested list items, quotes and code from styles, tables as
+  rows of cells, tracked insertions kept and deletions and text boxes left out, title, author and
+  date from the file. The archive is checked first (entries, uncompressed size, compression
+  ratio); password-protected files and damaged archives end as `E_PARSE_FAILED` with a reason.
+  Test builders create DOCX files; two handbooks join `corpus_mini` (byte-identical on
+  regeneration).
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,

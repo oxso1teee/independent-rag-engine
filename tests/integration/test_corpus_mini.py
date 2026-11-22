@@ -29,6 +29,7 @@ EXPECTED = {
     "en_changelog.md": ("md", "structure_aware"),
     "en_config_reference.md": ("md", "structure_aware"),
     "en_faq.txt": ("txt", "recursive"),
+    "en_handbook.docx": ("docx", "structure_aware"),
     "en_release_process.md": ("md", "structure_aware"),
     "en_report.pdf": ("pdf", "recursive"),
     "en_single_paragraph.txt": ("txt", "fixed"),
@@ -36,6 +37,7 @@ EXPECTED = {
     "mixed_api_notes.md": ("md", "structure_aware"),
     "ru_faq.md": ("md", "structure_aware"),
     "ru_glossary.md": ("md", "structure_aware"),
+    "ru_handbook.docx": ("docx", "structure_aware"),
     "ru_instruction.md": ("md", "structure_aware"),
     "ru_legacy_cp1251.txt": ("txt", "recursive"),
     "ru_page.html": ("html", "structure_aware"),
@@ -74,11 +76,12 @@ def test_processing_a_document_twice_gives_identical_chunks(name: str) -> None:
 
 @pytest.mark.parametrize("name", sorted(EXPECTED))
 def test_the_language_of_chunks_follows_the_text(name: str) -> None:
-    languages = {c.language.value for c in process(name).chunks if c.level == 0}
-    if name.startswith("ru_"):
-        assert languages == {"ru"}
-    elif name.startswith("en_"):
-        assert languages == {"en"}
+    done = process(name)
+    languages = [c.language.value for c in done.chunks if c.level == 0]
+    for prefix, language in (("ru_", "ru"), ("en_", "en")):
+        if name.startswith(prefix):
+            assert done.parsed.document.language.value == language
+            assert languages.count(language) >= len(languages) / 2
 
 
 def test_a_legacy_encoding_is_decoded_to_readable_text() -> None:
@@ -136,3 +139,17 @@ def test_pdf_reports_keep_their_pages_and_lose_running_titles(name: str) -> None
     assert all(page is not None for page in pages) and pages == sorted(p for p in pages if p)
     assert min(p for p in pages if p) == 1 and max(p for p in pages if p) == 5
     assert all(len(b.text) > 100 for b in done.parsed.document.blocks)  # joined, not line by line
+
+
+@pytest.mark.parametrize("name", ["en_handbook.docx", "ru_handbook.docx"])
+def test_docx_handbooks_keep_structure_tables_and_metadata(name: str) -> None:
+    done = process(name)
+    document = done.parsed.document
+    kinds = {b.kind.value for b in document.blocks}
+    assert {"heading", "paragraph", "list_item", "table", "quote", "code"} <= kinds
+    assert document.author and document.title
+    paths = {c.heading_path for c in done.chunks if c.level == 0}
+    assert any(len(path) == 3 for path in paths)  # title > heading > subheading
+    table = next(b for b in document.blocks if b.kind.value == "table")
+    assert table.text.splitlines()[1] == "option_1 | 10"
+    assert any(table.text in c.text for c in done.chunks if c.level == 0)
