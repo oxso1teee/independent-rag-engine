@@ -7,17 +7,19 @@ adapters are injected at a single composition root.
 ## Layers and the dependency rule
 
 ```
-cli                                  application entry points (thin)
-testing | observability | config     adapters and cross-cutting services
-ports                                Protocol contracts
-domain                               identifiers, models, invariants, errors
+cli                                                       application entry points (thin)
+ingestion                                                 use cases of the ingestion pipeline
+storage | system | testing | observability | config       adapters and cross-cutting services
+ports                                                     Protocol contracts
+domain                                                    identifiers, models, invariants, errors
 ```
 
 A layer may import only from layers below it; layers on the same row are independent.
-Future pipeline modules (ingestion, parsing, chunking, embedding, storage, retrieval,
-rerank, context, generation, orchestrator, evaluation) will sit between `ports` and the
-entry points, depend on `domain` and `ports` only, and receive collaborators through their
-constructors.
+`ingestion` additionally may not import `storage`, `system`, `sqlite3`, `structlog`,
+`pydantic` or the CLI framework: it receives its store, clock and adapters through
+constructors and sees them only as ports. Later pipeline modules (parsing, chunking,
+embedding, retrieval, rerank, context, generation, orchestrator, evaluation) follow the
+same rule. `cli` is the composition root.
 
 The rules are executable: [`.importlinter`](../.importlinter) declares them and CI runs
 `lint-imports`. They also forbid the domain from touching I/O or third-party libraries,
@@ -66,12 +68,13 @@ text, prompts or secrets. Violated domain invariants raise `E_INTEGRITY`.
 
 ## Ports
 
-`SourceAdapter`, `Parser`, `Chunker`, `EmbeddingProvider`, `Store`, `VectorIndex`,
-`LexicalIndex`, `Reranker`, `LLMProvider`, `TokenCounter` and `Clock` are runtime-checkable
-protocols with no behaviour. Network-bound providers (`EmbeddingProvider`, `LLMProvider`)
+`SourceAdapter`, `Parser`, `Chunker`, `EmbeddingProvider`, `Store` (with `MetadataReader`,
+`MetadataWriter` and `UnitOfWork`), `EmbeddingCache`, `VectorIndex`, `LexicalIndex`,
+`Reranker`, `LLMProvider`, `TokenCounter` and `Clock` are runtime-checkable protocols with
+no behaviour. Network-bound providers (`EmbeddingProvider`, `LLMProvider`)
 are `async`; CPU- and SQLite-bound ports are synchronous and are called from worker
 threads by the services that use them ([ADR 0003](adr/0003-async-provider-ports.md)).
-The store boundaries planned for Phase 2 are in [ADR 0004](adr/0004-store-boundaries-for-phase-2.md).
+The store boundaries are in [ADR 0004](adr/0004-store-boundaries-for-phase-2.md).
 
 ## Configuration
 
@@ -104,3 +107,88 @@ logging it.
 character trigrams: deterministic, meaningful lexical similarity, no model), `ScriptedLLM`
 (replays scripted replies and failures and records calls), `FakeClock`, and
 `InMemorySource`. Each is verified by the contract test of its port.
+
+## Storage (`rag_engine.storage`)
+
+SQLite is the system of record ([data model](DATA_MODEL.md)).
+
+- **Connections.** One connection per reading thread (`query_only`, never blocked by a
+  writer thanks to WAL) and one writer connection. WAL mode is required: the store refuses
+  to open where it is unavailable (`E_RESOURCE_GATE`), as it does for SQLite older than 3.35.
+  `busy_timeout` is 5 s; every connection is closed by `SqliteStore.close()`.
+- **Single writer.** A unit of work first takes an exclusive `flock` on
+  `<database>.writer.lock` and then runs `BEGIN IMMEDIATE`. A second writer, in this or
+  another process, gets `E_STORE_LOCKED` (retryable); `writer_timeout_s` lets a caller wait
+  instead. The operating system releases the lock when the holder dies.
+- **Unit of work.** `Store.unit_of_work().begin()` yields the only object that can change
+  data. It commits on normal exit and rolls back on any exception; nesting is refused. The
+  store never reads the clock: timestamps are passed in.
+- **Migrations.** Numbered SQL files in `storage/migrations/`, applied in order, each in its
+  own transaction together with its `schema_migrations` row (version, name, SHA-256 checksum,
+  time). Applied migrations are re-verified on every start: a changed script is
+  `E_INTEGRITY`, a database from a newer engine is `E_MIGRATION_REQUIRED`, a failing script is
+  rolled back and named in the error.
+- **Read-only open.** `open_store_read_only` never migrates, creates files or takes the writer
+  lock; `--dry-run` uses it.
+- **Backup.** `backup_database` runs `VACUUM INTO` a temporary file, verifies
+  `integrity_check` and per-table row counts, and only then moves it into place.
+
+## Ingestion (`rag_engine.ingestion`)
+
+One scan, `IngestService.run(source)`:
+
+1. `FilesystemSource.scan` lists the files below the root: sorted, NFC keys, include/exclude
+   globs, symlinks skipped unless the policy follows them (and then only inside the root),
+   oversized files skipped, unreadable directories reported as unreadable *subtrees*.
+2. `ChangeDetector` compares each entry with its `SyncState`. If `(size, mtime)` equals the
+   stored signal the file is not read; otherwise it is hashed (SHA-256) and its MIME type
+   detected from the content. Result per entry: `unchanged`, `new`, `modified`, `deleted` or
+   `inaccessible`.
+3. Moves are recognised when exactly one vanished and one new entry share a content hash
+   that no other document holds; the `DocumentId` is kept. Anything ambiguous stays separate.
+4. The mass-delete guard runs on the vanished set (below).
+5. If anything changed, one unit of work writes documents, sync states, tombstones and the
+   `ingest_doc` jobs together. If nothing changed, no transaction is opened.
+6. Tombstones older than the source's grace period are garbage-collected.
+
+Parsing, chunking and embedding are later phases; the queued jobs wait for them.
+
+**Identity.** A document is `(source, key)`; its `DocumentId` never changes while the key
+exists. A source's root is part of its identity: registering the same name with another root
+is `E_SOURCE_LOCATOR_CHANGED`, and the only way to move a source is `rag source rebase`
+(previewable with `--dry-run`), which keeps ids for keys that still exist and for unique
+content matches.
+
+**Mass-delete protection.** Nothing is changed, and `E_MASS_DELETE_GUARD` is raised, when a
+scan finds no documents at all while some are tracked, or when at least two tracked
+documents (more than 20 %) vanished at once. An unreadable directory never produces
+deletions, and a missing root is `E_SOURCE_NOT_FOUND`. `--allow-mass-delete` overrides the
+guard. Deletions are tombstones (`missing`): reversible while the grace period
+(`delete_grace_days`, default 30) runs; a reappearing file returns with the same id.
+
+**Job queue.** `JobQueue`/`Worker` over the `jobs` table: idempotent enqueue, lease with
+heartbeat, retry with exponential backoff (30 s, 60 s, ... capped at 1 h), at most 5 attempts,
+then `dead`. Non-retryable errors go `dead` immediately, so a poison file never blocks the
+queue. Expired leases are recovered on every claim; a worker that lost its lease is fenced
+off by the attempt number.
+
+### Assumed parameters
+
+The specification documents available to this repository state only the 20 % threshold.
+These values are therefore assumptions, kept as named constants and covered by tests:
+
+| Parameter | Value | Where |
+|---|---|---|
+| Mass-delete ratio / minimum count | > 20 % and ≥ 2 documents | `ingestion/lifecycle.py` |
+| Grace period | 30 days (per source) | `SourcePolicy.delete_grace_days` |
+| Maximum file size | 50 MiB (per source) | `SourcePolicy.max_file_bytes` |
+| Job attempts / backoff / lease | 5 / 30 s × 2, cap 1 h / 300 s | `ingestion/jobs.py` `RetryPolicy` |
+| Index state placeholders | `none` until schema v2 | `storage/sqlite/store.py` |
+
+## Command line
+
+`rag source add|list|rebase`, `rag ingest [--dry-run]`, `rag status`; `--json` prints one JSON
+document. Commands contain no logic: they call services obtained from the injected
+`Container`. Exit codes are listed in `cli/exit_codes.py` (`3` configuration, `4` source not
+found, `5` root changed, `6` mass-delete guard, `7` store locked, `8` migration required,
+`9` integrity, `10` resource, `11` unsupported format; `2` usage; `1` unexpected).

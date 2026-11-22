@@ -1,7 +1,6 @@
 # 0004. Store boundaries and the domain additions needed for Phase 2
 
-Status: Proposed (2026-11-22). Nothing in this record is implemented yet; it defines the
-exact scope of the first Phase 2 tasks.
+Status: Accepted (2026-11-22). Implemented in Phase 2 with the amendments listed at the end.
 
 ## Context
 
@@ -109,3 +108,45 @@ inside one atomic unit of work*.
 - `ports` still imports only `domain`; moving `SourceRevision` into `domain` keeps domain
   models independent of ports.
 - The write surface is a single, auditable interface; readers cannot mutate state.
+
+## Amendments made during implementation
+
+The decision above was checked against the architecture and data-model invariants (single
+writer, atomic units of work, deterministic identifiers, no infrastructure in the domain,
+no numpy in the domain) and holds. Implementing it required these additions, each of
+which only fills a gap and changes no decision:
+
+- **Scope of the first adapter.** Schema v1 has no chunk or embedding tables (they arrive
+  with schema v2). The chunk operations (`get_chunks`, `list_chunks`, `put_chunks`,
+  `delete_chunks`) and the embedding-model operations (`get/list/put_embedding_model`,
+  `set_active_embedding_model`) are therefore **not** on the Phase 2 ports; they are added
+  with their tables. The `EmbeddingCache` port and `StoredEmbedding` exist now so that its
+  shape is fixed, but have no adapter yet. `check_single_active_model` is implemented in
+  `domain/invariants.py` and unit-tested. No in-memory store double was added: contract
+  tests run against SQLite, the only adapter.
+- **`DocumentStatus.PENDING`.** A document is created when its source entry is first seen,
+  before any version exists, but an `active` document requires a version. `pending` means
+  "discovered, not yet ingested" and requires `current_version_id is None`.
+- **`IngestionJob.available_at`.** Retry with backoff needs a "not before" time. `failed`
+  means "last attempt failed, waits until `available_at`"; `queued` and `failed` jobs are
+  claimable once `available_at <= now`. `fail_job(..., retry_at | None)` sets it; `None`
+  makes the job `dead`.
+- **Lease fencing.** `heartbeat_job`, `complete_job` and `fail_job` take the `attempt`
+  number returned when the job was leased and return `False` when the caller no longer
+  holds the lease (it expired and the job was re-leased), so a stale worker cannot touch a
+  job another worker now owns. `release_expired_leases(now, max_attempts)` re-queues
+  expired leases and declares a job `dead` once `max_attempts` is reached.
+- **Idempotent enqueue.** At most one active (`queued`, `leased`, `failed`) job exists per
+  `(kind, source, document)`; `enqueue_job` returns the existing one. A partial unique
+  index enforces it.
+- **`delete_document`.** Garbage collection of tombstones physically removes a document with
+  its versions, sync state and jobs.
+- **`ScanReport` and `SourceAdapter.scan`.** A scan must say which parts of a source could
+  not be read, otherwise an unreadable directory looks like deleted content. `scan(previous)`
+  returns the entries plus `unreadable` and `skipped` issues; `discover` stays and equals
+  `scan(...).entries`.
+- **Exceptions.** `StoreNotInitialised` (code `E_SOURCE_NOT_FOUND`) is raised when a database
+  is opened read-only before it exists, so read-only commands can report an empty state
+  without creating a file.
+- **Writer lock file.** `<database>.writer.lock`, an exclusive `flock`; released by the
+  operating system when the holder dies.

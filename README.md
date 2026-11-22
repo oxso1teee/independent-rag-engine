@@ -3,9 +3,11 @@
 Modular, local-first RAG engine for reliable knowledge retrieval, evidence-grounded
 generation, and reproducible evaluation.
 
-> **Status: early development.** The repository currently contains the core foundation
-> (domain model, error taxonomy, ports, configuration, logging, test doubles, CI).
-> Ingestion, retrieval and generation are built on top of it in later phases.
+> **Status: early development.** The repository contains the core foundation (domain model,
+> error taxonomy, ports, configuration, logging, test doubles, CI) and document
+> ingestion: a SQLite store, source discovery, change detection, safe deletion and a
+> persistent job queue, driven by the `rag` command. Parsing, chunking, embeddings,
+> retrieval and generation are built on top in later phases.
 
 ## Design goals
 
@@ -35,6 +37,16 @@ uv run rag --version
 make check          # lint, types, architecture, tests
 ```
 
+Register a folder and see what ingestion finds (nothing is parsed yet; documents that need
+processing are queued):
+
+```bash
+uv run rag source add notes ~/Documents/notes
+uv run rag ingest --dry-run
+uv run rag ingest
+uv run rag status
+```
+
 The installed environment (including development tools) is about 190 MB; the runtime
 dependencies alone take about 60 MB.
 
@@ -45,18 +57,24 @@ src/rag_engine/
   domain/          identifiers, models, invariants, error taxonomy   (pure, no I/O)
   ports/           Protocol contracts: sources, parsing, chunking, embeddings, storage,
                    indexes, reranking, LLM, tokens, clock
+  ingestion/       filesystem source, change detection, identity, lifecycle, job queue, MIME
+  storage/         SQLite store (WAL, single writer, unit of work) and SQL migrations
+  system/          real clock and identifier entropy
   config/          validated settings and resource profiles
   observability/   structured logging, request correlation, timing
   testing/         deterministic fakes (embedder, LLM, clock, in-memory source)
-  cli/             the `rag` command
-tests/             unit, contract and architecture tests
+  cli/             the `rag` command and its composition root
+tests/             unit, contract, architecture, integration, e2e and performance tests
 docs/              architecture and development notes
 ```
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Data model](docs/DATA_MODEL.md)
 - [Development guide](docs/DEVELOPMENT.md)
+- [Testing](docs/TESTING.md)
+- [Changelog](CHANGELOG.md)
 - [Architecture decision records](docs/adr/README.md)
 
 ## Configuration
