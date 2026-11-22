@@ -83,6 +83,16 @@ persistence of chunks.
     is chosen; when a group shrinks to one document its link is cleared. The resolver runs
     after ingestion changes were applied and only when something changed. Duplicates are
     marked here and excluded from indexing by the commit that stores versions.
+14. **The chunk hierarchy has no module of its own.** Grouping blocks into sections and choosing
+    parents is part of the structure-aware chunker (`chunking/structure.py`): it decides the
+    leaves and the parent of each group together, and the other strategies have no parents.
+    `chunking/assemble.py` builds chunks for every strategy (ids, language, pages, duplicate
+    marking); a separate hierarchy module would only split one decision across two files.
+15. **The chunk-size grid is a script, not a notebook.** `eval/scripts/chunk_grid.py` runs from
+    the command line, prints Markdown or JSON, is deterministic, and is linted, type-checked and
+    tested with the rest of the code, which a notebook would not be. It reports the shape of the
+    chunks at several target sizes and ranks nothing: choosing a size needs retrieval quality
+    measurements.
 
 ## Consequences
 
