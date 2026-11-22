@@ -88,6 +88,9 @@ project until a release is cut.
 - Performance budgets (`make perf`): token counting, parsing and chunking of 1 MB Markdown, HTML
   and text, a 100-page PDF, a 2000-paragraph DOCX, the isolated worker and peak memory, with
   three measured runs recorded in `docs/TESTING.md`.
+- `eval/scripts/chunk_grid.py`: reports how a corpus is chunked at target sizes 192, 256 and 384
+  tokens (chunk and section counts, token distribution, small and near-limit shares, overlap,
+  duplicates, time) as Markdown or JSON. It describes shapes only and ranks nothing.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,

@@ -56,6 +56,7 @@ uv run rag ingest --dry-run
 uv run rag ingest
 uv run rag status
 uv run rag chunks ~/Documents/notes/guide.md
+uv run python eval/scripts/chunk_grid.py   # chunk shapes at 192/256/384 tokens; ranks nothing
 ```
 
 The installed environment (including development tools) is about 190 MB; the runtime
