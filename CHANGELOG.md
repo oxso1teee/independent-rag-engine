@@ -36,6 +36,10 @@ project until a release is cut.
   repeated leaf text as a non-indexed duplicate.
 - `fixed` and `recursive` chunkers with a shared `Chunker` contract suite (bounds, coverage,
   provenance, determinism, overlap, duplicates, random documents).
+- `structure_aware` chunker: sections cut at headings, tiny sections merged while they fit the
+  target, headings without text joined to the section they introduce, a parent chunk (level 1)
+  for every heading-led group with two or more leaves; the heading belongs to the parent, or to
+  the leaf when the group has one leaf. Shares the `Chunker` contract suite.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
