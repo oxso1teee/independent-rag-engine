@@ -107,3 +107,18 @@ def check_sync_state_matches_document(document: Document, state: SyncState) -> N
         (state.status is SyncStatus.MISSING) == (document.status is DocumentStatus.MISSING),
         "sync state and document disagree about a missing entry",
     )
+
+
+def check_version_transition(old: Document | None, new: Document) -> None:
+    """A document gets its first version once and never loses its current version.
+
+    ``None -> version`` is the first successful commit; ``version -> other version`` is an
+    update; ``version -> None`` would make an indexed document vanish from retrieval.
+    """
+    if old is None:
+        return
+    require(old.id == new.id, "the transition concerns two different documents")
+    require(
+        old.current_version_id is None or new.current_version_id is not None,
+        "a document cannot lose its current version",
+    )

@@ -127,9 +127,10 @@ def test_ingest_status_and_rescan(cli: Cli, docs: Path) -> None:
     assert code == 0
     assert payload["jobs"] == {"queued": 10}
     (source,) = payload["sources"]
-    assert source["documents"] == {"pending": 10} and source["sync"] == {"changed": 10}
+    assert source["documents"] == {"active": 10} and source["sync"] == {"changed": 10}
+    assert source["awaiting_first_ingest"] == 10
     code, out, _ = cli.run("status")
-    assert "jobs: 10 queued" in out and "notes: 10 pending" in out
+    assert "jobs: 10 queued" in out and "notes: 10 active (10 awaiting first ingestion)" in out
 
     code, out, _ = cli.run("ingest")
     assert code == 0 and "10 unchanged" in out and "0 job(s) queued" in out

@@ -131,6 +131,7 @@ def version_from_row(row: sqlite3.Row) -> DocumentVersion:
         chunker_fingerprint=row["chunker_fingerprint"],
         text_purged=bool(row["text_purged"]),
         parse_warnings=tuple(json.loads(row["parse_warnings_json"])),
+        normalized_text=row["normalized_text"],
         created_at=parse_ts(row["created_at"]),
     )
 

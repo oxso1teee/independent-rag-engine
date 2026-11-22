@@ -50,7 +50,7 @@ def add_document(store: SqliteStore, ids: IdFactory, source_id: SourceId, key: s
         source_id=source_id,
         source_key=SourceKey(key),
         current_version_id=None,
-        status=DocumentStatus.PENDING,
+        status=DocumentStatus.ACTIVE,
         created_at=T0,
         updated_at=T0,
     )

@@ -72,7 +72,8 @@ def test_first_scan_finds_new_documents_and_plans_one_job_each(workspace: Worksp
     reader = workspace.store.reader()
     documents = reader.list_documents(workspace.source.id)
     assert [d.source_key.value for d in documents] == ["a.md", "b/c.txt"]
-    assert {d.status for d in documents} == {DocumentStatus.PENDING}
+    assert {d.status for d in documents} == {DocumentStatus.ACTIVE}
+    assert all(d.current_version_id is None and not d.is_searchable for d in documents)
     states = reader.list_sync_states(workspace.source.id)
     assert {s.status for s in states} == {SyncStatus.CHANGED}
     assert all(s.last_content_hash is not None and s.last_revision is not None for s in states)
@@ -248,7 +249,8 @@ def test_reappearing_file_within_the_grace_period_returns_with_the_same_id(
     back = reader.get_document_by_key(workspace.source.id, SourceKey("3.md"))
     assert back is not None
     assert back.id == original.id
-    assert back.status is DocumentStatus.PENDING and back.missing_since is None
+    assert back.status is DocumentStatus.ACTIVE and back.missing_since is None
+    assert back.current_version_id is None
     state = reader.get_sync_state(workspace.source.id, SourceKey("3.md"))
     assert state is not None and state.status is SyncStatus.CHANGED
     assert len(reader.list_jobs(JobStatus.QUEUED)) == 10

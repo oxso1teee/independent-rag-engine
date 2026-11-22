@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import sqlite3
 import threading
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from types import TracebackType
@@ -13,6 +14,7 @@ from types import TracebackType
 from rag_engine.domain import ErrorCode, IndexMetadata, RagError
 from rag_engine.ports import Clock, MetadataReader, MetadataWriter, UnitOfWork
 from rag_engine.storage.migrations import Migration, Migrator, load_packaged_migrations
+from rag_engine.storage.sqlite.backup import backup_database
 from rag_engine.storage.sqlite.connection import WriterLock, connect, enable_wal
 from rag_engine.storage.sqlite.repository import SqliteReader, SqliteWriter, translate
 
@@ -159,7 +161,7 @@ def open_store(
                     # metadata about private documents: owner-only; SQLite gives -wal/-shm the
                     # same mode as the database file
                     path.chmod(0o600)
-                migrator.apply(conn, clock.now())
+                migrator.apply(conn, clock.now(), _backup_hook(path))
             except sqlite3.Error as exc:
                 raise translate(exc) from exc
         finally:
@@ -201,11 +203,38 @@ def open_store_read_only(
     return store
 
 
+def backup_path(database: Path, from_version: int, to_version: int) -> Path:
+    """A free name for the pre-migration backup, built from the real schema versions."""
+    base = database.name + f".pre-migration-v{from_version}-to-v{to_version}"
+    candidate = database.with_name(base + ".bak")
+    counter = 1
+    while candidate.exists():
+        counter += 1
+        candidate = database.with_name(f"{base}.{counter}.bak")
+    return candidate
+
+
+def _backup_hook(database: Path) -> Callable[[int, int], None]:
+    def hook(from_version: int, to_version: int) -> None:
+        backup_database(database, backup_path(database, from_version, to_version))
+
+    return hook
+
+
 def _ensure_index_state(store: SqliteStore, now: datetime, schema_version: int) -> None:
-    if store.reader().get_index_metadata() is not None:
+    """Create the singleton row, and keep its schema version equal to the migration history.
+
+    The version is never edited by migration scripts: the migration runner owns it, and this
+    function mirrors it into ``index_state`` once migrations have been applied.
+    """
+    current = store.reader().get_index_metadata()
+    if current is not None and current.schema_version == schema_version:
         return
     with store.unit_of_work().begin() as writer:
-        if writer.get_index_metadata() is None:
+        existing = writer.get_index_metadata()
+        if existing is not None:
+            writer.update_index_metadata(replace(existing, schema_version=schema_version))
+        else:
             writer.update_index_metadata(
                 IndexMetadata(
                     schema_version=schema_version,

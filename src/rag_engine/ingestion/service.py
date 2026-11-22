@@ -224,17 +224,12 @@ class IngestService:
                 source_id=source.id,
                 source_key=change.key,
                 current_version_id=None,
-                status=DocumentStatus.FAILED if unsupported else DocumentStatus.PENDING,
+                status=DocumentStatus.FAILED if unsupported else DocumentStatus.ACTIVE,
                 created_at=now,
                 updated_at=now,
             )
         else:
-            if unsupported:
-                status = DocumentStatus.FAILED
-            elif document.current_version_id is not None:
-                status = DocumentStatus.ACTIVE
-            else:
-                status = DocumentStatus.PENDING
+            status = DocumentStatus.FAILED if unsupported else DocumentStatus.ACTIVE
             document = replace(document, status=status, missing_since=None, updated_at=now)
         writer.put_document(document)
         writer.put_sync_state(
@@ -365,6 +360,7 @@ class SourceStatus:
     name: str
     locator: str | None
     documents: dict[str, int]
+    awaiting_first_ingest: int  # active documents without a committed version yet
     sync: dict[str, int]
 
 
@@ -385,6 +381,7 @@ class StoreStatus:
                     "name": s.name,
                     "locator": s.locator,
                     "documents": s.documents,
+                    "awaiting_first_ingest": s.awaiting_first_ingest,
                     "sync": s.sync,
                 }
                 for s in self.sources
@@ -405,7 +402,13 @@ def collect_status(reader: MetadataReader) -> StoreStatus:
         for state in reader.list_sync_states(source.id):
             sync[state.status.value] = sync.get(state.status.value, 0) + 1
         sources.append(
-            SourceStatus(source.name, source.locator, documents, dict(sorted(sync.items())))
+            SourceStatus(
+                source.name,
+                source.locator,
+                documents,
+                reader.count_documents(source.id, DocumentStatus.ACTIVE, has_version=False),
+                dict(sorted(sync.items())),
+            )
         )
     metadata = reader.get_index_metadata()
     jobs = {status.value: n for status, n in sorted(reader.count_jobs().items())}

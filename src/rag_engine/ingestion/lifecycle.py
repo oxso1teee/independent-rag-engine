@@ -84,12 +84,7 @@ def tombstone(writer: MetadataWriter, document: Document, now: datetime) -> None
 
 def restore(document: Document, now: datetime) -> Document:
     """The document after its entry reappeared within the grace period."""
-    status = (
-        DocumentStatus.ACTIVE
-        if document.current_version_id is not None
-        else (DocumentStatus.PENDING)
-    )
-    return replace(document, status=status, missing_since=None, updated_at=now)
+    return replace(document, status=DocumentStatus.ACTIVE, missing_since=None, updated_at=now)
 
 
 class Lifecycle:

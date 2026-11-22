@@ -8,8 +8,6 @@ from pathlib import Path
 from rag_engine.domain import ErrorCode, RagError
 from rag_engine.storage.sqlite.connection import connect
 
-_TABLES = ("sources", "documents", "versions", "sync_state", "jobs", "index_state")
-
 
 def backup_database(source: Path, destination: Path) -> Path:
     """Copy ``source`` into a new, compact database file and verify the copy.
@@ -52,6 +50,7 @@ def backup_database(source: Path, destination: Path) -> Path:
         raise
     finally:
         origin.close()
+    partial.chmod(0o600)
     partial.replace(destination)
     return destination
 
@@ -62,7 +61,14 @@ def _verify(origin: sqlite3.Connection, copy_path: Path) -> None:
         verdict = copy.execute("PRAGMA integrity_check").fetchall()
         if [row[0] for row in verdict] != ["ok"]:
             raise RagError(ErrorCode.E_INTEGRITY, "the backup failed its integrity check")
-        for table in _TABLES:
+        tables = [
+            row[0]
+            for row in origin.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+                " ORDER BY name"
+            )
+        ]
+        for table in tables:
             expected = origin.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]  # noqa: S608
             actual = copy.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]  # noqa: S608
             if expected != actual:

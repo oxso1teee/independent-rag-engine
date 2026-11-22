@@ -9,6 +9,7 @@ import pytest
 
 from rag_engine.domain import (
     ContentHash,
+    Document,
     DocumentStatus,
     ErrorCode,
     IdFactory,
@@ -27,6 +28,7 @@ from rag_engine.domain.invariants import (
     check_generation_monotonic,
     check_single_active_model,
     check_sync_state_matches_document,
+    check_version_transition,
 )
 from rag_engine.domain.models import EmbeddingModel
 from tests.factories import T0, amend, make_document, make_job, make_sync_state
@@ -164,23 +166,38 @@ class TestIndexMetadata:
         raises_integrity(lambda: check_generation_monotonic(old, self.make(index_generation=2)))
 
 
-class TestDocumentStatusPending:
-    def test_pending_document_has_no_version(self, ids: IdFactory) -> None:
-        pending = make_document(
+class TestDocumentWithoutVersion:
+    def awaiting(self, ids: IdFactory) -> Document:
+        return make_document(
             document_id=ids.document_id(),
             source_id=ids.source_id(),
             version_id=None,
-            status=DocumentStatus.PENDING,
+            status=DocumentStatus.ACTIVE,
         )
-        assert pending.current_version_id is None
-        raises_integrity(
-            lambda: make_document(
-                document_id=ids.document_id(),
-                source_id=ids.source_id(),
-                version_id=ids.document_version_id(),
-                status=DocumentStatus.PENDING,
-            )
-        )
+
+    def test_active_without_a_version_is_valid_but_not_searchable(self, ids: IdFactory) -> None:
+        document = self.awaiting(ids)
+        assert document.current_version_id is None
+        assert not document.is_searchable
+        with_version = amend(document, current_version_id=ids.document_version_id())
+        assert with_version.is_searchable
+        for status in (DocumentStatus.FAILED, DocumentStatus.DELETED):
+            assert not amend(with_version, status=status).is_searchable
+
+    def test_first_commit_moves_null_to_a_version(self, ids: IdFactory) -> None:
+        before = self.awaiting(ids)
+        after = amend(before, current_version_id=ids.document_version_id())
+        check_version_transition(None, before)  # first discovery
+        check_version_transition(before, before)  # still waiting
+        check_version_transition(before, after)  # first successful commit
+        newer = amend(after, current_version_id=ids.document_version_id())
+        check_version_transition(after, newer)  # an update
+
+    def test_a_document_never_loses_its_version(self, ids: IdFactory) -> None:
+        before = self.awaiting(ids)
+        after = amend(before, current_version_id=ids.document_version_id())
+        raises_integrity(lambda: check_version_transition(after, before))
+        raises_integrity(lambda: check_version_transition(after, self.awaiting(ids)))
 
 
 def test_sync_state_must_match_its_document(ids: IdFactory) -> None:
@@ -189,7 +206,7 @@ def test_sync_state_must_match_its_document(ids: IdFactory) -> None:
         document_id=ids.document_id(),
         source_id=source_id,
         version_id=None,
-        status=DocumentStatus.PENDING,
+        status=DocumentStatus.ACTIVE,
         key="a.md",
     )
     check_sync_state_matches_document(document, make_sync_state(source_id, "a.md"))

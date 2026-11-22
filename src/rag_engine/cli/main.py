@@ -308,6 +308,8 @@ def build_app(container: Container) -> typer.Typer:
             typer.echo("No sources registered.")
         for s in result.sources:
             docs = ", ".join(f"{n} {k}" for k, n in s.documents.items()) or "no documents"
+            if s.awaiting_first_ingest:
+                docs += f" ({s.awaiting_first_ingest} awaiting first ingestion)"
             typer.echo(f"{s.name}: {docs}")
         jobs = ", ".join(f"{n} {k}" for k, n in result.jobs.items()) or "empty"
         typer.echo(f"jobs: {jobs}")

@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import re
 import sqlite3
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from importlib import resources
@@ -18,6 +18,11 @@ from importlib import resources
 from rag_engine.domain import ErrorCode, RagError
 
 _NAME_RE = re.compile(r"(\d{4})_([a-z0-9_]+)\.sql")
+_FOREIGN_KEYS_OFF = re.compile(r"^--\s*migrate:\s*foreign_keys\s*=\s*off\s*$", re.MULTILINE)
+
+BeforeMigrate = Callable[[int, int], None]
+"""``hook(current_version, target_version)``: called once before pending migrations run on a
+database that already holds data (used to take the automatic backup)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +30,16 @@ class Migration:
     version: int
     name: str
     sql: str
+
+    @property
+    def foreign_keys_off(self) -> bool:
+        """Whether the script rebuilds tables and must run with foreign keys disabled.
+
+        Declared by the header line ``-- migrate: foreign_keys=off``. The runner then follows
+        the procedure from the SQLite documentation: disable the pragma outside the
+        transaction, check ``foreign_key_check`` before committing, re-enable it.
+        """
+        return _FOREIGN_KEYS_OFF.search(self.sql) is not None
 
     @property
     def checksum(self) -> str:
@@ -125,11 +140,18 @@ class Migrator:
                 )
         return len(rows)
 
-    def apply(self, conn: sqlite3.Connection, now: datetime) -> list[int]:
+    def apply(
+        self,
+        conn: sqlite3.Connection,
+        now: datetime,
+        before_migrate: BeforeMigrate | None = None,
+    ) -> list[int]:
         """Apply every pending migration; returns the versions applied.
 
         The connection must be in autocommit mode (``isolation_level=None``) and the caller
-        must hold the writer lock.
+        must hold the writer lock. ``before_migrate`` runs when the database already has a
+        version and something is pending. The recorded version in ``schema_migrations`` is
+        the single source of truth for the schema version.
         """
         conn.execute(
             "CREATE TABLE IF NOT EXISTS schema_migrations ("
@@ -138,6 +160,8 @@ class Migrator:
         )
         done = self.verify(conn)
         applied: list[int] = []
+        if done > 0 and done < self.latest_version and before_migrate is not None:
+            before_migrate(done, self.latest_version)
         for migration in self._migrations[done:]:
             self._apply_one(conn, migration, now)
             applied.append(migration.version)
@@ -145,10 +169,22 @@ class Migrator:
 
     @staticmethod
     def _apply_one(conn: sqlite3.Connection, migration: Migration, now: datetime) -> None:
+        rebuild = migration.foreign_keys_off
         try:
+            if rebuild:
+                conn.execute("PRAGMA foreign_keys = OFF")  # a no-op inside a transaction
             conn.execute("BEGIN IMMEDIATE")
             for statement in split_statements(migration.sql):
                 conn.execute(statement)
+            if rebuild:
+                violations = conn.execute("PRAGMA foreign_key_check").fetchall()
+                if violations:
+                    raise RagError(
+                        ErrorCode.E_INTEGRITY,
+                        f"migration {migration.version:04d}_{migration.name} would break "
+                        "foreign keys and was rolled back",
+                        context={"version": migration.version, "violations": len(violations)},
+                    )
             conn.execute(
                 "INSERT INTO schema_migrations (version, name, checksum, applied_at) "
                 "VALUES (?, ?, ?, ?)",
@@ -165,6 +201,9 @@ class Migrator:
                 f"migration {migration.version:04d}_{migration.name} failed and was rolled back",
                 context={"version": migration.version, "sqlite_error": type(exc).__name__},
             ) from exc
+        finally:
+            if rebuild:
+                conn.execute("PRAGMA foreign_keys = ON")
 
 
 def _table_exists(conn: sqlite3.Connection, name: str) -> bool:

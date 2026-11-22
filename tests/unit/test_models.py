@@ -108,12 +108,14 @@ def test_models_are_immutable() -> None:
 def test_document_rules() -> None:
     active = make_document(document_id=DOC_ID, source_id=SOURCE_ID, version_id=VERSION_ID)
     assert active.status is DocumentStatus.ACTIVE
-    with pytest.raises(RagError):
-        make_document(document_id=DOC_ID, source_id=SOURCE_ID, version_id=None)
-    first_commit_pending = make_document(
-        document_id=DOC_ID, source_id=SOURCE_ID, version_id=None, status=DocumentStatus.FAILED
-    )
-    assert first_commit_pending.current_version_id is None
+    assert active.is_searchable
+    # before its first commit a document is active but has no version and is not searchable
+    awaiting_first_commit = make_document(document_id=DOC_ID, source_id=SOURCE_ID, version_id=None)
+    assert awaiting_first_commit.status is DocumentStatus.ACTIVE
+    assert awaiting_first_commit.current_version_id is None
+    assert not awaiting_first_commit.is_searchable
+    missing = amend(active, status=DocumentStatus.MISSING, missing_since=T0)
+    assert not missing.is_searchable
 
 
 def test_document_missing_since_matches_status() -> None:

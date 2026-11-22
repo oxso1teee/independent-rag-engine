@@ -42,7 +42,7 @@ def test_database_uses_wal_and_enforces_foreign_keys(store: SqliteStore) -> None
         # a document of a source that does not exist violates a foreign key
         writer._run(  # type: ignore[attr-defined]
             "INSERT INTO documents (id, source_id, source_key, status, created_at, updated_at)"
-            " VALUES ('d', 'missing', 'k', 'pending', 't', 't')"
+            " VALUES ('d', 'missing', 'k', 'active', 't', 't')"
         )
     assert info.value.code is ErrorCode.E_INTEGRITY
 
