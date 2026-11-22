@@ -63,6 +63,9 @@ markers = [
     "unit: pure logic, no I/O, no network, no models",
     "contract: protocol contract tests run against implementations",
     "architecture: import-boundary checks (spawns a subprocess)",
+    "integration: real SQLite and filesystem, no network",
+    "e2e: whole command-line flows against a temporary workspace",
+    "performance: measured acceptance thresholds",
 ]
 
 [tool.coverage.run]

@@ -8,6 +8,11 @@ import structlog
 from hypothesis import HealthCheck, settings
 from structlog.contextvars import clear_contextvars
 
+from rag_engine.domain import IdFactory
+from rag_engine.storage.sqlite import SqliteStore, open_store
+from rag_engine.testing import FakeClock
+from tests.factories import make_ids
+
 settings.register_profile(
     "deterministic",
     derandomize=True,
@@ -17,7 +22,14 @@ settings.register_profile(
 )
 settings.load_profile("deterministic")
 
-_MARKERS_BY_DIR = {"unit": "unit", "contract": "contract", "architecture": "architecture"}
+_MARKERS_BY_DIR = {
+    "unit": "unit",
+    "contract": "contract",
+    "architecture": "architecture",
+    "integration": "integration",
+    "e2e": "e2e",
+    "performance": "performance",
+}
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -43,3 +55,19 @@ def _clean_rag_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     for name in list(os.environ):
         if name.startswith("RAG_"):
             monkeypatch.delenv(name)
+
+
+@pytest.fixture
+def clock() -> FakeClock:
+    return FakeClock()
+
+
+@pytest.fixture
+def ids() -> IdFactory:
+    return make_ids()
+
+
+@pytest.fixture
+def store(tmp_path: Path, clock: FakeClock) -> Iterator[SqliteStore]:
+    with open_store(tmp_path / "rag.db", clock) as opened:
+        yield opened
