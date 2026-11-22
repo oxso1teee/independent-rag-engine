@@ -147,6 +147,7 @@ def open_store(
     """Open (creating and migrating when needed) the store at ``path``."""
     migrator = Migrator(load_packaged_migrations() if migrations is None else migrations)
     path.parent.mkdir(parents=True, exist_ok=True)
+    created = not path.exists()
     store = SqliteStore(path, busy_timeout_ms=busy_timeout_ms, writer_timeout_s=writer_timeout_s)
     try:
         store._lock.acquire()
@@ -154,6 +155,10 @@ def open_store(
             conn = store._writer_connection()
             try:
                 enable_wal(conn)
+                if created:
+                    # metadata about private documents: owner-only; SQLite gives -wal/-shm the
+                    # same mode as the database file
+                    path.chmod(0o600)
                 migrator.apply(conn, clock.now())
             except sqlite3.Error as exc:
                 raise translate(exc) from exc

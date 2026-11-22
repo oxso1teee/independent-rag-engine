@@ -288,3 +288,14 @@ def test_changing_a_locator_without_rebase_is_refused(store: SqliteStore, ids: I
         )
     assert rebased.locator == "/elsewhere"
     assert store.reader().get_source(source.id) == rebased
+
+
+def test_new_database_is_private_and_paths_with_spaces_and_unicode_work(
+    tmp_path: Path, clock: FakeClock, ids: IdFactory
+) -> None:
+    path = tmp_path / "Мои документы" / "базa знаний.db"
+    with open_store(path, clock) as store, store.unit_of_work().begin() as writer:
+        writer.put_source(make_source(ids))
+    assert path.stat().st_mode & 0o777 == 0o600
+    with open_store_read_only(path) as ro:
+        assert [s.name for s in ro.reader().list_sources()] == ["notes"]
