@@ -29,6 +29,13 @@ project until a release is cut.
 - Text splitting for the chunkers: sentences (Russian and English abbreviations, initials,
   decimals, list markers, ellipsis), words, lines and size-bounded hard splits that never separate
   a combining mark from its letter; every function reassembles its input exactly.
+- Chunking core: a packer that joins sentences, lines and word groups up to the target size,
+  repeats the tail of the previous prose chunk as overlap (never around tables or code), merges a
+  too-small last chunk and guarantees `max_tokens` by recursive halving; a chunk assembler that
+  builds identified, language-tagged chunks as exact slices of the normalised text and marks
+  repeated leaf text as a non-indexed duplicate.
+- `fixed` and `recursive` chunkers with a shared `Chunker` contract suite (bounds, coverage,
+  provenance, determinism, overlap, duplicates, random documents).
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
