@@ -63,8 +63,9 @@ src/rag_engine/
   config/          validated settings and resource profiles
   observability/   structured logging, request correlation, timing
   testing/         deterministic fakes (embedder, LLM, clock, in-memory source)
-  cli/             the `rag` command and its composition root
-tests/             unit, contract, architecture, integration, e2e and performance tests
+  cli/             the `rag` command (receives its collaborators, no infrastructure)
+  container.py     composition root and entry point
+tests/             unit, contract, architecture, integration, e2e, chaos, integrity and perf tests
 docs/              architecture and development notes
 ```
 

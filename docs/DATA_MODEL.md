@@ -1,8 +1,10 @@
 # Data model
 
-State of the model as implemented through Phase 2 (schema version 1). Domain objects are
+State of the model as implemented through Phase 2 (schema version 2). Domain objects are
 frozen dataclasses that validate their own invariants; SQLite holds their persistent form
-(`storage/migrations/0001_core.sql`, mapping in `storage/sqlite/codec.py`).
+(`storage/migrations/0001_core.sql` and `0002_align_data_model.sql`, mapping in
+`storage/sqlite/codec.py`). Where this differs from the original design, the reason is in
+[ADR 0005](adr/0005-data-model-alignment.md).
 
 Identifiers are typed UUIDv7 values (`SourceId`, `DocumentId`, `DocumentVersionId`, `JobId`,
 `RequestId`); content hashes are SHA-256 hex. Timestamps are UTC, stored as fixed-width ISO-8601
@@ -14,19 +16,24 @@ text with microseconds, so text order is time order.
 |---|---|---|
 | `Source` | A registered origin of documents (`fs` or `inline`) | name `[a-z0-9-]{1,64}`; a filesystem source has a locator whose SHA-256 is `locator_fingerprint`; the locator changes only through a rebase |
 | `SourcePolicy` | include/exclude globs, `max_file_bytes`, `follow_symlinks`, `delete_grace_days` | positive size, non-negative grace, at least one include |
-| `Document` | One entry of a source, identified by `(source_id, source_key)` | `active` needs a version, `pending` has none, `missing_since` is set exactly when `missing` |
-| `DocumentVersion` | Immutable result of ingesting one content | `seq >= 1`; rewriting an id with different content is `E_INTEGRITY` |
+| `Document` | One entry of a source, identified by `(source_id, source_key)` | `missing_since` is set exactly when `missing`; `current_version_id` is NULL only until the first commit and never returns to NULL; a current version exists and belongs to the document; it cannot duplicate itself |
+| `DocumentVersion` | Immutable result of ingesting one content | `seq >= 1`; `UNIQUE (document_id, content_hash)`; rewriting an id with different content is `E_INTEGRITY`; purged text keeps no `normalized_text` |
 | `SyncState` | Last observation of an entry (revision, content hash, status) | `failed` needs an error code; `next_retry_at` only when failed |
 | `IngestionJob` | Unit of queued work | see the state machine below |
-| `IndexMetadata` | Singleton: schema version, monotonic `index_generation`, placeholders for index settings | generation never decreases |
+| `IndexMetadata` | Singleton: schema version (mirrored from `schema_migrations`), monotonic `index_generation`, placeholders for index settings | generation never decreases |
 
 `SourceKey` is the path of an entry inside its source: relative, `/`-separated, Unicode NFC.
 
-### Document status
+### Document status and "searchable"
 
-`pending` (discovered, not ingested) → `active` (has a current version) · `missing`
-(tombstone, reversible during the grace period) · `failed` (unsupported or unreadable) ·
-`deleted` (reserved). A tombstone is physically removed only by garbage collection.
+`active` · `missing` (tombstone, reversible during the grace period) · `deleted` (user soft
+deletion, reserved) · `failed` (unsupported or unreadable).
+
+A document is created at first discovery as `active` with `current_version_id = NULL`. It is
+**searchable** only when it is `active` *and* has a version (`Document.is_searchable`), so a
+document that has not been indexed yet never reaches retrieval. The first successful commit sets
+the first version (NULL → version); later commits replace it; it never goes back to NULL.
+`rag status` shows documents without a version as "awaiting first ingestion".
 
 ### Sync status
 
@@ -42,21 +49,25 @@ queued ──lease──▶ leased ──complete──▶ done
    └──lease expired (attempts left)──┘   lease expired (attempts used up) ──▶ dead
 ```
 
-`attempts` counts leases. At most one *active* job (`queued`, `leased`, `failed`) exists per
-`(kind, source, document)`. The payload holds scalars only (content hash, MIME type, size),
-never document text.
+`available_at` is the time before which a job must not be claimed (creation time, retry time,
+or re-queue time). `attempts` counts leases. At most one *active* job (`queued`, `leased`,
+`failed`) exists per `(kind, source, document)`. The payload holds scalars only (content hash,
+MIME type, detected encoding, size), never document text.
 
-## Tables (schema v1)
+## Tables (schema v2)
 
-`sources`, `documents` (unique `(source_id, source_key)`), `versions` (unique
-`(document_id, seq)`, cascade from documents), `sync_state` (primary key
-`(source_id, source_key)`), `jobs` (indexes `jobs_claim`, partial unique `jobs_one_active`),
-`index_state` (one row, `id = 1`), `schema_migrations`.
+`sources`, `documents` (unique `(source_id, source_key)`), `document_versions` (unique
+`(document_id, seq)` and `(document_id, content_hash)`, `normalized_text` zlib BLOB,
+cascade from documents), `sync_state` (primary key `(source_id, source_key)`), `jobs`
+(indexes `jobs_claim`, partial unique `jobs_one_active`), `index_state` (one row, `id = 1`),
+`schema_migrations`.
 `documents.current_version_id` is deliberately not a foreign key (documents and versions
-reference each other); the unit of work writes both together.
+reference each other); the writer verifies that the version exists and belongs to the document.
 
-Schema v2 (Phase 4) adds chunks, embedding models, embeddings and the full-text index.
+Schema v3 (Phase 4) adds chunks, embedding models, embeddings and the full-text index.
+`duplicate_of` exists but is filled in Phase 3 (after normalisation).
 
-## What the store does not hold
+## What the store does not hold yet
 
-Document text and vectors. Phase 2 stores only metadata, hashes and queue state.
+Document text and vectors: Phase 2 stores metadata, hashes and queue state. `normalized_text`
+is written from Phase 3 on.

@@ -18,7 +18,8 @@ Changing dependencies: edit `pyproject.toml`, run `uv lock`, commit `uv.lock`. C
 | `make typecheck` | Mypy in strict mode (source and tests) |
 | `make arch` | import-linter contracts |
 | `make test` | Unit tests only (`pytest -m unit`) |
-| `make test-all` | All tests with coverage and the domain coverage gate (90 %) |
+| `make test-all` | All tests except `perf`, with coverage and the domain coverage gate (90 %) |
+| `make perf` | Performance budgets (NFR-04), run separately |
 | `make audit` | Lock check and `pip-audit` |
 | `make check` | Everything above except the audit |
 
@@ -28,12 +29,13 @@ Changing dependencies: edit `pyproject.toml`, run `uv lock`, commit `uv.lock`. C
 uv run rag source add notes ~/Documents/notes --exclude '.git/**'
 uv run rag ingest --dry-run      # what would change; writes nothing
 uv run rag ingest                # scan and queue the documents that need processing
+uv run rag ingest --accept-mass-delete   # confirm a disappearance the guard stopped
 uv run rag status                # documents per state, job queue
 uv run rag source rebase notes /new/location --dry-run
 ```
 
 The database path comes from `[storage] db_path` in `rag.toml` (default `data/rag.db`),
-`RAG_STORAGE__DB_PATH` or `--db`. Add `--json` to any command for machine-readable output.
+`RAG_STORAGE__DB_PATH` or `--db`. Queue retry and lease parameters are the `[ingest]` section. Add `--json` to any command for machine-readable output.
 Parsing, chunking and embedding are later phases: queued jobs stay queued for now.
 
 ## Tests

@@ -1,6 +1,8 @@
 # 0004. Store boundaries and the domain additions needed for Phase 2
 
-Status: Accepted (2026-11-22). Implemented in Phase 2 with the amendments listed at the end.
+Status: Accepted (2026-11-22). Implemented in Phase 2 with the amendments listed at the end;
+parts of them were corrected by [ADR 0005](0005-data-model-alignment.md) (no `pending`
+status, `document_versions`) and [ADR 0007](0007-repository-layout-and-composition-root.md).
 
 ## Context
 
@@ -98,6 +100,16 @@ inside one atomic unit of work*.
   connection with the unit of work, so "version + chunks + FTS + `current_version`" commits
   atomically (Phase 4) without leaking a transaction type into the ports.
 
+## Alternatives considered
+
+- **One `MetadataStore` with read and write methods** (as in the architecture overview):
+  rejected because nothing then prevents a reader from mutating state and the single writer
+  could not be expressed in the type.
+- **Transaction objects passed to services** instead of a unit of work: rejected, it leaks
+  the storage technology into every service.
+- **Writer lock through SQLite alone** (`BEGIN IMMEDIATE`): kept as a second line of defence, but
+  a lock file gives a clear `E_STORE_LOCKED` immediately and a bounded wait.
+
 ## Consequences
 
 - Phase 2 starts with: move `SourceRevision`, add the domain models and invariants with
@@ -124,9 +136,9 @@ which only fills a gap and changes no decision:
   shape is fixed, but have no adapter yet. `check_single_active_model` is implemented in
   `domain/invariants.py` and unit-tested. No in-memory store double was added: contract
   tests run against SQLite, the only adapter.
-- **`DocumentStatus.PENDING`.** A document is created when its source entry is first seen,
-  before any version exists, but an `active` document requires a version. `pending` means
-  "discovered, not yet ingested" and requires `current_version_id is None`.
+- **~~`DocumentStatus.PENDING`~~** (superseded by ADR 0005). A document is created when its
+  source entry is first seen, before any version exists; it is `active` with no version and is
+  not searchable until its first commit.
 - **`IngestionJob.available_at`.** Retry with backoff needs a "not before" time. `failed`
   means "last attempt failed, waits until `available_at`"; `queued` and `failed` jobs are
   claimable once `available_at <= now`. `fail_job(..., retry_at | None)` sets it; `None`
