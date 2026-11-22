@@ -7,7 +7,10 @@ import json
 
 import pytest
 
+from rag_engine.chunking.registry import ChunkerRegistry
+from rag_engine.chunking.tokens import HeuristicTokenCounter
 from rag_engine.domain import (
+    ChunkPolicy,
     ContentHash,
     ErrorCode,
     ParsedDocument,
@@ -22,6 +25,8 @@ from rag_engine.parsing.cleaners import CleanerSet, compile_cleaners
 from rag_engine.parsing.registry import default_parsers
 from rag_engine.ports import ParseHints, ParseLimits
 from rag_engine.testing import FakeClock
+from tests.chunking_checks import check_chunks
+from tests.factories import make_ids
 from tests.workspace import Workspace
 
 LIMITS = ParseLimits()
@@ -192,3 +197,88 @@ def test_processing_the_same_bytes_twice_gives_equal_results() -> None:
     first, second = parse(data, "a.md"), parse(data, "a.md")
     assert first.document == second.document
     assert first.content_hash == second.content_hash
+
+
+# ------------------------------------------------------------------- chunking
+
+POLICY = ChunkPolicy(target_tokens=40, max_tokens=60, min_tokens=8, overlap_ratio=0.12)
+COUNTER = HeuristicTokenCounter()
+VERSION = make_ids().document_version_id()
+GUIDE = (
+    "# Guide\n\n" + " ".join(f"Sentence number {i} of the guide." for i in range(20)) + "\n\n"
+    "## Setup\n\nRun the installer.\n\n## Usage\n\n"
+    + " ".join(f"Usage sentence {i} explains one thing." for i in range(20))
+)
+
+
+def chunking_processor() -> DocumentProcessor:
+    return DocumentProcessor(default_parsers(), FakeClock(), ChunkerRegistry(COUNTER))
+
+
+def test_a_processed_document_has_chunks_and_the_strategy_that_made_them() -> None:
+    done = chunking_processor().process(
+        GUIDE.encode(), SourceKey("guide.md"), LIMITS, POLICY, VERSION
+    )
+    assert done.chunker_id == "structure_aware" and done.chunker_version == "1"
+    assert done.parsed.parser_id == "md" and done.chunks
+    check_chunks(done.parsed.document, done.chunks, POLICY, COUNTER, done.chunker_fingerprint)
+    assert {c.level for c in done.chunks} == {0, 1}
+    assert all(c.document_version_id == VERSION for c in done.chunks)
+
+
+def test_the_strategy_follows_the_content_of_the_file() -> None:
+    runner = chunking_processor()
+    cases = {
+        "a.txt": (b"first paragraph\n\nsecond paragraph", "recursive"),
+        "b.txt": (b"one single paragraph of plain words", "fixed"),
+        "c.md": (b"# T\n\ntext", "structure_aware"),
+    }
+    for name, (data, strategy) in cases.items():
+        done = runner.process(data, SourceKey(name), LIMITS, POLICY, VERSION)
+        assert done.chunker_id == strategy, name
+
+
+def test_processing_is_deterministic_and_the_fingerprint_follows_the_policy() -> None:
+    runner = chunking_processor()
+    first = runner.process(GUIDE.encode(), SourceKey("g.md"), LIMITS, POLICY, VERSION)
+    again = runner.process(GUIDE.encode(), SourceKey("g.md"), LIMITS, POLICY, VERSION)
+    assert first.chunks == again.chunks and first.chunker_fingerprint == again.chunker_fingerprint
+    other = ChunkPolicy(target_tokens=48, max_tokens=60, min_tokens=8, overlap_ratio=0.12)
+    changed = runner.process(GUIDE.encode(), SourceKey("g.md"), LIMITS, other, VERSION)
+    assert changed.chunker_fingerprint != first.chunker_fingerprint
+    assert {c.id for c in changed.chunks}.isdisjoint({c.id for c in first.chunks})
+
+
+def test_an_empty_document_has_no_chunks() -> None:
+    done = chunking_processor().process(b"   \n\n", SourceKey("e.txt"), LIMITS, POLICY, VERSION)
+    assert done.chunks == ()
+
+
+def test_parse_failures_stop_before_chunking() -> None:
+    with pytest.raises(RagError) as info:
+        chunking_processor().process(
+            b"\x89PNG\r\n\x1a\n" + b"0" * 64, SourceKey("p.md"), LIMITS, POLICY, VERSION
+        )
+    assert info.value.code is ErrorCode.E_UNSUPPORTED_FORMAT
+
+
+def test_processing_without_chunkers_is_a_programming_error() -> None:
+    with pytest.raises(RuntimeError, match="without chunkers"):
+        processor().process(b"text", SourceKey("a.txt"), LIMITS, POLICY, VERSION)
+
+
+def test_chunking_is_logged_as_a_stage_without_the_text() -> None:
+    stream = io.StringIO()
+    configure_logging("INFO", stream=stream)
+    chunking_processor().process(
+        f"# {SECRET}\n\n{SECRET}".encode(), SourceKey("s.md"), LIMITS, POLICY, VERSION
+    )
+    events = [json.loads(line) for line in stream.getvalue().splitlines()]
+    stages = [(e["stage"], e["event"]) for e in events]
+    assert stages == [
+        ("process.parse", "stage.start"),
+        ("process.parse", "stage.done"),
+        ("process.chunk", "stage.start"),
+        ("process.chunk", "stage.done"),
+    ]
+    assert events[2]["chunker"] == "structure_aware" and SECRET not in stream.getvalue()

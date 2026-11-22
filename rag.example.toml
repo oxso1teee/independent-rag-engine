@@ -41,12 +41,13 @@ enabled = false
 # isolate = ["pdf", "docx", "html"]   # formats parsed in a separate worker process
 # isolation_memory_mb = 1024
 
-# Chunk size policy (tokens) and token counter.
+# Chunk size policy (tokens), strategy and token counter.
 [chunking]
 # target_tokens = 256
 # max_tokens = 384
 # min_tokens = 48
 # overlap_ratio = 0.12
+# strategy = "auto"               # auto picks by document structure; or structure_aware, recursive, fixed
 # counter = "heuristic"           # or "tokenizers" together with tokenizer_json
 # tokenizer_json = "models/tokenizer.json"
 

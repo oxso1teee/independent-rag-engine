@@ -40,6 +40,10 @@ project until a release is cut.
   target, headings without text joined to the section they introduce, a parent chunk (level 1)
   for every heading-led group with two or more leaves; the heading belongs to the parent, or to
   the leaf when the group has one leaf. Shares the `Chunker` contract suite.
+- `ChunkerRegistry` and the `ChunkerSelector` port: `auto` picks `structure_aware` for documents
+  with headings, `recursive` for several blocks and `fixed` for a single block; `[chunking]
+  strategy` forces one. `DocumentProcessor.process` parses and chunks a file and reports the
+  chunker, its version and its fingerprint; each stage is logged without document text.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,

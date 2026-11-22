@@ -1,7 +1,7 @@
 """Ports: Protocol contracts between the core and its adapters. No implementations."""
 
 from rag_engine.ports.cache import EmbeddingCache, StoredEmbedding
-from rag_engine.ports.chunker import Chunker
+from rag_engine.ports.chunker import Chunker, ChunkerSelector
 from rag_engine.ports.clock import Clock
 from rag_engine.ports.embedding import EmbeddingProvider, Vectors
 from rag_engine.ports.lexical import LexicalDocument, LexicalIndex
@@ -32,6 +32,7 @@ from rag_engine.ports.vector import VectorIndex
 __all__ = [
     "Candidate",
     "Chunker",
+    "ChunkerSelector",
     "Clock",
     "Delta",
     "EmbeddingCache",

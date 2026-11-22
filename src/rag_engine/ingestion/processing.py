@@ -1,10 +1,11 @@
-"""From a stored source entry to a parsed document.
+"""From a stored source entry to a parsed document and its chunks.
 
 ``DocumentProcessor`` reads the bytes within a size limit, identifies the format from the
 content, picks the parser that supports it and returns the parsed document together with the
 provenance that is recorded with a version (parser, normaliser, MIME decision, content hash).
-It never persists anything and never lets a parser's own exception escape: whatever goes wrong
-is an ``E_PARSE_FAILED`` or ``E_UNSUPPORTED_FORMAT`` with a stable reason.
+``process`` goes on to chunk the document with the strategy the selector chooses. Nothing is
+persisted, and a parser's own exception never escapes: whatever goes wrong is an
+``E_PARSE_FAILED`` or ``E_UNSUPPORTED_FORMAT`` with a stable reason.
 """
 
 from __future__ import annotations
@@ -15,7 +16,10 @@ from dataclasses import dataclass
 from typing import BinaryIO
 
 from rag_engine.domain import (
+    Chunk,
+    ChunkPolicy,
     ContentHash,
+    DocumentVersionId,
     ErrorCode,
     ParsedDocument,
     ParseReason,
@@ -25,7 +29,7 @@ from rag_engine.domain import (
 )
 from rag_engine.ingestion.mime import MimeResult, detect_mime, require_supported
 from rag_engine.observability import Timer, get_logger, stage_scope
-from rag_engine.ports import Clock, ParseHints, ParseLimits, Parser
+from rag_engine.ports import ChunkerSelector, Clock, ParseHints, ParseLimits, Parser
 
 _log = get_logger("rag_engine.ingestion.processing")
 _READ_BLOCK = 1024 * 1024
@@ -43,6 +47,16 @@ class ParsedResult:
     parse_ms: int
 
 
+@dataclass(frozen=True, slots=True)
+class ProcessedDocument:
+    parsed: ParsedResult
+    chunks: tuple[Chunk, ...]
+    chunker_id: str
+    chunker_version: str
+    chunker_fingerprint: str
+    chunk_ms: int
+
+
 def read_limited(stream: BinaryIO, max_bytes: int) -> bytes:
     """All bytes of ``stream``; more than ``max_bytes`` is an error, found without reading on."""
     chunks: list[bytes] = []
@@ -58,9 +72,15 @@ def read_limited(stream: BinaryIO, max_bytes: int) -> bytes:
 
 
 class DocumentProcessor:
-    def __init__(self, parsers: Sequence[Parser], clock: Clock) -> None:
+    def __init__(
+        self,
+        parsers: Sequence[Parser],
+        clock: Clock,
+        chunkers: ChunkerSelector | None = None,
+    ) -> None:
         self._parsers = tuple(parsers)
         self._clock = clock
+        self._chunkers = chunkers
 
     def read(self, stream: BinaryIO, limits: ParseLimits) -> bytes:
         return read_limited(stream, limits.max_input_bytes)
@@ -88,6 +108,36 @@ class DocumentProcessor:
             content_hash=ContentHash.of_bytes(data),
             size_bytes=len(data),
             parse_ms=timer.elapsed_ms(),
+        )
+
+    def process(
+        self,
+        data: bytes,
+        key: SourceKey,
+        limits: ParseLimits,
+        policy: ChunkPolicy,
+        version_id: DocumentVersionId,
+    ) -> ProcessedDocument:
+        """Parse ``data`` and chunk the result; ``version_id`` seeds the chunk ids."""
+        if self._chunkers is None:
+            raise RuntimeError("this DocumentProcessor was created without chunkers")
+        parsed = self.parse(data, key, limits)
+        chunker = self._chunkers.select(parsed.document)
+        timer = Timer(self._clock)
+        with stage_scope(_log, "process.chunk", clock=self._clock, chunker=chunker.chunker_id):
+            chunks = chunker.chunk(
+                parsed.document,
+                policy,
+                version_id=version_id,
+                normalizer_version=parsed.normalizer_version,
+            )
+        return ProcessedDocument(
+            parsed=parsed,
+            chunks=tuple(chunks),
+            chunker_id=chunker.chunker_id,
+            chunker_version=chunker.version,
+            chunker_fingerprint=chunker.fingerprint(policy, parsed.normalizer_version),
+            chunk_ms=timer.elapsed_ms(),
         )
 
     def _select(self, mime: MimeResult, key: SourceKey) -> Parser:

@@ -30,3 +30,10 @@ class Chunker(Protocol):
     ) -> Sequence[Chunk]:
         """Deterministic: same input and policy give identical chunks and ids."""
         ...
+
+
+@runtime_checkable
+class ChunkerSelector(Protocol):
+    def select(self, document: ParsedDocument) -> Chunker:
+        """The strategy that chunks this document."""
+        ...

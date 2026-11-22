@@ -120,12 +120,13 @@ class ParsingSettings(_Section):
 
 
 class ChunkingSettings(_Section):
-    """Chunk size policy and the token counter."""
+    """Chunk size policy, the strategy and the token counter."""
 
     target_tokens: int = Field(default=256, ge=16, le=8192)
     max_tokens: int = Field(default=384, ge=16, le=8192)
     min_tokens: int = Field(default=48, ge=1, le=8192)
     overlap_ratio: float = Field(default=0.12, ge=0, lt=0.5)
+    strategy: Literal["auto", "structure_aware", "recursive", "fixed"] = "auto"
     counter: Literal["heuristic", "tokenizers"] = "heuristic"
     tokenizer_json: Path | None = None
 
