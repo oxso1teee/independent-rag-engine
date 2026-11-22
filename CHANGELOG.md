@@ -23,6 +23,9 @@ project until a release is cut.
   paragraphs, nested lists, tables, code and quotes, title, author and date from the page head.
 - Token counting: `HeuristicTokenCounter` (script-aware, at least one token per word, errs on the
   high side) and `HfTokenCounter` for a local `tokenizer.json` (optional extra `tokenizers`).
+- `DocumentProcessor`: size-limited reading, format identification from content, parser
+  selection, provenance of a version (parser, normaliser, MIME decision, content hash) and
+  clean failures (`E_PARSE_FAILED` with a reason, `E_UNSUPPORTED_FORMAT`); parser registry.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
