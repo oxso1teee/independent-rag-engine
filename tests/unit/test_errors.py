@@ -196,3 +196,27 @@ def test_subclasses_are_restored_as_their_own_type() -> None:
     error = Specific(ErrorCode.E_PARSE_FAILED, "bad")
     restored = copy.deepcopy(error)
     assert isinstance(restored, Specific)
+
+
+def test_parse_failures_carry_a_stable_reason() -> None:
+    from rag_engine.domain import ParseReason, parse_failed
+
+    assert {r.value for r in ParseReason} == {
+        "corrupt",
+        "encrypted",
+        "no_text_layer",
+        "too_large",
+        "too_many_pages",
+        "too_many_blocks",
+        "too_deep",
+        "zip_bomb",
+        "timeout",
+        "memory",
+        "worker_failed",
+        "encoding",
+    }
+    error = parse_failed(ParseReason.ENCRYPTED, "the document is encrypted", pages=3)
+    assert error.code is ErrorCode.E_PARSE_FAILED
+    assert error.category is ErrorCategory.PARSE
+    assert error.retryable is False
+    assert error.context == {"reason": "encrypted", "pages": 3}

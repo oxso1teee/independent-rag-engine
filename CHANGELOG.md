@@ -8,6 +8,8 @@ project until a release is cut.
 ### Phase 3: parsing and chunking
 - Domain: `Block.attrs`, UTC check for `ParsedDocument.created`, `detect_language`,
   `check_block_provenance`, `check_duplicate_graph`; ADR 0008 defines the contracts.
+- Ports: `ParseLimits`, `ParseHints.encoding/limits`, `Parser.normalizer_version`; domain
+  `ParseReason` and `parse_failed`; settings sections `[parsing]` and `[chunking]`.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
