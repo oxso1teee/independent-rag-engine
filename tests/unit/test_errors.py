@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import copy
+import json
+import pickle
+from collections.abc import Callable
+
 import pytest
 
 from rag_engine.domain import ErrorCategory, ErrorCode, RagError, error_spec, require, violation
@@ -91,3 +96,103 @@ def test_require_and_violation_use_the_integrity_code() -> None:
     assert info.value.category is ErrorCategory.INTEGRITY
     assert info.value.context == {"field": "x"}
     assert violation("v").code is ErrorCode.E_INTEGRITY
+
+
+# ------------------------------------------------- copy / pickle / frozen context
+
+NESTED: dict[str, object] = {
+    "stage": "embed",
+    "attempts": [1, 2, 3],
+    "limits": {"batch": 16, "tags": ["a", "b"], "inner": {"deep": [{"x": 1}]}},
+    "flag": True,
+    "none": None,
+}
+
+
+def _error() -> RagError:
+    return RagError(
+        ErrorCode.E_RATE_LIMITED,
+        "slow down",
+        retryable=False,  # overrides the code default (True) so restoration is observable
+        context=NESTED,  # type: ignore[arg-type]
+    )
+
+
+def _assert_equivalent(original: RagError, restored: RagError) -> None:
+    assert type(restored) is type(original)
+    assert restored.code is original.code
+    assert restored.category is original.category
+    assert restored.message == original.message
+    assert restored.retryable is original.retryable
+    assert restored.context == original.context
+    assert str(restored) == str(original)
+    assert restored.to_dict() == original.to_dict()
+
+
+@pytest.mark.parametrize(
+    "clone",
+    [
+        copy.copy,
+        copy.deepcopy,
+        lambda e: pickle.loads(pickle.dumps(e)),  # noqa: S301
+        lambda e: pickle.loads(pickle.dumps(e, protocol=pickle.HIGHEST_PROTOCOL)),  # noqa: S301
+    ],
+    ids=["copy", "deepcopy", "pickle", "pickle-highest"],
+)
+def test_error_survives_cloning(clone: Callable[[RagError], RagError]) -> None:
+    original = _error()
+    restored = clone(original)
+    assert restored is not original
+    _assert_equivalent(original, restored)
+    assert restored.retryable is False
+
+
+def test_restored_error_keeps_its_context_frozen() -> None:
+    restored = pickle.loads(pickle.dumps(_error()))  # noqa: S301
+    with pytest.raises(TypeError):
+        restored.context["new"] = 1
+    with pytest.raises(TypeError):
+        restored.context["limits"]["batch"] = 1
+    with pytest.raises(TypeError):
+        restored.context["attempts"][0] = 9
+    with pytest.raises(AttributeError):
+        restored.context["attempts"].append(4)
+
+
+def test_nested_context_is_deeply_frozen_and_detached() -> None:
+    source: dict[str, object] = {"items": [1, {"k": [2]}], "map": {"a": 1}}
+    error = RagError(ErrorCode.E_TIMEOUT, "slow", context=source)  # type: ignore[arg-type]
+    source["items"].append(3)  # type: ignore[attr-defined]
+    source["map"]["a"] = 2  # type: ignore[index]
+    assert error.context["items"] == (1, {"k": (2,)})
+    assert error.context["map"] == {"a": 1}
+    with pytest.raises(TypeError):
+        error.context["map"]["a"] = 5  # type: ignore[index]
+
+
+def test_to_dict_is_json_friendly_and_mutable_copy() -> None:
+    data = _error().to_dict()
+    assert json.loads(json.dumps(data))["context"]["limits"]["inner"] == {"deep": [{"x": 1}]}
+    data["context"]["attempts"].append(99)  # type: ignore[index]
+    assert _error().context["attempts"] == (1, 2, 3)
+
+
+@pytest.mark.parametrize("bad", [{1: "x"}, {"s": {1, 2}}, {"b": b"raw"}, {"o": object()}])
+def test_unsupported_context_values_are_rejected(bad: dict[object, object]) -> None:
+    with pytest.raises(TypeError):
+        RagError(ErrorCode.E_TIMEOUT, "x", context=bad)  # type: ignore[arg-type]
+
+
+def test_every_code_round_trips() -> None:
+    for code in ErrorCode:
+        error = RagError(code, "m", context={"c": code.value})
+        _assert_equivalent(error, pickle.loads(pickle.dumps(error)))  # noqa: S301
+
+
+def test_subclasses_are_restored_as_their_own_type() -> None:
+    class Specific(RagError):
+        pass
+
+    error = Specific(ErrorCode.E_PARSE_FAILED, "bad")
+    restored = copy.deepcopy(error)
+    assert isinstance(restored, Specific)

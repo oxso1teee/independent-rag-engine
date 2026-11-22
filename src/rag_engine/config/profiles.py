@@ -9,8 +9,9 @@ from types import MappingProxyType
 
 
 class ResourceProfile(StrEnum):
+    """Only ``low`` is supported for now; further profiles need measured limits."""
+
     LOW = "low"
-    STANDARD = "standard"
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,14 +34,6 @@ PROFILE_LIMITS: Mapping[ResourceProfile, ProfileLimits] = MappingProxyType(
             embed_batch=16,
             ingest_workers=1,
             max_loaded_vectors_mb=512,
-            reranker_enabled=False,
-        ),
-        ResourceProfile.STANDARD: ProfileLimits(
-            llm_concurrency=1,
-            embed_concurrency=2,
-            embed_batch=32,
-            ingest_workers=2,
-            max_loaded_vectors_mb=2048,
             reranker_enabled=False,
         ),
     }

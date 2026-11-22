@@ -39,4 +39,7 @@ Changing dependencies: edit `pyproject.toml`, run `uv lock`, commit `uv.lock`. C
   mutating.
 - Raise `RagError` with a stable code for every expected failure; never swallow errors.
 - Keep log fields free of document text, prompts and secrets (see `observability`).
+  Event names are constants (`ingest.document_parsed`); put variable data in fields,
+  never into the event name or an exception message that may be logged.
+- Architecture decisions are recorded in `docs/adr/`.
 - Commits follow Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).

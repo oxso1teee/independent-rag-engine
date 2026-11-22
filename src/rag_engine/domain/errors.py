@@ -10,12 +10,44 @@ Error ``context`` must never contain document text, prompts or secrets.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
 
-type ContextValue = str | int | float | bool | None
+type ContextValue = (
+    str | int | float | bool | Sequence[ContextValue] | Mapping[str, ContextValue] | None
+)
+
+
+def _freeze(value: object) -> ContextValue:
+    """Deeply immutable copy: mappings become read-only views, sequences become tuples."""
+    if value is None or isinstance(value, str | int | float | bool):
+        return value
+    if isinstance(value, Mapping):
+        frozen: dict[str, ContextValue] = {}
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise TypeError("error context keys must be strings")
+            frozen[key] = _freeze(item)
+        return MappingProxyType(frozen)
+    if isinstance(value, Sequence) and not isinstance(value, bytes | bytearray):
+        return tuple(_freeze(item) for item in value)
+    raise TypeError(f"unsupported error context value: {type(value).__name__}")
+
+
+def _freeze_mapping(value: Mapping[str, ContextValue]) -> Mapping[str, ContextValue]:
+    frozen = _freeze(value)
+    return frozen if isinstance(frozen, Mapping) else MappingProxyType({})
+
+
+def _thaw(value: ContextValue) -> object:
+    """Plain, mutable, JSON-friendly copy of a frozen context value."""
+    if isinstance(value, Mapping):
+        return {key: _thaw(item) for key, item in value.items()}
+    if isinstance(value, Sequence) and not isinstance(value, str):
+        return [_thaw(item) for item in value]
+    return value
 
 
 class ErrorCategory(StrEnum):
@@ -118,7 +150,14 @@ class RagError(Exception):
         self.category = spec.category
         self.retryable = spec.retryable if retryable is None else retryable
         self.message = message
-        self.context = MappingProxyType(dict(context or {}))
+        self.context = _freeze_mapping(context or {})
+
+    def __reduce__(self) -> tuple[object, ...]:
+        """Support ``copy``, ``deepcopy`` and ``pickle`` (the context is rebuilt frozen)."""
+        return (
+            _restore_error,
+            (type(self), self.code.value, self.message, self.retryable, _thaw(self.context)),
+        )
 
     def to_dict(self) -> dict[str, object]:
         """Serialise to a plain structure suitable for logs and API problems."""
@@ -127,8 +166,18 @@ class RagError(Exception):
             "category": self.category.value,
             "retryable": self.retryable,
             "message": self.message,
-            "context": dict(self.context),
+            "context": _thaw(self.context),
         }
+
+
+def _restore_error(
+    cls: type[RagError],
+    code: str,
+    message: str,
+    retryable: bool,
+    context: Mapping[str, ContextValue],
+) -> RagError:
+    return cls(ErrorCode(code), message, retryable=retryable, context=context)
 
 
 def violation(message: str, **context: ContextValue) -> RagError:

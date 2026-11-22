@@ -1,7 +1,7 @@
 # Copy to rag.toml (ignored by Git) and adjust. Environment variables prefixed with
-# RAG_ override these values, e.g. RAG_PROFILE=standard or RAG_LLM__CONTEXT_WINDOW=8192.
+# RAG_ override these values, e.g. RAG_LOGGING__LEVEL=DEBUG or RAG_LLM__CONTEXT_WINDOW=8192.
 
-# Resource profile: "low" (default) or "standard".
+# Resource profile. Only "low" is supported at the moment.
 profile = "low"
 
 # Explicit overrides of the profile's limits (all optional).

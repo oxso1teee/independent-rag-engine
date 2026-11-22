@@ -43,6 +43,9 @@ violations make the linter fail.
 
 ## Errors
 
+Categories, the code-to-category assignment and the rationale are recorded in
+[ADR 0001](adr/0001-error-taxonomy-and-categories.md).
+
 Every failure is a `RagError(code, message, retryable, context)`. Codes are stable and
 listed in `domain/errors.py`; a snapshot test fails on any change.
 
@@ -57,7 +60,8 @@ listed in `domain/errors.py`; a snapshot test fails on any change.
 | `integrity` | `E_EMBED_MODEL_MISMATCH`, `E_INTEGRITY` |
 | `user` | `E_FILTER_INVALID` |
 
-\* retryable by default. `context` carries scalars only and must never contain document
+\* retryable by default. `context` holds scalars and nested sequences/mappings of scalars (deeply immutable,
+restored intact by `copy` and `pickle`) and must never contain document
 text, prompts or secrets. Violated domain invariants raise `E_INTEGRITY`.
 
 ## Ports
@@ -66,7 +70,8 @@ text, prompts or secrets. Violated domain invariants raise `E_INTEGRITY`.
 `LexicalIndex`, `Reranker`, `LLMProvider`, `TokenCounter` and `Clock` are runtime-checkable
 protocols with no behaviour. Network-bound providers (`EmbeddingProvider`, `LLMProvider`)
 are `async`; CPU- and SQLite-bound ports are synchronous and are called from worker
-threads by the services that use them.
+threads by the services that use them ([ADR 0003](adr/0003-async-provider-ports.md)).
+The store boundaries planned for Phase 2 are in [ADR 0004](adr/0004-store-boundaries-for-phase-2.md).
 
 ## Configuration
 
@@ -74,7 +79,7 @@ threads by the services that use them.
 (nested keys with `__`), an optional TOML file, defaults. `.env` files are not a source.
 Validation is strict (unknown keys are rejected) and every problem is reported as
 `E_CONFIG_INVALID` naming the field and reason, never the value. The `low` resource
-profile is the default; its limits (`llm_concurrency`, `embed_concurrency`, `embed_batch`,
+profile is the only supported one ([ADR 0002](adr/0002-single-resource-profile.md)); its limits (`llm_concurrency`, `embed_concurrency`, `embed_batch`,
 `ingest_workers`, `max_loaded_vectors_mb`) can be overridden explicitly. An enabled
 embedding provider requires `provider` and `model`; an enabled LLM additionally requires
 `context_window`. Secrets are referenced by environment-variable name (`api_key_env`);
@@ -84,9 +89,14 @@ a key placed in a file is rejected.
 
 `structlog` with JSON output. `request_scope(request_id)` binds the request id to every
 event inside it and `stage_scope(...)` adds the stage name, timing and failure codes.
-A processor redacts values under sensitive keys (text, prompts, answers, tokens, keys,
-passwords) and replaces any string longer than 200 characters, so content cannot be
-logged by accident. Use `text_digest()` to correlate content without logging it.
+Processors, in order: event-name check (names must be constants such as `stage.done`;
+anything else is replaced by `log.event_redacted` with a digest and length), exception
+summary (`exc_info` becomes `exception_type`, `exception_chain`, `RagError` code,
+category and retryable flag, and traceback frames as `file:line in function`; the
+exception message is never logged), then redaction of values under sensitive keys (text,
+prompts, answers, tokens, keys, passwords, `exception`, `stack`) and replacement of any
+string longer than 200 characters. Use `text_digest()` to correlate content without
+logging it.
 
 ## Test doubles
 

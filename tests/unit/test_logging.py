@@ -175,3 +175,163 @@ def test_console_rendering_is_supported() -> None:
     configure_logging("INFO", json_output=False, stream=stream)
     get_logger("x").info("hello", n=1)
     assert "hello" in stream.getvalue()
+
+
+# ------------------------------------------------ security regression (exceptions, events)
+
+PRIVATE = "CONFIDENTIAL DOCUMENT BODY"
+
+
+def _single_event(stream: io.StringIO) -> dict[str, object]:
+    recorded = events(stream)
+    assert len(recorded) == 1
+    return recorded[0]
+
+
+def _assert_no_leak(stream: io.StringIO) -> None:
+    assert "CONFIDENTIAL" not in stream.getvalue()
+
+
+def _raise_private() -> None:
+    raise ValueError(f"{PRIVATE} " + "x" * 400)
+
+
+@pytest.mark.parametrize("style", ["exc_info_true", "exception_method", "instance", "tuple"])
+def test_exceptions_never_leak_their_message(style: str) -> None:
+    import sys
+
+    stream = capture()
+    logger = get_logger("t")
+    try:
+        _raise_private()
+    except ValueError as caught:
+        if style == "exc_info_true":
+            logger.error("parse.failed", exc_info=True)
+        elif style == "exception_method":
+            logger.exception("parse.failed")
+        elif style == "instance":
+            logger.error("parse.failed", exc_info=caught)
+        else:
+            logger.error("parse.failed", exc_info=sys.exc_info())
+    _assert_no_leak(stream)
+    event = _single_event(stream)
+    assert event["exception_type"] == "builtins.ValueError"
+    assert "exc_info" not in event
+    assert "exception" not in event
+    frames = event["traceback"]
+    assert isinstance(frames, list)
+    assert any("_raise_private" in frame for frame in frames)
+    assert all("/" not in frame for frame in frames)  # file names only, no directories
+
+
+def test_rag_error_diagnostics_are_preserved() -> None:
+    stream = capture()
+    request_id = make_ids().request_id()
+    error = RagError(ErrorCode.E_PROVIDER_TIMEOUT, f"{PRIVATE} timed out", context={"k": PRIVATE})
+    with request_scope(request_id):
+        try:
+            raise error
+        except RagError:
+            get_logger("t").error("embed.failed", exc_info=True)
+    _assert_no_leak(stream)
+    event = _single_event(stream)
+    assert event["error_code"] == "E_PROVIDER_TIMEOUT"
+    assert event["error_category"] == "provider"
+    assert event["retryable"] is True
+    assert event["request_id"] == str(request_id)
+    assert event["exception_type"].endswith("RagError")  # type: ignore[attr-defined]
+
+
+def test_exception_chain_reports_types_only() -> None:
+    stream = capture()
+    try:
+        try:
+            _raise_private()
+        except ValueError as inner:
+            raise RagError(ErrorCode.E_PARSE_FAILED, "wrapped") from inner
+    except RagError:
+        get_logger("t").error("parse.failed", exc_info=True)
+    _assert_no_leak(stream)
+    assert _single_event(stream)["exception_chain"] == ["builtins.ValueError"]
+
+
+def test_exc_info_without_an_active_exception_is_harmless() -> None:
+    stream = capture()
+    get_logger("t").error("odd.event", exc_info=True)
+    event = _single_event(stream)
+    assert "exception_type" not in event
+    assert "exc_info" not in event
+
+
+def test_manually_supplied_exception_text_is_redacted_and_capped() -> None:
+    stream = capture()
+    get_logger("t").error("x.failed", exception=f"Traceback ... {PRIVATE}", stack=PRIVATE * 20)
+    _assert_no_leak(stream)
+
+
+@pytest.mark.parametrize(
+    "event",
+    [
+        f"parsed {PRIVATE}",
+        f"{PRIVATE}",
+        "Has Spaces",
+        "UPPER.case",
+        "x" * 200,
+        "",
+        "résumé.parsed",
+    ],
+)
+def test_non_constant_event_names_are_replaced_by_a_digest(event: str) -> None:
+    stream = capture()
+    get_logger("t").info(event, chunks=2)
+    _assert_no_leak(stream)
+    recorded = _single_event(stream)
+    assert recorded["event"] == "log.event_redacted"
+    assert recorded["event_digest"] == text_digest(event)
+    assert recorded["event_chars"] == len(event)
+    assert recorded["chunks"] == 2
+
+
+@pytest.mark.parametrize(
+    "event", ["stage.start", "ingest.document_parsed", "a", "retry:2", "x-y_z.1"]
+)
+def test_constant_event_names_pass_unchanged(event: str) -> None:
+    stream = capture()
+    get_logger("t").info(event)
+    assert _single_event(stream)["event"] == event
+
+
+def test_non_string_event_is_handled() -> None:
+    stream = capture()
+    get_logger("t").info({"text": PRIVATE})  # type: ignore[arg-type]
+    _assert_no_leak(stream)
+    assert _single_event(stream)["event"] == "log.event_redacted"
+
+
+def test_stage_failure_keeps_request_stage_and_code_without_content() -> None:
+    stream = capture()
+    logger = get_logger("pipeline")
+    request_id = make_ids().request_id()
+    with (
+        pytest.raises(ValueError, match="CONFIDENTIAL"),
+        request_scope(request_id),
+        stage_scope(logger, "parse"),
+    ):
+        _raise_private()
+    _assert_no_leak(stream)
+    failed = events(stream)[-1]
+    assert failed["event"] == "stage.failed"
+    assert failed["request_id"] == str(request_id)
+    assert failed["stage"] == "parse"
+    assert failed["error_type"] == "ValueError"
+
+
+def test_console_renderer_also_hides_exception_content() -> None:
+    stream = io.StringIO()
+    configure_logging("INFO", json_output=False, stream=stream)
+    try:
+        _raise_private()
+    except ValueError:
+        get_logger("t").exception("parse.failed")
+    assert "CONFIDENTIAL" not in stream.getvalue()
+    assert "ValueError" in stream.getvalue()

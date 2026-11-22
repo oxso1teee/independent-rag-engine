@@ -33,7 +33,7 @@ def test_toml_file_is_loaded(tmp_path: Path) -> None:
     path = write(
         tmp_path,
         """
-profile = "standard"
+profile = "low"
 
 [storage]
 db_path = "var/index.db"
@@ -55,7 +55,7 @@ level = "DEBUG"
 """,
     )
     settings = load_settings(path)
-    assert settings.profile is ResourceProfile.STANDARD
+    assert settings.profile is ResourceProfile.LOW
     assert settings.storage.db_path == Path("var/index.db")
     assert settings.llm.context_window == 8192
     assert settings.embedding.model == "embed-small"
@@ -67,11 +67,11 @@ def test_environment_overrides_the_file(tmp_path: Path, monkeypatch: pytest.Monk
         tmp_path, '[llm]\nenabled = true\nprovider = "local"\nmodel = "m"\ncontext_window = 4096\n'
     )
     monkeypatch.setenv("RAG_LLM__CONTEXT_WINDOW", "16384")
-    monkeypatch.setenv("RAG_PROFILE", "standard")
+    monkeypatch.setenv("RAG_LOGGING__LEVEL", "DEBUG")
     settings = load_settings(path)
     assert settings.llm.context_window == 16384
     assert settings.llm.provider == "local"  # merged, not replaced
-    assert settings.profile is ResourceProfile.STANDARD
+    assert settings.logging.level == "DEBUG"
 
 
 def test_explicit_limits_override_the_profile(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -85,7 +85,7 @@ def test_explicit_limits_override_the_profile(monkeypatch: pytest.MonkeyPatch) -
 def test_settings_are_immutable() -> None:
     settings = load_settings()
     with pytest.raises(ValueError, match="frozen"):
-        settings.profile = ResourceProfile.STANDARD  # type: ignore[misc]
+        settings.profile = ResourceProfile.LOW  # type: ignore[misc]
 
 
 def _fails(tmp_path: Path, body: str) -> RagError:
@@ -120,6 +120,7 @@ def test_max_new_tokens_must_fit_the_window(tmp_path: Path) -> None:
     "body",
     [
         'profile = "huge"',
+        'profile = "standard"',
         "[limits]\nllm_concurrency = 0",
         "[limits]\nembed_batch = 100000",
         '[llm]\nprovider = "Bad Name"',
@@ -165,9 +166,9 @@ def test_invalid_environment_value_is_a_config_error(monkeypatch: pytest.MonkeyP
 
 
 def test_dotenv_files_are_not_a_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    (tmp_path / ".env").write_text("RAG_PROFILE=standard\n", encoding="utf-8")
+    (tmp_path / ".env").write_text("RAG_LOGGING__LEVEL=DEBUG\n", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
-    assert load_settings().profile is ResourceProfile.LOW
+    assert load_settings().logging.level == "INFO"
 
 
 def test_read_secret_comes_from_the_environment_only() -> None:
@@ -180,5 +181,5 @@ def test_read_secret_comes_from_the_environment_only() -> None:
 
 
 def test_profiles_are_consistent() -> None:
-    assert set(PROFILE_LIMITS) == set(ResourceProfile)
+    assert set(PROFILE_LIMITS) == set(ResourceProfile) == {ResourceProfile.LOW}
     assert Settings().profile is ResourceProfile.LOW

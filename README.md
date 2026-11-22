@@ -57,6 +57,7 @@ docs/              architecture and development notes
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Development guide](docs/DEVELOPMENT.md)
+- [Architecture decision records](docs/adr/README.md)
 
 ## Configuration
 

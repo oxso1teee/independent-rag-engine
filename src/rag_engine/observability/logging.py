@@ -2,18 +2,29 @@
 
 Every event is a JSON-serialisable mapping. A request scope binds ``request_id``
 for all events emitted inside it (correlation across stages), and a stage scope
-binds ``stage``. By default the processor chain redacts values stored under
-sensitive keys (document text, prompts, answers, secrets) and replaces any
-over-long string, so user content cannot reach the logs by accident.
+binds ``stage``. By default the processor chain
+
+- accepts only constant-style event names (``stage.done``); anything else is
+  replaced by ``log.event_redacted`` plus a digest and length of the original,
+- replaces ``exc_info`` by diagnostics that cannot carry content: exception type,
+  cause chain types, ``RagError`` code/category/retryable and traceback frames
+  (file name, line, function) but never the exception message,
+- redacts values stored under sensitive keys (document text, prompts, answers,
+  secrets) and replaces any over-long string,
+
+so user content cannot reach the logs by accident.
 """
 
 from __future__ import annotations
 
 import hashlib
 import logging
+import re
 import sys
+import traceback
 from collections.abc import Iterator, MutableMapping
 from contextlib import contextmanager
+from pathlib import PurePath
 from typing import Any, TextIO
 
 import structlog
@@ -45,11 +56,17 @@ _SENSITIVE_EXACT = frozenset(
         "bearer",
         "password",
         "authorization",
+        "exception",
+        "stack",
+        "stack_info",
     }
 )
 _SENSITIVE_SUFFIXES = ("_text", "_prompt", "_content", "_body")
 _SENSITIVE_PARTS = ("password", "secret", "api_key", "apikey", "credential")
-_UNTOUCHED = frozenset({"event", "exception", "stack", "timestamp", "level"})
+_UNTOUCHED = frozenset({"event", "timestamp", "level"})
+_EVENT_NAME = re.compile(r"[a-z0-9][a-z0-9_.:-]{0,79}")
+_MAX_TRACEBACK_FRAMES = 30
+_MAX_CHAIN = 5
 
 
 def is_sensitive_key(key: str) -> bool:
@@ -84,6 +101,59 @@ def redact_sensitive(_: Any, __: str, event_dict: EventDict) -> EventDict:
         if key in _UNTOUCHED:
             continue
         event_dict[key] = REDACTED if is_sensitive_key(key) else _scrub(event_dict[key])
+    return event_dict
+
+
+def sanitize_event(_: Any, __: str, event_dict: EventDict) -> EventDict:
+    """Structlog processor: event names are constants, never interpolated content."""
+    event = event_dict.get("event")
+    if isinstance(event, str) and _EVENT_NAME.fullmatch(event):
+        return event_dict
+    original = str(event)
+    event_dict["event"] = "log.event_redacted"
+    event_dict["event_digest"] = text_digest(original)
+    event_dict["event_chars"] = len(original)
+    return event_dict
+
+
+def _exception_from(exc_info: object) -> BaseException | None:
+    if isinstance(exc_info, BaseException):
+        return exc_info
+    if exc_info is True:
+        return sys.exc_info()[1]
+    if isinstance(exc_info, tuple) and len(exc_info) == 3:
+        candidate = exc_info[1]
+        return candidate if isinstance(candidate, BaseException) else None
+    return None
+
+
+def _type_name(exc: BaseException) -> str:
+    cls = type(exc)
+    return f"{cls.__module__}.{cls.__qualname__}"
+
+
+def summarize_exception(_: Any, __: str, event_dict: EventDict) -> EventDict:
+    """Structlog processor: replace ``exc_info`` by content-free diagnostics."""
+    exc = _exception_from(event_dict.pop("exc_info", None))
+    if exc is None:
+        return event_dict
+    event_dict["exception_type"] = _type_name(exc)
+    if isinstance(exc, RagError):
+        event_dict.setdefault("error_code", exc.code.value)
+        event_dict.setdefault("error_category", exc.category.value)
+        event_dict.setdefault("retryable", exc.retryable)
+    chain: list[str] = []
+    cause = exc.__cause__ or exc.__context__
+    while cause is not None and len(chain) < _MAX_CHAIN:
+        chain.append(_type_name(cause))
+        cause = cause.__cause__ or cause.__context__
+    if chain:
+        event_dict["exception_chain"] = chain
+    frames = traceback.extract_tb(exc.__traceback__)[-_MAX_TRACEBACK_FRAMES:]
+    if frames:
+        event_dict["traceback"] = [
+            f"{PurePath(f.filename).name}:{f.lineno} in {f.name}" for f in frames
+        ]
     return event_dict
 
 
@@ -125,8 +195,9 @@ def configure_logging(
         merge_contextvars,
         structlog.processors.add_log_level,
         _timestamper(clock),
+        sanitize_event,
+        summarize_exception,
         redact_sensitive,
-        structlog.processors.format_exc_info,
         renderer,
     ]
     structlog.configure(

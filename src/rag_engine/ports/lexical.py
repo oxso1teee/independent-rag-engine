@@ -6,14 +6,21 @@ from collections.abc import Sequence, Set
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
-from rag_engine.domain import ChunkId, ScoredChunk
+from rag_engine.domain import ChunkId, Language, ScoredChunk
 
 
 @dataclass(frozen=True, slots=True)
 class LexicalDocument:
+    """One indexable chunk. ``language`` selects the analyser (stemmer) of the chunk.
+
+    ``language`` is the last field with a default, so existing positional calls
+    ``LexicalDocument(chunk_id, body, headings)`` keep working.
+    """
+
     chunk_id: ChunkId
     body: str
     headings: str = ""
+    language: Language = Language.UND
 
 
 @runtime_checkable
