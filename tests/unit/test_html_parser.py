@@ -102,9 +102,9 @@ def test_entities_are_decoded_exactly_once() -> None:
 
 
 def test_inline_flow_and_breaks_and_images() -> None:
-    document = parse(
-        '<div>Start <span>in <em>span</em></span><br>next <img src="a.png" alt="alt text"> end</div>'
-    )
+    page = "<div>Start <span>in <em>span</em></span><br>next "
+    page += '<img src="a.png" alt="alt text"> end</div>'
+    document = parse(page)
     assert document.normalized_text == "Start in span\nnext alt text end"
 
 
