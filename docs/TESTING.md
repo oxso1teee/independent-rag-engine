@@ -40,6 +40,30 @@ of create/modify/delete/rename/wait/rescan (including steps around the 30-day gr
 are compared with a naive model of the ingestion rules after every rescan; identities must not
 change. Changing the grace period in the model by one day makes it fail.
 
+## Parsing and chunking (Phase 3)
+
+- **Contracts.** `tests/contract/test_parser_contract.py` runs every parser (md, html, txt, pdf,
+  docx) over valid samples, empty and oversized input, arbitrary bytes and mutated samples;
+  `test_chunker_contract.py` runs every chunking strategy over the same documents, policies and
+  random documents; `test_token_counter_contract.py` covers both counters.
+- **Corpus.** `tests/fixtures/corpus_mini` holds eighteen original Russian, English and mixed
+  documents (Markdown, HTML, text, a cp1251 file, PDF and DOCX). `generate_corpus_mini.py`
+  recreates them byte for byte.
+- **Golden snapshot.** `tests/fixtures/golden/corpus_mini.json` records, for each document, the
+  parser, versions, text hash, and every chunk (level, parent, kind, tokens, offsets, text hash,
+  heading path, language, pages, duplicate flag). Any change in normalisation, parsing or chunk
+  boundaries is a diff. After an intended change run
+  `uv run python tests/fixtures/update_golden.py` and review the diff.
+- **Properties.** `tests/unit/test_pipeline_properties.py` generates Markdown, HTML and text and
+  random size policies; every strategy must refuse a document with a documented error or return
+  chunks that satisfy the data-model invariants, cover the text, respect `max_tokens` and are
+  identical on a second run; without overlap the leaves rebuild the text.
+- **Fuzzing.** `tests/integration/test_pipeline_fuzz.py` mutates every corpus file with a fixed
+  seed (flipped bytes, truncation, deleted, inserted, duplicated and zeroed ranges) and checks
+  the same outcome rule; the isolated worker must give the outcome of in-process parsing.
+- **Isolation.** `tests/integration/test_parser_isolation.py` runs parsers that hang, crash,
+  exhaust memory, recurse, print to the protocol channel, read the environment or raise.
+
 ## NFR-04
 
 `tests/perf/test_nfr04_rescan.py` ingests 1000 files, drains the queue through a spy parser,

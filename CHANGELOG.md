@@ -81,6 +81,10 @@ project until a release is cut.
   `DocumentId` (no chains; links follow additions, changes, renames, disappearances and
   restorations; non-active documents hold none). `rag ingest` reports the links it updated. The
   integrity checks verify the graph exactly, and the model-based test now creates copies.
+- Hardening: a golden snapshot of how every `corpus_mini` document is parsed and chunked (with an
+  update script), property tests of parse-then-chunk for generated Markdown, HTML and text under
+  random size policies, and mutation fuzzing of every corpus file through the whole pipeline,
+  including equality of isolated and in-process outcomes.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
