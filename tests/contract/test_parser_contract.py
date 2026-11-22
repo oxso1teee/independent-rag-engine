@@ -16,6 +16,7 @@ from hypothesis import strategies as st
 
 from rag_engine.domain import ErrorCode, ParsedDocument, RagError
 from rag_engine.domain.invariants import check_block_provenance
+from rag_engine.parsing.md import MarkdownParser
 from rag_engine.parsing.txt import TxtParser
 from rag_engine.ports import ParseHints, ParseLimits, Parser
 
@@ -33,6 +34,17 @@ class Case:
 
 
 CASES: dict[str, Case] = {
+    "md": Case(
+        make=MarkdownParser,
+        mime="text/markdown",
+        extension="md",
+        samples=(
+            b"# Title\n\nA paragraph.\n\n## Part\n\n- one\n- two\n",
+            "---\ntitle: T\n---\n\n# Заголовок\n\nТекст `код` и **выделение**.\n".encode(),
+            b"| a | b |\n|---|---|\n| 1 | 2 |\n\n```\ncode\n```\n\n> quote\n",
+            b"plain text without any markup",
+        ),
+    ),
     "txt": Case(
         make=TxtParser,
         mime="text/plain",
