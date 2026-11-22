@@ -41,8 +41,15 @@ persistence of chunks.
 7. **Limits and isolation.** Input size, text length, block count, page count, archive size and
    ratio, nesting depth and wall time are limits with defaults in `[parsing]`; exceeding one is
    an error, never silent truncation. PDF, DOCX and HTML are parsed in a separate, long-lived
-   worker process with a memory limit and a timeout, so a malformed file cannot take the main
-   process down; Markdown and plain text are parsed in process.
+   worker process (`[parsing] isolate`), so a malformed file cannot take the main process down:
+   the worker is a fresh interpreter with a minimal environment (no secrets), a data-segment
+   cap (`isolation_memory_mb`, `RLIMIT_DATA`) and no core dumps. Requests and replies are
+   length-prefixed JSON (never pickle); the document is rebuilt through the domain
+   constructors, which check every invariant again. A parse that exceeds `timeout_s` (plus a
+   short grace period) gets the worker killed (`timeout`); memory exhaustion is reported as
+   `memory` and a crash as `worker_failed`; the next document starts a fresh worker, which is
+   also replaced after 200 documents. This limits resources, it is not a syscall sandbox.
+   Markdown and plain text are parsed in process.
 8. **Token counting.** `TokenCounter` is a port. The default `HeuristicTokenCounter` is
    script-aware, deterministic and errs on the high side; `HfTokenCounter` counts with a local
    `tokenizer.json` (optional extra). The counter id is part of the chunker fingerprint.

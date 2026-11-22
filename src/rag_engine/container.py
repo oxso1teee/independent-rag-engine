@@ -25,6 +25,7 @@ from rag_engine.ingestion.service import IngestService
 from rag_engine.ingestion.sources import FilesystemSource
 from rag_engine.observability import configure_logging
 from rag_engine.parsing.cleaners import compile_cleaners
+from rag_engine.parsing.isolation import ParserWorker
 from rag_engine.parsing.registry import default_parsers
 from rag_engine.ports import Clock, ParseLimits, SourceAdapter, Store
 from rag_engine.storage.sqlite import open_store, open_store_read_only
@@ -72,8 +73,15 @@ def build_processing(settings: Settings, clock: Clock, ids: IdFactory) -> Proces
         overlap_ratio=chunking.overlap_ratio,
     )
 
+    parsing = settings.parsing
+    worker = ParserWorker(parsing.isolation_memory_mb) if parsing.isolate else None
+
     def build(cleaners: Sequence[str], strategy: str | None) -> DocumentProcessor:
-        parsers = default_parsers(compile_cleaners(cleaners) if cleaners else None)
+        parsers = default_parsers(
+            compile_cleaners(cleaners) if cleaners else None,
+            isolate=parsing.isolate,
+            worker=worker,
+        )
         return DocumentProcessor(
             parsers, clock, ChunkerRegistry(counter, strategy or chunking.strategy)
         )

@@ -70,6 +70,12 @@ project until a release is cut.
   ratio); password-protected files and damaged archives end as `E_PARSE_FAILED` with a reason.
   Test builders create DOCX files; two handbooks join `corpus_mini` (byte-identical on
   regeneration).
+- Parser isolation: PDF, DOCX and HTML are parsed in a long-lived worker process by default
+  (`[parsing] isolate`). The worker starts with a minimal environment, a data-segment cap
+  (`isolation_memory_mb`) and no core dumps; messages are length-prefixed JSON, never pickle. A
+  hang is killed at the time limit (`timeout`), exhausted memory ends as `memory`, a crash as
+  `worker_failed`; the next document starts a fresh worker, which is also replaced every 200
+  documents. Results equal those of in-process parsing (tested for the real parsers).
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
