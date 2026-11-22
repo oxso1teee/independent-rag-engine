@@ -12,3 +12,4 @@ supersedes the old one.
 | [0005](0005-documents-versions-and-schema-v2.md) | Documents, versions and schema v2 | Accepted |
 | [0006](0006-ingestion-safety-and-queue.md) | Ingestion safety rules, retry policy, exit codes and MIME detection | Accepted |
 | [0007](0007-layout-and-composition-root.md) | Layout, composition root and boundaries | Accepted |
+| [0008](0008-parsing-and-chunking-contracts.md) | Parsing and chunking contracts | Accepted |
