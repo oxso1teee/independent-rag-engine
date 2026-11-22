@@ -93,6 +93,10 @@ project until a release is cut.
   duplicates, time) as Markdown or JSON. It describes shapes only and ranks nothing.
 - `corpus_mini` gains a service-line and repeated-disclaimer document; the fixtures are excluded
   from the formatter so they stay byte-identical to the generator's output.
+- Memory estimate corrected: memory is measured per million characters, with the Python-level
+  peak, the resident-set growth and the worker cap kept apart; a conservative budget (15 MB per
+  million characters, and 250 MB plus 14 MB per million characters for the worker) and the
+  limits of the measurement are in `docs/TESTING.md` and ADR 0008.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
