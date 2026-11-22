@@ -14,7 +14,7 @@ from markdown_it.token import Token
 from rag_engine.domain import BlockKind, ParsedDocument, ParseReason, parse_failed
 from rag_engine.parsing.assemble import TextAssembler
 from rag_engine.parsing.cleaners import CleanerSet, normalizer_version
-from rag_engine.parsing.common import check_input_size, decode_text
+from rag_engine.parsing.common import check_input_size, clean_metadata, decode_text
 from rag_engine.parsing.frontmatter import parse_date, split_front_matter
 from rag_engine.parsing.htmltext import fragment_text
 from rag_engine.ports import ParseHints
@@ -67,7 +67,7 @@ class MarkdownParser:
         if any(token.level > hints.limits.max_nesting for token in tokens):
             raise parse_failed(ParseReason.TOO_DEEP, "the document is nested too deeply")
         _Walker(assembler).walk(tokens)
-        title = meta.get("title") or None
+        title = clean_metadata(meta.get("title"))
         first_h1 = next(
             (
                 b.text
@@ -81,14 +81,14 @@ class MarkdownParser:
             warnings.append("front_matter_date_ignored")
         document = assembler.parsed(
             title=title or first_h1,
-            author=meta.get("author") or None,
+            author=clean_metadata(meta.get("author")),
             created=created,
             warnings=tuple(warnings),
         )
         if not document.blocks:
             return assembler.parsed(
                 title=title,
-                author=meta.get("author") or None,
+                author=clean_metadata(meta.get("author")),
                 warnings=(*warnings, "empty_document"),
             )
         return document
