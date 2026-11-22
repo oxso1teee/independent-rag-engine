@@ -76,6 +76,11 @@ project until a release is cut.
   hang is killed at the time limit (`timeout`), exhausted memory ends as `memory`, a crash as
   `worker_failed`; the next document starts a fresh worker, which is also replaced every 200
   documents. Results equal those of in-process parsing (tested for the real parsers).
+- `duplicate_of`: after ingestion changes are applied, in the same transaction, documents of one
+  source with identical raw content are linked to the active one with the smallest
+  `DocumentId` (no chains; links follow additions, changes, renames, disappearances and
+  restorations; non-active documents hold none). `rag ingest` reports the links it updated. The
+  integrity checks verify the graph exactly, and the model-based test now creates copies.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,

@@ -35,6 +35,7 @@ from rag_engine.ingestion.change import (
     documents_by_key,
     sync_states_by_key,
 )
+from rag_engine.ingestion.duplicates import resolve_duplicates
 from rag_engine.ingestion.identity import AdapterFactory, SourceRegistry, match_moves
 from rag_engine.ingestion.lifecycle import (
     Lifecycle,
@@ -76,6 +77,7 @@ class IngestReport:
     jobs_enqueued: int
     skipped: int
     gc_removed: int
+    duplicates: int = 0  # duplicate links set or cleared by this run
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -92,6 +94,7 @@ class IngestReport:
             "jobs_enqueued": self.jobs_enqueued,
             "skipped": self.skipped,
             "gc_removed": self.gc_removed,
+            "duplicates": self.duplicates,
         }
 
 
@@ -125,16 +128,19 @@ class IngestService:
         with request_scope(self._ids.request_id()):
             with stage_scope(_log, "ingest.scan", clock=self._clock, dry_run=False):
                 source, plan = self._detect(name, self._store.reader(), accept_mass_delete)
-            jobs = 0
+            jobs = duplicates = 0
             if plan.mutates:
                 with (
                     stage_scope(_log, "ingest.apply", clock=self._clock),
                     self._store.unit_of_work().begin() as writer,
                 ):
                     jobs = self._apply(writer, source, plan)
+                    duplicates = resolve_duplicates(writer, source.id, self._clock.now())
             with stage_scope(_log, "ingest.gc", clock=self._clock):
                 gc = self._lifecycle.collect_garbage(source).removed
-            report = self._report(source, plan, dry_run=False, jobs=jobs, gc=gc)
+            report = self._report(
+                source, plan, dry_run=False, jobs=jobs, gc=gc, duplicates=duplicates
+            )
             _log.info("ingest.done", **_counts(report))
             return report
 
@@ -355,7 +361,7 @@ class IngestService:
 
     @staticmethod
     def _report(
-        source: Source, plan: ChangePlan, *, dry_run: bool, jobs: int, gc: int
+        source: Source, plan: ChangePlan, *, dry_run: bool, jobs: int, gc: int, duplicates: int = 0
     ) -> IngestReport:
         counts = plan.counts()
         unsupported = sum(1 for c in plan.changes if c.error is ErrorCode.E_UNSUPPORTED_FORMAT)
@@ -375,6 +381,7 @@ class IngestService:
             jobs_enqueued=jobs,
             skipped=plan.skipped,
             gc_removed=gc,
+            duplicates=duplicates,
         )
 
 

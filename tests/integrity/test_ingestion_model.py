@@ -68,6 +68,14 @@ class IngestionMachine(RuleBasedStateMachine):
     def create_or_modify(self, key: str) -> None:
         self._write(key, self._fresh_content(key))
 
+    @precondition(lambda self: bool(self.disk) and len(self.disk) < len(NAMES))
+    @rule(data=st.data())
+    def copy_content(self, data: st.DataObject) -> None:
+        """A new file with the same bytes as an existing one: a duplicate."""
+        source = data.draw(st.sampled_from(sorted(self.disk)))
+        target = data.draw(st.sampled_from([n for n in NAMES if n not in self.disk]))
+        self._write(target, self.disk[source])
+
     @precondition(lambda self: bool(self.disk))
     @rule(data=st.data())
     def delete(self, data: st.DataObject) -> None:

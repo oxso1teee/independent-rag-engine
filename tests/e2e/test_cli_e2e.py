@@ -395,3 +395,15 @@ def test_isolation_can_be_turned_off_in_the_configuration(cli: Cli, tmp_path: Pa
     page.write_text("<main><p>Body.</p></main>", encoding="utf-8")
     code, payload = cli.json("--config", str(config), "chunks", str(page))
     assert code == 0 and payload["document"]["parser"] == "html"
+
+
+def test_ingest_reports_copies_of_identical_files(cli: Cli, docs: Path) -> None:
+    (docs / "notes" / "copy-of-n0.md").write_text("# note 0\n", encoding="utf-8")
+    cli.run("source", "add", "notes", str(docs))
+    code, payload = cli.json("ingest", "notes")
+    assert code == 0 and payload["results"][0]["duplicates"] == 1
+    code, out, _ = cli.run("ingest")
+    assert code == 0 and "duplicate link" not in out  # nothing changed, nothing to report
+    (docs / "notes" / "copy-of-n0.md").unlink()  # the copy disappears: its link is cleared
+    code, out, _ = cli.run("ingest")
+    assert code == 0 and "1 duplicate link(s) updated" in out

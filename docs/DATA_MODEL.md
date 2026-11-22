@@ -65,7 +65,9 @@ cascade from documents), `sync_state` (primary key `(source_id, source_key)`), `
 reference each other); the writer verifies that the version exists and belongs to the document.
 
 Schema v3 (Phase 4) adds chunks, embedding models, embeddings and the full-text index.
-`duplicate_of` exists but is filled in Phase 3 (after normalisation).
+`duplicate_of` is maintained by ingestion: among the active documents of one source with
+identical raw bytes, the one with the smallest `DocumentId` is the original and the others point
+to it (see [ADR 0008](adr/0008-parsing-and-chunking-contracts.md), item 13).
 
 ## What the store does not hold yet
 
