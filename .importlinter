@@ -23,6 +23,7 @@ containers =
     rag_engine.domain
 layers =
     invariants
+    language
     models
     ids
     errors

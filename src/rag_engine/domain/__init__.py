@@ -31,6 +31,7 @@ from rag_engine.domain.ids import (
     text_hash,
     uuid7,
 )
+from rag_engine.domain.language import detect_language
 from rag_engine.domain.models import (
     Block,
     BlockKind,
@@ -118,6 +119,7 @@ __all__ = [
     "TextHash",
     "Uuid7Generator",
     "chunker_fingerprint",
+    "detect_language",
     "error_spec",
     "freeze_context",
     "normalize_source_key",

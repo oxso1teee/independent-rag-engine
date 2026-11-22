@@ -14,6 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
+from types import MappingProxyType
 
 from rag_engine.domain.errors import ContextValue, ErrorCode, freeze_context, require
 from rag_engine.domain.ids import (
@@ -345,8 +346,15 @@ class Block:
     level: int | None = None
     page: int | None = None
     heading_path: tuple[str, ...] = ()
+    attrs: Mapping[str, str | int | float | bool] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        for key, value in self.attrs.items():
+            require(
+                isinstance(key, str) and isinstance(value, str | int | float | bool),
+                "block attributes are scalars keyed by strings",
+            )
+        object.__setattr__(self, "attrs", MappingProxyType(dict(self.attrs)))
         require(0 <= self.char_start < self.char_end, "invalid block span")
         require(len(self.text) == self.char_end - self.char_start, "block text/span mismatch")
         if self.kind is BlockKind.HEADING:
@@ -369,6 +377,8 @@ class ParsedDocument:
     warnings: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if self.created is not None:
+            _require_utc(self.created, "created")
         previous_start = 0
         for block in self.blocks:
             require(block.char_end <= len(self.normalized_text), "block exceeds the text")

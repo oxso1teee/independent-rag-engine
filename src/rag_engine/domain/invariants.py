@@ -7,11 +7,13 @@ Single-entity invariants are enforced by the models themselves.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
-from rag_engine.domain.errors import require
-from rag_engine.domain.ids import ChunkId
+from rag_engine.domain.errors import require, violation
+from rag_engine.domain.ids import ChunkId, ContentHash, DocumentId
 from rag_engine.domain.models import (
+    Block,
+    BlockKind,
     Chunk,
     ChunkPolicy,
     Document,
@@ -122,3 +124,53 @@ def check_version_transition(old: Document | None, new: Document) -> None:
         old.current_version_id is None or new.current_version_id is not None,
         "a document cannot lose its current version",
     )
+
+
+def check_block_provenance(blocks: Sequence[Block]) -> None:
+    """Every block carries the path of the headings above it; page numbers never go back.
+
+    A heading's own path ends with its text; a heading of level ``n`` closes every open
+    heading of level ``n`` or deeper.
+    """
+    stack: list[tuple[int, str]] = []
+    last_page = 0
+    for block in blocks:
+        if block.kind is BlockKind.HEADING:
+            level = block.level if block.level is not None else 1
+            while stack and stack[-1][0] >= level:
+                stack.pop()
+            stack.append((level, block.text))
+        expected = tuple(text for _, text in stack)
+        require(
+            block.heading_path == expected,
+            "block heading path does not follow the headings above it",
+            char_start=block.char_start,
+        )
+        if block.page is not None:
+            require(block.page >= last_page, "page numbers must not decrease", page=block.page)
+            last_page = block.page
+
+
+def check_duplicate_graph(
+    documents: Sequence[Document], hashes: Mapping[DocumentId, ContentHash]
+) -> None:
+    """``duplicate_of`` points at a live, non-duplicate document of the same source with the
+    same content; chains and cycles are impossible."""
+    by_id = {document.id: document for document in documents}
+    for document in documents:
+        target_id = document.duplicate_of
+        if target_id is None:
+            continue
+        target = by_id.get(target_id)
+        if target is None:
+            raise violation("duplicate_of refers to an unknown document")
+        require(target.source_id == document.source_id, "duplicates live in one source")
+        require(target.duplicate_of is None, "duplicate_of must not form a chain")
+        require(
+            target.status is DocumentStatus.ACTIVE, "the original of a duplicate must be active"
+        )
+        require(
+            hashes.get(document.id) is not None
+            and hashes.get(document.id) == hashes.get(target.id),
+            "duplicates must have identical content",
+        )
