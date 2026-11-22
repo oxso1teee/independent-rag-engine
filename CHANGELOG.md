@@ -13,6 +13,8 @@ project until a release is cut.
 - Parsing: idempotent text normalisation (prose and code modes), exactly-once entity decoding,
   validated per-source cleaners that version the normaliser, and `TextAssembler`, which builds
   `normalized_text`, block offsets and heading paths together.
+- Plain-text parser (declared or detected encoding, blank-line paragraphs, empty documents) and a
+  shared `Parser` contract suite.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
