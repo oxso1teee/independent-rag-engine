@@ -378,3 +378,20 @@ def test_chunks_help_is_listed(cli: Cli) -> None:
     assert "chunks" in cli.run("--help")[1]
     code, out, _ = cli.run("chunks", "--help")
     assert code == 0 and all(w in out for w in ("--source", "--cleaner", "--strategy", "--full"))
+
+
+def test_html_is_parsed_in_the_isolated_worker_by_default(cli: Cli, tmp_path: Path) -> None:
+    page = tmp_path / "page.html"
+    page.write_text("<main><h1>Title</h1><p>Body of the page.</p></main>", encoding="utf-8")
+    code, payload = cli.json("chunks", str(page))
+    assert code == 0 and payload["document"]["parser"] == "html"
+    assert payload["chunks"][0]["text"].startswith("Title")
+
+
+def test_isolation_can_be_turned_off_in_the_configuration(cli: Cli, tmp_path: Path) -> None:
+    config = tmp_path / "rag.toml"
+    config.write_text("[parsing]\nisolate = []\n", encoding="utf-8")
+    page = tmp_path / "page.html"
+    page.write_text("<main><p>Body.</p></main>", encoding="utf-8")
+    code, payload = cli.json("--config", str(config), "chunks", str(page))
+    assert code == 0 and payload["document"]["parser"] == "html"

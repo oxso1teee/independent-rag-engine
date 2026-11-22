@@ -42,7 +42,8 @@ The database path comes from `[storage] db_path` in `rag.toml` (default `data/ra
 `RAG_STORAGE__DB_PATH` or `--db`. Queue retry and lease parameters are the `[ingest]` section. Add `--json` to any command for machine-readable output.
 `rag chunks` runs the parser and the chunker on one document and prints the chunks (`--full` for
 whole texts, `--cleaner/-C` for extra line cleaners, `--strategy` to override
-`[chunking] strategy`). It reads the `[parsing]` and `[chunking]` sections of `rag.toml`. Storing
+`[chunking] strategy`). It reads the `[parsing]` and `[chunking]` sections of `rag.toml`; PDF,
+DOCX and HTML are parsed in an isolated worker process unless `[parsing] isolate = []`. Storing
 versions and chunks, embedding and search are later phases: queued jobs stay queued for now.
 
 ## Tests
