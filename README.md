@@ -37,14 +37,15 @@ uv run rag --version
 make check          # lint, types, architecture, tests
 ```
 
-Register a folder and see what ingestion finds (nothing is parsed yet; documents that need
-processing are queued):
+Register a folder and see what ingestion finds (documents that need processing are queued),
+then preview how a document is parsed and split into chunks (nothing is stored):
 
 ```bash
 uv run rag source add notes ~/Documents/notes
 uv run rag ingest --dry-run
 uv run rag ingest
 uv run rag status
+uv run rag chunks ~/Documents/notes/guide.md
 ```
 
 The installed environment (including development tools) is about 190 MB; the runtime

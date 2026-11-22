@@ -13,6 +13,7 @@ from collections import defaultdict
 from collections.abc import Callable, Collection, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import BinaryIO
 
 from rag_engine.domain import (
     ContentHash,
@@ -29,6 +30,7 @@ from rag_engine.domain import (
 )
 from rag_engine.ingestion.change import Move, hash_stream
 from rag_engine.ingestion.sources.fs import locator_fingerprint, normalize_locator
+from rag_engine.parsing.cleaners import compile_cleaners
 from rag_engine.ports import Clock, SourceAdapter, Store
 
 AdapterFactory = Callable[[Source], SourceAdapter]
@@ -135,6 +137,7 @@ class SourceRegistry:
             updated_at=now,
         )
         self._adapter_factory(source)  # validates the policy (globs) before anything is stored
+        compile_cleaners(source.policy.cleaners)  # and the cleaners
         with self._store.unit_of_work().begin() as writer:
             writer.put_source(source)
         return source
@@ -147,6 +150,13 @@ class SourceRegistry:
         if source is None:
             raise RagError(ErrorCode.E_SOURCE_NOT_FOUND, "unknown source", context={"name": name})
         return source
+
+    def open(self, name: str, key: SourceKey) -> tuple[Source, BinaryIO]:
+        """The source and a read stream of one of its documents (the caller closes it)."""
+        source = self.get(name)
+        adapter = self._adapter_factory(source)
+        self.verify(source, adapter)
+        return source, adapter.open(key)
 
     def verify(self, source: Source, adapter: SourceAdapter) -> None:
         """Refuse to work when the adapter reads a different root than the registered one."""

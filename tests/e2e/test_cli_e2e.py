@@ -16,8 +16,9 @@ from typing import Any
 import pytest
 
 from rag_engine.cli import main
-from rag_engine.cli.context import Services
-from rag_engine.container import build_services, filesystem_adapter
+from rag_engine.cli.context import Processing, Services
+from rag_engine.config import load_settings
+from rag_engine.container import build_processing, build_services, filesystem_adapter
 from rag_engine.storage.sqlite import open_store, open_store_read_only
 from rag_engine.testing import FakeClock
 from tests.factories import make_ids
@@ -39,6 +40,9 @@ class ContainerForTests:
             yield build_services(store, path, self.clock, self.ids, filesystem_adapter)
         finally:
             store.close()
+
+    def processing(self, config: Path | None) -> Processing:
+        return build_processing(load_settings(config), self.clock, self.ids)
 
 
 @dataclass
@@ -270,3 +274,107 @@ def test_a_second_writer_is_reported_as_a_storage_error(cli: Cli, docs: Path) ->
         code, _, err = cli.run("ingest", "notes")
     assert code == 8 and "E_STORE_LOCKED" in err
     assert cli.run("ingest", "notes")[0] == 0  # released: works again
+
+
+# ---------------------------------------------------------------------- rag chunks
+
+NOTE = (
+    "# Notes\n\nFirst paragraph of the note.\n\nSecond paragraph of the note.\n\n"
+    "Footer: generated automatically\n"
+)
+
+
+@pytest.fixture
+def note(tmp_path: Path) -> Path:
+    path = tmp_path / "note.md"
+    path.write_text(NOTE, encoding="utf-8")
+    return path
+
+
+def test_chunks_of_a_file_need_no_database(cli: Cli, note: Path) -> None:
+    code, out, err = cli.run("chunks", str(note))
+    assert code == 0 and err == ""
+    assert out.startswith("note.md: md -> structure_aware (")
+    assert "Footer: generated automatically" in out and "[Notes]" in out
+    assert not cli.container.default_db.exists()
+
+
+def test_chunks_json_describes_document_chunker_and_every_chunk(cli: Cli, note: Path) -> None:
+    code, payload = cli.json("chunks", str(note))
+    assert code == 0
+    assert payload["document"]["parser"] == "md" and payload["document"]["title"] == "Notes"
+    assert payload["document"]["normalizer_version"] == "norm/1"
+    assert payload["chunking"]["chunker"] == "structure_aware"
+    assert payload["chunking"]["target_tokens"] == 256
+    assert payload["summary"]["leaves"] == 1 and payload["summary"]["sections"] == 0
+    (chunk,) = payload["chunks"]
+    assert chunk["ordinal"] == 0 and chunk["parent"] is None and chunk["heading_path"] == ["Notes"]
+    assert chunk["text"].startswith("Notes\n\nFirst paragraph")
+    assert "id" not in chunk
+
+
+def test_chunks_output_is_the_same_every_time(cli: Cli, note: Path) -> None:
+    first, second = cli.run("chunks", str(note), "--full"), cli.run("chunks", str(note), "--full")
+    assert first == second
+    assert cli.run("chunks", str(note), "--json") == cli.run("chunks", str(note), "--json")
+
+
+def test_full_prints_whole_texts_and_the_preview_is_short(cli: Cli, tmp_path: Path) -> None:
+    path = tmp_path / "long.txt"
+    path.write_text("word " * 60 + "THE-END", encoding="utf-8")
+    assert "THE-END" not in cli.run("chunks", str(path))[1]
+    assert "THE-END" in cli.run("chunks", str(path), "--full")[1]
+
+
+def test_a_cleaner_drops_matching_lines_and_versions_the_normaliser(cli: Cli, note: Path) -> None:
+    code, payload = cli.json("chunks", str(note), "-C", "^Footer:.*$")
+    assert code == 0
+    assert "Footer" not in payload["chunks"][0]["text"]
+    assert payload["document"]["normalizer_version"].startswith("norm/1+")
+
+
+def test_the_strategy_can_be_chosen(cli: Cli, note: Path) -> None:
+    code, payload = cli.json("chunks", str(note), "--strategy", "fixed")
+    assert code == 0 and payload["chunking"]["chunker"] == "fixed"
+    code, _, err = cli.run("chunks", str(note), "--strategy", "semantic")
+    assert code == 3 and "E_CONFIG_INVALID" in err
+
+
+def test_source_cleaners_apply_to_chunks_of_that_source(cli: Cli, docs: Path) -> None:
+    (docs / "notes" / "n0.md").write_text(NOTE, encoding="utf-8")
+    assert cli.run("source", "add", "notes", str(docs), "-C", "^Footer:.*$")[0] == 0
+    code, payload = cli.json("chunks", "--source", "notes", "notes/n0.md")
+    assert code == 0 and payload["document"]["name"] == "notes/n0.md"
+    assert "Footer" not in payload["chunks"][0]["text"]
+    extra = cli.json("chunks", "-s", "notes", "notes/n0.md", "-C", "First paragraph.*")[1]
+    assert "First paragraph" not in extra["chunks"][0]["text"]
+    assert extra["document"]["normalizer_version"] != payload["document"]["normalizer_version"]
+
+
+def test_an_unsafe_cleaner_is_refused_when_the_source_is_added(cli: Cli, docs: Path) -> None:
+    code, _, err = cli.run("source", "add", "notes", str(docs), "-C", "(a+)+$")
+    assert code == 3 and "E_CONFIG_INVALID" in err
+    assert not cli.container.default_db.exists() or cli.json("source", "list")[1]["sources"] == []
+
+
+def test_chunks_failures_have_their_own_exit_codes(cli: Cli, docs: Path, tmp_path: Path) -> None:
+    assert cli.run("chunks", str(tmp_path / "absent.md"))[0] == 4
+    assert cli.run("chunks", str(tmp_path))[0] == 4  # a directory is not a document
+    picture = tmp_path / "pic.md"
+    picture.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 64)
+    code, _, err = cli.run("chunks", str(picture))
+    assert code == 5 and "E_UNSUPPORTED_FORMAT" in err
+    code, payload = cli.json("chunks", str(picture))
+    assert code == 5 and payload["error"]["code"] == "E_UNSUPPORTED_FORMAT"
+    code, _, err = cli.run("chunks", "--source", "notes", "notes/n0.md")  # no database yet
+    assert code == 4 and "no database yet" in err
+    cli.run("source", "add", "notes", str(docs))
+    assert cli.run("chunks", "--source", "other", "notes/n0.md")[0] == 4
+    assert cli.run("chunks", "--source", "notes", "notes/absent.md")[0] == 4
+    assert cli.run("chunks", "--source", "notes", "../outside.md")[0] == 4
+
+
+def test_chunks_help_is_listed(cli: Cli) -> None:
+    assert "chunks" in cli.run("--help")[1]
+    code, out, _ = cli.run("chunks", "--help")
+    assert code == 0 and all(w in out for w in ("--source", "--cleaner", "--strategy", "--full"))

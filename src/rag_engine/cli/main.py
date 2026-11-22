@@ -11,19 +11,23 @@ With ``--json`` a command prints exactly one JSON document to stdout, errors inc
 from __future__ import annotations
 
 import json
+import unicodedata
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
 from rag_engine import __version__
-from rag_engine.cli.context import Container, Services
+from rag_engine.cli.context import Container, Processing, Services
 from rag_engine.cli.exit_codes import ExitCode, exit_code_for
-from rag_engine.domain import ErrorCode, RagError, SourcePolicy
+from rag_engine.cli.render import chunks_to_dict, describe_chunks
+from rag_engine.domain import ErrorCode, RagError, SourceKey, SourcePolicy
 from rag_engine.ingestion.identity import RebasePlan
+from rag_engine.ingestion.processing import read_limited
 from rag_engine.ingestion.service import IngestReport, StoreStatus, collect_status
+from rag_engine.ports import ParseLimits
 from rag_engine.storage.sqlite import StoreNotInitialised
 
 JsonOption = Annotated[bool, typer.Option("--json", help="Print one JSON document.")]
@@ -144,6 +148,12 @@ def build_app(container: Container) -> typer.Typer:
             int,
             typer.Option("--grace-days", min=0, help="Days a vanished document stays restorable."),
         ] = 30,
+        cleaner: Annotated[
+            list[str] | None,
+            typer.Option(
+                "--cleaner", "-C", help="Regex of whole lines to drop from every text (repeatable)."
+            ),
+        ] = None,
         json_output: JsonOption = False,
     ) -> None:
         """Register a directory as a document source (idempotent for the same name and root)."""
@@ -152,6 +162,7 @@ def build_app(container: Container) -> typer.Typer:
                 include=tuple(include) if include else ("**/*",),
                 exclude=tuple(exclude or ()),
                 max_file_bytes=int(max_file_mb * 1024 * 1024),
+                cleaners=tuple(cleaner or ()),
                 follow_symlinks=follow_symlinks,
                 delete_grace_days=grace_days,
             )
@@ -286,6 +297,63 @@ def build_app(container: Container) -> typer.Typer:
         if errors:
             raise typer.Exit(int(exit_code_for(errors[0])))
 
+    # ---------------------------------------------------------------------- chunks
+
+    @app.command("chunks")
+    def chunks(
+        ctx: typer.Context,
+        doc: Annotated[
+            str, typer.Argument(help="A file; with --source, the key of a document in that source.")
+        ],
+        source: Annotated[
+            str | None,
+            typer.Option("--source", "-s", help="Registered source; its cleaners are applied."),
+        ] = None,
+        cleaner: Annotated[
+            list[str] | None,
+            typer.Option("--cleaner", "-C", help="Extra regex of lines to drop (repeatable)."),
+        ] = None,
+        strategy: Annotated[
+            str | None,
+            typer.Option(
+                "--strategy", help="auto, structure_aware, recursive or fixed (default: config)."
+            ),
+        ] = None,
+        full: Annotated[bool, typer.Option("--full", help="Print whole chunk texts.")] = False,
+        json_output: JsonOption = False,
+    ) -> None:
+        """Parse a document and show the chunks it is split into; nothing is stored."""
+        state = _state(ctx)
+        extra = tuple(cleaner or ())
+        try:
+            processing = state.container.processing(state.config)
+            if source is None:
+                path = Path(doc)
+                name, patterns = unicodedata.normalize("NFC", path.name), extra
+                limits = processing.limits
+                data = _read_file(path, limits.max_input_bytes)
+            else:
+                name, found, limits, data = _execute(
+                    ctx,
+                    lambda s: _read_entry(s, source, doc, processing),
+                    read_only=True,
+                    as_json=json_output,
+                )
+                patterns = (*found, *extra)
+            done = processing.build(patterns, strategy).process(
+                data,
+                SourceKey(name),
+                limits,
+                processing.policy,
+                processing.ids.document_version_id(),
+            )
+        except RagError as error:
+            raise _fail(error, as_json=json_output) from error
+        if json_output:
+            _emit(chunks_to_dict(done, processing.policy, name))
+        else:
+            typer.echo("\n".join(describe_chunks(done, name, full=full)))
+
     # ---------------------------------------------------------------------- status
 
     @app.command("status")
@@ -317,6 +385,39 @@ def build_app(container: Container) -> typer.Typer:
         typer.echo(f"jobs: {jobs}")
 
     return app
+
+
+def _key(value: str) -> SourceKey:
+    try:
+        return SourceKey(value)
+    except RagError:
+        raise RagError(
+            ErrorCode.E_SOURCE_NOT_FOUND,
+            "not a valid document key (relative, '/'-separated, no '..')",
+            context={"key": value},
+        ) from None
+
+
+def _read_file(path: Path, max_bytes: int) -> bytes:
+    try:
+        with path.open("rb") as stream:
+            return read_limited(stream, max_bytes)
+    except OSError:
+        raise RagError(
+            ErrorCode.E_SOURCE_NOT_FOUND,
+            "the file does not exist or cannot be read",
+            context={"path": str(path)},
+        ) from None
+
+
+def _read_entry(
+    services: Services, name: str, key: str, processing: Processing
+) -> tuple[str, tuple[str, ...], ParseLimits, bytes]:
+    source, stream = services.registry.open(name, _key(key))
+    limits = replace(processing.limits, max_input_bytes=source.policy.max_file_bytes)
+    with stream:
+        data = read_limited(stream, limits.max_input_bytes)
+    return key, source.policy.cleaners, limits, data
 
 
 def _describe(report: IngestReport) -> str:

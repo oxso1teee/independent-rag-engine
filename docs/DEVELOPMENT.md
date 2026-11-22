@@ -32,11 +32,18 @@ uv run rag ingest                # scan and queue the documents that need proces
 uv run rag ingest --accept-mass-delete   # confirm a disappearance the guard stopped
 uv run rag status                # documents per state, job queue
 uv run rag source rebase notes /new/location --dry-run
+uv run rag source add wiki ~/wiki -C '^Last edited:.*$'   # drop matching whole lines from every text
+uv run rag chunks ~/wiki/page.md          # parse and chunk one file; writes nothing
+uv run rag chunks --source wiki page.md   # a document of a source, with its cleaners applied
+uv run rag chunks page.md --strategy recursive --full --json
 ```
 
 The database path comes from `[storage] db_path` in `rag.toml` (default `data/rag.db`),
 `RAG_STORAGE__DB_PATH` or `--db`. Queue retry and lease parameters are the `[ingest]` section. Add `--json` to any command for machine-readable output.
-Parsing, chunking and embedding are later phases: queued jobs stay queued for now.
+`rag chunks` runs the parser and the chunker on one document and prints the chunks (`--full` for
+whole texts, `--cleaner/-C` for extra line cleaners, `--strategy` to override
+`[chunking] strategy`). It reads the `[parsing]` and `[chunking]` sections of `rag.toml`. Storing
+versions and chunks, embedding and search are later phases: queued jobs stay queued for now.
 
 ## Tests
 

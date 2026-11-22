@@ -205,7 +205,9 @@ Queue parameters are settings (`[ingest]`); safety rules are fixed.
 
 ## Command line
 
-`rag source add|list|rebase`, `rag ingest [--dry-run] [--accept-mass-delete]`, `rag status`;
+`rag source add|list|rebase` (`add` takes repeatable `--cleaner` line patterns),
+`rag ingest [--dry-run] [--accept-mass-delete]`, `rag status`, `rag chunks DOC [--source NAME]
+[--cleaner RE] [--strategy S] [--full]` (parse and chunk one document, nothing stored);
 `--json` prints one JSON document (errors included). Commands contain no logic: they call
 services from the injected `Container`. Exit codes follow the error category: `0` ok, `1`
 unexpected, `2` user/usage, `3` config, `4` source, `5` parse, `6` provider, `7` resource,
