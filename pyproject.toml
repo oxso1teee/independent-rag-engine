@@ -16,11 +16,15 @@ dependencies = [
     "typer>=0.15",
 ]
 
+[project.optional-dependencies]
+tokenizers = ["tokenizers>=0.20"]
+
 [project.scripts]
 rag = "rag_engine.container:main"
 
 [dependency-groups]
 dev = [
+    "tokenizers>=0.20",
     "hypothesis>=6.100",
     "import-linter>=2.0",
     "mypy>=1.13",

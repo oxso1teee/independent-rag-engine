@@ -21,6 +21,8 @@ project until a release is cut.
   `selectolax`.
 - HTML parser: main-content selection, page furniture and hidden elements removed, headings,
   paragraphs, nested lists, tables, code and quotes, title, author and date from the page head.
+- Token counting: `HeuristicTokenCounter` (script-aware, at least one token per word, errs on the
+  high side) and `HfTokenCounter` for a local `tokenizer.json` (optional extra `tokenizers`).
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
