@@ -13,7 +13,7 @@ fixed, derandomised profile.
 | `tests/e2e` | `e2e` | The `rag` command in-process (injected container, fake clock) and as a real process |
 | `tests/chaos` | `chaos` | `SIGKILL` at every stage (below) |
 | `tests/integrity` | `integrity` | Data-model invariants and a model-based test of ingestion |
-| `tests/perf` | `perf` | NFR-04 on 1000 files, measured; **not** part of the pull-request CI |
+| `tests/perf` | `perf` | NFR-04 on 1000 files and the Phase 3 parsing and chunking budgets, measured; **not** part of the pull-request CI |
 
 The pull-request CI runs `pytest -m "not perf"`. `make test-all` does the same with coverage.
 `make perf` runs the budgets separately.
@@ -81,12 +81,39 @@ on the code of the Phase 2 compliance PR):
 
 Budget: 5 s. Parser calls on rescan: 0. Jobs created: 0. Logical database dump: unchanged.
 
+## Phase 3 performance budgets
+
+`tests/perf/test_phase3_pipeline.py` generates its inputs (no stored binaries) and prints one
+line per measurement. The budgets are multiples (about five times, ten for the worker round
+trip) of the measurements below; they exist to catch an accidental quadratic step, and like all
+initial budgets they may be revised with new measurements.
+
+Measured on 2026-11-22 with `make perf` (4 vCPU, Python 3.12.3, three runs on the code of the
+hardening PR; seconds, heuristic token counter, default chunk policy 256/384/48/12 %):
+
+| Measurement | Run 1 | Run 2 | Run 3 | Budget |
+|---|---|---|---|---|
+| Count tokens of 6 MB of text | 1.28 | 1.29 | 1.38 | 7 |
+| Markdown, 1 MB, parse + chunk (structure-aware) | 3.49 | 3.34 | 3.28 | 15 |
+| HTML, 1 MB, parse + chunk | 1.78 | 1.74 | 1.79 | 10 |
+| Plain text, 1 MB, parse + chunk (recursive) | 1.00 | 1.04 | 1.06 | 6 |
+| Chunk 1 MB, structure-aware | 1.42 | 1.31 | 1.33 | 15 |
+| Chunk 1 MB, recursive | 1.01 | 1.04 | 0.92 | 15 |
+| Chunk 1 MB, fixed | 2.96 | 3.15 | 3.27 | 15 |
+| PDF, 100 pages, parse + chunk | 0.61 | 0.62 | 0.75 | 5 |
+| DOCX, 2000 paragraphs, parse + chunk | 2.08 | 2.21 | 2.17 | 10 |
+| Isolated worker: start + first document | 0.95 | 0.79 | 0.74 | 5 |
+| Isolated worker: one more 20 KB document | 0.004 | 0.005 | 0.004 | 0.5 |
+| Peak Python memory, Markdown 2 MB parse + chunk | 25 MB | 25 MB | 25 MB | 150 MB |
+
+The worker adds under a second once per process and a few milliseconds per document.
+
 ## Running
 
 ```bash
 make test        # unit tests only
 make test-all    # everything except perf, with coverage and the domain coverage gate (90 %)
-make perf        # NFR-04, run before a phase is closed
+make perf        # NFR-04 and the Phase 3 budgets, run before a phase is closed
 make check       # lint, types, architecture, all tests
 ```
 
