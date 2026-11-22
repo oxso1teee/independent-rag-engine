@@ -43,7 +43,8 @@ The database path comes from `[storage] db_path` in `rag.toml` (default `data/ra
 `rag chunks` runs the parser and the chunker on one document and prints the chunks (`--full` for
 whole texts, `--cleaner/-C` for extra line cleaners, `--strategy` to override
 `[chunking] strategy`). It reads the `[parsing]` and `[chunking]` sections of `rag.toml`; PDF,
-DOCX and HTML are parsed in an isolated worker process unless `[parsing] isolate = []`. Storing
+DOCX and HTML are parsed in an isolated worker process unless `[parsing] isolate = []`. `eval/scripts/chunk_grid.py` prints how a corpus is cut at several target sizes (counts, token
+distribution, overlap, time) without ranking them. Storing
 versions and chunks, embedding and search are later phases: queued jobs stay queued for now.
 
 ## Tests
