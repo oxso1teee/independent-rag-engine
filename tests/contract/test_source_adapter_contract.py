@@ -3,23 +3,36 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
 from rag_engine.domain import ErrorCode, RagError, SourceKey
+from rag_engine.ingestion.sources import FilesystemSource
 from rag_engine.ports import SourceAdapter, SourceRevision
 from rag_engine.testing import InMemorySource
 
 FILES = {"b/note.md": "# B", "a.txt": "alpha", "Папка/файл.md": "содержимое"}
 
-FACTORIES: dict[str, Callable[[], SourceAdapter]] = {
-    "in-memory": lambda: InMemorySource(FILES),
+
+def _filesystem(root: Path) -> SourceAdapter:
+    for name, text in FILES.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+    return FilesystemSource(root)
+
+
+# Every adapter is built from a fresh temporary directory (ignored by in-memory ones).
+FACTORIES: dict[str, Callable[[Path], SourceAdapter]] = {
+    "in-memory": lambda _root: InMemorySource(FILES),
+    "filesystem": _filesystem,
 }
 
 
 @pytest.fixture(params=sorted(FACTORIES))
-def source(request: pytest.FixtureRequest) -> SourceAdapter:
-    return FACTORIES[request.param]()
+def source(request: pytest.FixtureRequest, tmp_path: Path) -> SourceAdapter:
+    return FACTORIES[request.param](tmp_path)
 
 
 def test_satisfies_the_protocol(source: SourceAdapter) -> None:
@@ -30,6 +43,12 @@ def test_discovery_is_sorted_and_complete(source: SourceAdapter) -> None:
     keys = [entry.key.value for entry in source.discover({})]
     assert keys == sorted(keys)
     assert set(keys) == set(FILES)
+
+
+def test_scan_reports_the_same_entries_as_discovery(source: SourceAdapter) -> None:
+    report = source.scan({})
+    assert report.entries == tuple(source.discover({}))
+    assert report.unreadable == ()
 
 
 def test_discovery_is_repeatable(source: SourceAdapter) -> None:
