@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 import textwrap
@@ -107,3 +108,29 @@ def test_clean_package_passes(tmp_path: Path) -> None:
     )
     result = run_linter(tmp_path / "setup.cfg", tmp_path, tmp_path)
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    ("module", "content"),
+    [
+        ("chunking/offender.py", "from rag_engine.parsing import txt\n"),
+        ("parsing/offender.py", "from rag_engine.chunking import fixed\n"),
+        ("chunking/offender.py", "from rag_engine.storage import sqlite\n"),
+        ("parsing/offender.py", "from rag_engine.config import load_settings\n"),
+        ("chunking/offender.py", "from rag_engine.ingestion import processing\n"),
+        ("parsing/offender.py", "import sqlite3\n"),
+        ("chunking/offender.py", "import urllib.request\n"),
+    ],
+)
+def test_parsing_and_chunking_stay_independent_compute(
+    tmp_path: Path, module: str, content: str
+) -> None:
+    package = tmp_path / "rag_engine"
+    shutil.copytree(
+        PROJECT / "src" / "rag_engine", package, ignore=shutil.ignore_patterns("__pycache__")
+    )
+    clean = run_linter(PROJECT / ".importlinter", tmp_path, tmp_path)
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+    (package / module).write_text(content, encoding="utf-8")
+    result = run_linter(PROJECT / ".importlinter", tmp_path, tmp_path)
+    assert result.returncode != 0, result.stdout

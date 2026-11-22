@@ -11,7 +11,7 @@ layers =
     rag_engine.container
     rag_engine.cli
     rag_engine.ingestion
-    rag_engine.storage | rag_engine.system | rag_engine.testing | rag_engine.observability | rag_engine.config
+    rag_engine.storage | rag_engine.system | rag_engine.testing | rag_engine.observability | rag_engine.config | rag_engine.parsing | rag_engine.chunking
     rag_engine.ports
     rag_engine.domain
 
@@ -87,6 +87,8 @@ source_modules =
     rag_engine.storage
     rag_engine.system
     rag_engine.ingestion
+    rag_engine.parsing
+    rag_engine.chunking
 forbidden_modules =
     rag_engine.container
     rag_engine.cli
@@ -108,4 +110,26 @@ forbidden_modules =
     click
 # Logging goes through rag_engine.observability (which wraps structlog), so third-party
 # modules are only forbidden as *direct* imports of ingestion.
+allow_indirect_imports = True
+
+[importlinter:contract:parsing-chunking-are-compute]
+name = Parsing and chunking never touch storage, configuration or the network
+type = forbidden
+source_modules =
+    rag_engine.parsing
+    rag_engine.chunking
+forbidden_modules =
+    rag_engine.storage
+    rag_engine.system
+    rag_engine.config
+    rag_engine.ingestion
+    sqlite3
+    socket
+    http
+    urllib
+    pydantic
+    pydantic_settings
+    typer
+    click
+# Third-party parsers may use these modules themselves; only direct imports are forbidden.
 allow_indirect_imports = True

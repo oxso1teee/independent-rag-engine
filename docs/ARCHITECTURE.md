@@ -10,7 +10,8 @@ adapters are injected at a single composition root.
 container                                                 composition root: configuration, adapters, entry point
 cli                                                       command line (thin)
 ingestion                                                 use cases of the ingestion pipeline
-storage | system | testing | observability | config       adapters and cross-cutting services
+storage | system | testing | observability | config | parsing | chunking
+                                                          adapters and cross-cutting services
 ports                                                     Protocol contracts
 domain                                                    identifiers, models, invariants, errors
 ```
@@ -18,16 +19,18 @@ domain                                                    identifiers, models, i
 A layer may import only from layers below it; layers on the same row are independent.
 `ingestion` additionally may not import `storage`, `system`, `sqlite3`, `pydantic` or the
 CLI framework directly: it receives its store, clock and adapters through constructors and sees
-them only as ports (logging goes through `observability`). Later pipeline modules (parsing,
-chunking, embedding, retrieval, rerank, context, generation, orchestrator, evaluation) follow
-the same rule. [`container.py`](../src/rag_engine/container.py) is the only place that reads
+them only as ports (logging goes through `observability`). `parsing` and `chunking` are pure
+computation: they depend on the domain and the ports only, never on each other, on storage,
+configuration, ingestion or the network. Later pipeline modules (embedding, retrieval, rerank,
+context, generation, orchestrator, evaluation) follow the same rule. [`container.py`](../src/rag_engine/container.py) is the only place that reads
 configuration and creates adapters; the command line receives a `Container` (a protocol in
 `cli/context.py`), so tests substitute fakes.
 
 The rules are executable: [`.importlinter`](../.importlinter) declares them and CI runs
 `lint-imports`. They also forbid the domain from touching I/O or third-party libraries,
-and the core from importing the CLI or the test doubles. A negative test proves that
-violations make the linter fail.
+and the core from importing the CLI or the test doubles. Negative tests prove that
+violations make the linter fail, including new imports between `parsing` and `chunking` or
+from either into storage, configuration, ingestion or the network.
 
 ## Domain
 
