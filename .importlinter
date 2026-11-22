@@ -101,8 +101,10 @@ forbidden_modules =
     rag_engine.storage
     rag_engine.system
     sqlite3
-    structlog
     pydantic
     pydantic_settings
     typer
     click
+# Logging goes through rag_engine.observability (which wraps structlog), so third-party
+# modules are only forbidden as *direct* imports of ingestion.
+allow_indirect_imports = True

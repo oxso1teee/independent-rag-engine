@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from hypothesis import HealthCheck, settings
 from structlog.contextvars import clear_contextvars
 
 from rag_engine.domain import IdFactory
+from rag_engine.observability import configure_logging
 from rag_engine.storage.sqlite import SqliteStore, open_store
 from rag_engine.testing import FakeClock
 from tests.factories import make_ids
@@ -46,6 +48,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 @pytest.fixture(autouse=True)
 def _isolated_logging() -> Iterator[None]:
     clear_contextvars()
+    configure_logging("INFO", stream=io.StringIO())  # keep events off the real stdout/stderr
     yield
     clear_contextvars()
     structlog.reset_defaults()

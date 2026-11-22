@@ -42,7 +42,17 @@ from rag_engine.ingestion.lifecycle import (
     restore,
     tombstone,
 )
+from rag_engine.observability import get_logger, request_scope, stage_scope
 from rag_engine.ports import Clock, MetadataReader, MetadataWriter, Store
+
+_log = get_logger("rag_engine.ingestion")
+
+
+def _counts(report: IngestReport) -> dict[str, int]:
+    """Numbers only: events never carry paths or document text."""
+    return {
+        k: v for k, v in report.to_dict().items() if isinstance(v, int) and not isinstance(v, bool)
+    }
 
 
 def _revision(change: DetectedChange) -> SourceRevision:
@@ -104,18 +114,29 @@ class IngestService:
 
     def plan(self, name: str, *, accept_mass_delete: bool = False) -> IngestReport:
         """What a run would do; reads the store and the files, writes nothing."""
-        source, plan = self._detect(name, self._store.reader(), accept_mass_delete)
-        return self._report(source, plan, dry_run=True, jobs=0, gc=0)
+        with request_scope(self._ids.request_id()):
+            with stage_scope(_log, "ingest.scan", clock=self._clock, dry_run=True):
+                source, plan = self._detect(name, self._store.reader(), accept_mass_delete)
+            report = self._report(source, plan, dry_run=True, jobs=0, gc=0)
+            _log.info("ingest.planned", **_counts(report))
+            return report
 
     def run(self, name: str, *, accept_mass_delete: bool = False) -> IngestReport:
-        reader = self._store.reader()
-        source, plan = self._detect(name, reader, accept_mass_delete)
-        jobs = 0
-        if plan.mutates:
-            with self._store.unit_of_work().begin() as writer:
-                jobs = self._apply(writer, source, plan)
-        gc = self._lifecycle.collect_garbage(source).removed
-        return self._report(source, plan, dry_run=False, jobs=jobs, gc=gc)
+        with request_scope(self._ids.request_id()):
+            with stage_scope(_log, "ingest.scan", clock=self._clock, dry_run=False):
+                source, plan = self._detect(name, self._store.reader(), accept_mass_delete)
+            jobs = 0
+            if plan.mutates:
+                with (
+                    stage_scope(_log, "ingest.apply", clock=self._clock),
+                    self._store.unit_of_work().begin() as writer,
+                ):
+                    jobs = self._apply(writer, source, plan)
+            with stage_scope(_log, "ingest.gc", clock=self._clock):
+                gc = self._lifecycle.collect_garbage(source).removed
+            report = self._report(source, plan, dry_run=False, jobs=jobs, gc=gc)
+            _log.info("ingest.done", **_counts(report))
+            return report
 
     # -- detection --------------------------------------------------------------------
 

@@ -21,6 +21,7 @@ from rag_engine.ingestion.identity import AdapterFactory, SourceRegistry
 from rag_engine.ingestion.jobs import JobQueue, RetryPolicy
 from rag_engine.ingestion.service import IngestService
 from rag_engine.ingestion.sources import FilesystemSource
+from rag_engine.observability import configure_logging
 from rag_engine.ports import Clock, SourceAdapter, Store
 from rag_engine.storage.sqlite import open_store, open_store_read_only
 from rag_engine.system import SystemClock, system_id_factory
@@ -70,6 +71,7 @@ class DefaultContainer:
     @contextmanager
     def open(self, config: Path | None, db: Path | None, *, read_only: bool) -> Iterator[Services]:
         settings = load_settings(config)
+        configure_logging(settings.logging.level, json_output=settings.logging.json_output)
         path = db if db is not None else settings.storage.db_path
         clock = SystemClock()
         store = (
