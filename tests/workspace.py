@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import sqlite3
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,6 +18,7 @@ from rag_engine.ingestion.sources import FilesystemSource
 from rag_engine.ports import SourceAdapter
 from rag_engine.storage.sqlite import SqliteStore
 from rag_engine.testing import FakeClock
+from tests.integrity.checks import check_store_invariants
 
 
 def logical_dump(store: SqliteStore) -> str:
@@ -103,5 +104,8 @@ def make_workspace(
 
 
 @pytest.fixture
-def workspace(make_workspace: Callable[..., Workspace]) -> Workspace:
-    return make_workspace()
+def workspace(make_workspace: Callable[..., Workspace]) -> Iterator[Workspace]:
+    ws = make_workspace()
+    yield ws
+    # whatever the test did, the store must still satisfy the data-model invariants
+    check_store_invariants(ws.store.reader())

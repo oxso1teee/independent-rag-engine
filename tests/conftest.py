@@ -29,7 +29,9 @@ _MARKERS_BY_DIR = {
     "architecture": "architecture",
     "integration": "integration",
     "e2e": "e2e",
-    "performance": "performance",
+    "perf": "perf",
+    "chaos": "chaos",
+    "integrity": "integrity",
 }
 
 

@@ -3,6 +3,7 @@
 from rag_engine.config.profiles import PROFILE_LIMITS, ProfileLimits, ResourceProfile
 from rag_engine.config.settings import (
     EmbeddingSettings,
+    IngestSettings,
     LimitOverrides,
     LlmSettings,
     LoggingSettings,
@@ -15,6 +16,7 @@ from rag_engine.config.settings import (
 __all__ = [
     "PROFILE_LIMITS",
     "EmbeddingSettings",
+    "IngestSettings",
     "LimitOverrides",
     "LlmSettings",
     "LoggingSettings",

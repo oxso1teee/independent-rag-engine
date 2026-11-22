@@ -38,7 +38,7 @@ jobs:
       - name: Import boundaries
         run: uv run lint-imports
       - name: Tests with coverage (no network)
-        run: uv run pytest --cov=rag_engine --cov-report=term-missing
+        run: uv run pytest -m "not perf" --cov=rag_engine --cov-report=term-missing
       - name: Domain coverage gate (>= 90 %)
         run: uv run coverage report --include="src/rag_engine/domain/*" --fail-under=90
 
@@ -52,7 +52,7 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync --frozen
-      - run: uv run pytest -q
+      - run: uv run pytest -q -m "not perf"
 
   supply-chain:
     name: Licenses and vulnerabilities

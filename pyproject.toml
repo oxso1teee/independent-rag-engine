@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-rag = "rag_engine.cli:main"
+rag = "rag_engine.container:main"
 
 [dependency-groups]
 dev = [
@@ -66,7 +66,9 @@ markers = [
     "architecture: import-boundary checks (spawns a subprocess)",
     "integration: real SQLite and filesystem, no network",
     "e2e: whole command-line flows against a temporary workspace",
-    "performance: measured acceptance thresholds",
+    "perf: measured budgets (NFR); not part of the pull-request CI, run with `make perf`",
+    "chaos: failure injection, including SIGKILL at defined points",
+    "integrity: data-model invariants and property-based model checks",
 ]
 
 [tool.coverage.run]

@@ -16,7 +16,8 @@ from typing import Any
 import pytest
 
 from rag_engine.cli import main
-from rag_engine.cli.container import Services, build_services, filesystem_adapter
+from rag_engine.cli.context import Services
+from rag_engine.container import build_services, filesystem_adapter
 from rag_engine.storage.sqlite import open_store, open_store_read_only
 from rag_engine.testing import FakeClock
 from tests.factories import make_ids
