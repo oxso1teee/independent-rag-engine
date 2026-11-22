@@ -19,6 +19,8 @@ project until a release is cut.
   indented code, tables, raw HTML blocks reduced to text, front-matter metadata (title, author,
   date) read without a YAML library; entities decoded once. Dependencies: `markdown-it-py`,
   `selectolax`.
+- HTML parser: main-content selection, page furniture and hidden elements removed, headings,
+  paragraphs, nested lists, tables, code and quotes, title, author and date from the page head.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,

@@ -72,3 +72,13 @@ def decode_text(data: bytes, hints: ParseHints) -> tuple[str, list[str]]:
 def split_paragraphs(text: str) -> list[str]:
     """Paragraphs of ``text`` (blank-line separated); line endings must already be ``\\n``."""
     return _PARAGRAPH_BREAK.split(text.replace("\r\n", "\n").replace("\r", "\n"))
+
+
+def clean_metadata(value: str | None) -> str | None:
+    """A single-line, normalised metadata value, or ``None`` when nothing is left."""
+    if value is None:
+        return None
+    from rag_engine.parsing.normalize import normalize_text
+
+    cleaned = " ".join(normalize_text(value).split())
+    return cleaned or None
