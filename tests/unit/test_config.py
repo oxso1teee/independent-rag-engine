@@ -196,19 +196,20 @@ def test_parsing_and_chunking_defaults() -> None:
     assert (settings.chunking.target_tokens, settings.chunking.max_tokens) == (256, 384)
     assert settings.chunking.min_tokens == 48
     assert settings.chunking.overlap_ratio == 0.12
-    assert settings.chunking.counter == "heuristic"
+    assert settings.chunking.counter == "heuristic" and settings.chunking.strategy == "auto"
 
 
 def test_parsing_and_chunking_can_be_configured(tmp_path: Path) -> None:
     path = write(
         tmp_path,
         '[parsing]\nmax_pages = 50\nisolate = ["pdf"]\n\n'
-        '[chunking]\ntarget_tokens = 192\nmax_tokens = 256\ncounter = "tokenizers"\n'
+        '[chunking]\ntarget_tokens = 192\nmax_tokens = 256\nstrategy = "recursive"\n'
+        'counter = "tokenizers"\n'
         'tokenizer_json = "models/tokenizer.json"\n',
     )
     settings = load_settings(path)
     assert settings.parsing.max_pages == 50 and settings.parsing.isolate == ("pdf",)
-    assert settings.chunking.target_tokens == 192
+    assert settings.chunking.target_tokens == 192 and settings.chunking.strategy == "recursive"
     assert settings.chunking.tokenizer_json == Path("models/tokenizer.json")
 
 
@@ -226,6 +227,7 @@ def test_environment_overrides_parsing_settings(monkeypatch: pytest.MonkeyPatch)
         "[chunking]\ntarget_tokens = 400\n",  # target above max
         '[chunking]\ncounter = "tokenizers"\n',  # needs a tokenizer file
         '[chunking]\ncounter = "magic"\n',
+        '[chunking]\nstrategy = "semantic"\n',
         "[chunking]\noverlap_ratio = 0.5\n",
         "[parsing]\ntimeout_s = 0\n",
         "[parsing]\nmax_pages = 0\n",
