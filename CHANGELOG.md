@@ -26,6 +26,9 @@ project until a release is cut.
 - `DocumentProcessor`: size-limited reading, format identification from content, parser
   selection, provenance of a version (parser, normaliser, MIME decision, content hash) and
   clean failures (`E_PARSE_FAILED` with a reason, `E_UNSUPPORTED_FORMAT`); parser registry.
+- Text splitting for the chunkers: sentences (Russian and English abbreviations, initials,
+  decimals, list markers, ellipsis), words, lines and size-bounded hard splits that never separate
+  a combining mark from its letter; every function reassembles its input exactly.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
