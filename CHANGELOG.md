@@ -44,6 +44,10 @@ project until a release is cut.
   with headings, `recursive` for several blocks and `fixed` for a single block; `[chunking]
   strategy` forces one. `DocumentProcessor.process` parses and chunks a file and reports the
   chunker, its version and its fingerprint; each stage is logged without document text.
+- `corpus_mini` fixtures: sixteen original Russian, English and mixed documents (Markdown, HTML,
+  plain text, a cp1251 file, tiny sections, empty headings, tables, code) produced by a
+  deterministic generator, with a corpus test that checks parser and strategy choice, the chunk
+  invariants under two policies, determinism, language, heading paths and parents.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
