@@ -314,6 +314,8 @@ class IngestService:
         if mime is not None:
             payload["mime"] = mime.mime
             payload["detected_by"] = mime.detected_by
+            if mime.encoding is not None:
+                payload["encoding"] = mime.encoding
         if change.revision is not None:
             payload["size_bytes"] = change.revision.size_bytes
         job = IngestionJob(

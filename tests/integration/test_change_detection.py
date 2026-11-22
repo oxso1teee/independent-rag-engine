@@ -274,3 +274,17 @@ def test_dry_run_changes_nothing(workspace: Workspace) -> None:
     assert planned.dry_run and planned.new == 1 and planned.jobs_enqueued == 0
     assert logical_dump(workspace.store) == before
     assert workspace.store.reader().list_documents(workspace.source.id) == []
+
+
+def test_the_detected_encoding_travels_with_the_job(workspace: Workspace) -> None:
+    text = "Привет, это достаточно длинный русский текст для определения кодировки. " * 4
+    workspace.write("legacy.txt", text.encode("cp1251"))
+    workspace.write("modern.md", text)
+    report(workspace)
+    jobs = {
+        str(j.payload["encoding"]): j
+        for j in workspace.store.reader().list_jobs(JobStatus.QUEUED, JobKind.INGEST_DOC)
+    }
+    assert set(jobs) == {"cp1251", "utf_8"}
+    assert jobs["cp1251"].payload["mime"] == "text/plain"
+    assert jobs["cp1251"].payload["detected_by"] == "charset"
