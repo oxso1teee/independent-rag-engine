@@ -142,7 +142,7 @@ opening, migration, index-state bootstrap), `sqlite/uow.py` (unit of work),
   script edits it. Before migrating a database that already has a version, the runner takes a
   verified backup `<db>.pre-migration-v<from>-to-v<to>.bak` (never overwritten, owner-only).
   Schema v1 is published and immutable (its checksum is pinned in a test); v2 corrects it
-  ([ADR 0005](adr/0005-data-model-alignment.md)); Phase 4 starts at v3.
+  ([ADR 0005](adr/0005-documents-versions-and-schema-v2.md)); Phase 4 starts at v3.
 - **Read-only open.** `open_store_read_only` never migrates, creates files or takes the writer
   lock; `--dry-run` uses it.
 - **Backup.** `backup_database` runs `VACUUM INTO` a temporary file, verifies
@@ -193,8 +193,8 @@ every claim; a worker that lost its lease is fenced off by the attempt number.
 
 ### Parameters
 
-See [ADR 0006](adr/0006-ingestion-safety-and-queue.md) for which values are specified and which
-are assumptions. Queue parameters are settings (`[ingest]`); safety rules are fixed.
+See [ADR 0006](adr/0006-ingestion-safety-and-queue.md) for the rules behind these values.
+Queue parameters are settings (`[ingest]`); safety rules are fixed.
 
 | Parameter | Value | Where |
 |---|---|---|

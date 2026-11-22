@@ -1,8 +1,8 @@
 # 0004. Store boundaries and the domain additions needed for Phase 2
 
 Status: Accepted (2026-11-22). Implemented in Phase 2 with the amendments listed at the end;
-parts of them were corrected by [ADR 0005](0005-data-model-alignment.md) (no `pending`
-status, `document_versions`) and [ADR 0007](0007-repository-layout-and-composition-root.md).
+parts of them are refined by [ADR 0005](0005-documents-versions-and-schema-v2.md) (document
+statuses, `document_versions`) and [ADR 0007](0007-layout-and-composition-root.md).
 
 ## Context
 
@@ -136,7 +136,7 @@ which only fills a gap and changes no decision:
   shape is fixed, but have no adapter yet. `check_single_active_model` is implemented in
   `domain/invariants.py` and unit-tested. No in-memory store double was added: contract
   tests run against SQLite, the only adapter.
-- **~~`DocumentStatus.PENDING`~~** (superseded by ADR 0005). A document is created when its
+- **~~`DocumentStatus.PENDING`~~** (replaced, see ADR 0005). A document is created when its
   source entry is first seen, before any version exists; it is `active` with no version and is
   not searchable until its first commit.
 - **`IngestionJob.available_at`.** Retry with backoff needs a "not before" time. `failed`
