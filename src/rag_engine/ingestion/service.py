@@ -42,7 +42,17 @@ from rag_engine.ingestion.lifecycle import (
     restore,
     tombstone,
 )
+from rag_engine.observability import get_logger, request_scope, stage_scope
 from rag_engine.ports import Clock, MetadataReader, MetadataWriter, Store
+
+_log = get_logger("rag_engine.ingestion")
+
+
+def _counts(report: IngestReport) -> dict[str, int]:
+    """Numbers only: events never carry paths or document text."""
+    return {
+        k: v for k, v in report.to_dict().items() if isinstance(v, int) and not isinstance(v, bool)
+    }
 
 
 def _revision(change: DetectedChange) -> SourceRevision:
@@ -102,25 +112,36 @@ class IngestService:
 
     # -- public ----------------------------------------------------------------------
 
-    def plan(self, name: str, *, allow_mass_delete: bool = False) -> IngestReport:
+    def plan(self, name: str, *, accept_mass_delete: bool = False) -> IngestReport:
         """What a run would do; reads the store and the files, writes nothing."""
-        source, plan = self._detect(name, self._store.reader(), allow_mass_delete)
-        return self._report(source, plan, dry_run=True, jobs=0, gc=0)
+        with request_scope(self._ids.request_id()):
+            with stage_scope(_log, "ingest.scan", clock=self._clock, dry_run=True):
+                source, plan = self._detect(name, self._store.reader(), accept_mass_delete)
+            report = self._report(source, plan, dry_run=True, jobs=0, gc=0)
+            _log.info("ingest.planned", **_counts(report))
+            return report
 
-    def run(self, name: str, *, allow_mass_delete: bool = False) -> IngestReport:
-        reader = self._store.reader()
-        source, plan = self._detect(name, reader, allow_mass_delete)
-        jobs = 0
-        if plan.mutates:
-            with self._store.unit_of_work().begin() as writer:
-                jobs = self._apply(writer, source, plan)
-        gc = self._lifecycle.collect_garbage(source).removed
-        return self._report(source, plan, dry_run=False, jobs=jobs, gc=gc)
+    def run(self, name: str, *, accept_mass_delete: bool = False) -> IngestReport:
+        with request_scope(self._ids.request_id()):
+            with stage_scope(_log, "ingest.scan", clock=self._clock, dry_run=False):
+                source, plan = self._detect(name, self._store.reader(), accept_mass_delete)
+            jobs = 0
+            if plan.mutates:
+                with (
+                    stage_scope(_log, "ingest.apply", clock=self._clock),
+                    self._store.unit_of_work().begin() as writer,
+                ):
+                    jobs = self._apply(writer, source, plan)
+            with stage_scope(_log, "ingest.gc", clock=self._clock):
+                gc = self._lifecycle.collect_garbage(source).removed
+            report = self._report(source, plan, dry_run=False, jobs=jobs, gc=gc)
+            _log.info("ingest.done", **_counts(report))
+            return report
 
     # -- detection --------------------------------------------------------------------
 
     def _detect(
-        self, name: str, reader: MetadataReader, allow_mass_delete: bool
+        self, name: str, reader: MetadataReader, accept_mass_delete: bool
     ) -> tuple[Source, ChangePlan]:
         source = self._registry.get(name)
         adapter = self._adapter_factory(source)
@@ -135,7 +156,7 @@ class IngestService:
             vanished=len(plan.of_kind(ChangeKind.DELETED)),
             tracked=tracked,
             entries_seen=plan.entries_seen,
-            allow=allow_mass_delete,
+            accept=accept_mass_delete,
         )
         return source, plan
 
@@ -224,17 +245,12 @@ class IngestService:
                 source_id=source.id,
                 source_key=change.key,
                 current_version_id=None,
-                status=DocumentStatus.FAILED if unsupported else DocumentStatus.PENDING,
+                status=DocumentStatus.FAILED if unsupported else DocumentStatus.ACTIVE,
                 created_at=now,
                 updated_at=now,
             )
         else:
-            if unsupported:
-                status = DocumentStatus.FAILED
-            elif document.current_version_id is not None:
-                status = DocumentStatus.ACTIVE
-            else:
-                status = DocumentStatus.PENDING
+            status = DocumentStatus.FAILED if unsupported else DocumentStatus.ACTIVE
             document = replace(document, status=status, missing_since=None, updated_at=now)
         writer.put_document(document)
         writer.put_sync_state(
@@ -319,6 +335,8 @@ class IngestService:
         if mime is not None:
             payload["mime"] = mime.mime
             payload["detected_by"] = mime.detected_by
+            if mime.encoding is not None:
+                payload["encoding"] = mime.encoding
         if change.revision is not None:
             payload["size_bytes"] = change.revision.size_bytes
         job = IngestionJob(
@@ -365,6 +383,7 @@ class SourceStatus:
     name: str
     locator: str | None
     documents: dict[str, int]
+    awaiting_first_ingest: int  # active documents without a committed version yet
     sync: dict[str, int]
 
 
@@ -385,6 +404,7 @@ class StoreStatus:
                     "name": s.name,
                     "locator": s.locator,
                     "documents": s.documents,
+                    "awaiting_first_ingest": s.awaiting_first_ingest,
                     "sync": s.sync,
                 }
                 for s in self.sources
@@ -405,7 +425,13 @@ def collect_status(reader: MetadataReader) -> StoreStatus:
         for state in reader.list_sync_states(source.id):
             sync[state.status.value] = sync.get(state.status.value, 0) + 1
         sources.append(
-            SourceStatus(source.name, source.locator, documents, dict(sorted(sync.items())))
+            SourceStatus(
+                source.name,
+                source.locator,
+                documents,
+                reader.count_documents(source.id, DocumentStatus.ACTIVE, has_version=False),
+                dict(sorted(sync.items())),
+            )
         )
     metadata = reader.get_index_metadata()
     jobs = {status.value: n for status, n in sorted(reader.count_jobs().items())}

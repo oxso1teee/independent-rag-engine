@@ -58,7 +58,15 @@ class MetadataReader(Protocol):
         """Documents of a source ordered by key; ``after`` is an exclusive keyset cursor."""
         ...
 
-    def count_documents(self, source_id: SourceId, status: DocumentStatus | None = None) -> int: ...
+    def count_documents(
+        self,
+        source_id: SourceId,
+        status: DocumentStatus | None = None,
+        *,
+        has_version: bool | None = None,
+    ) -> int:
+        """Documents of a source, optionally by status and by whether a version is committed."""
+        ...
 
     def get_version(self, version_id: DocumentVersionId) -> DocumentVersion | None: ...
 

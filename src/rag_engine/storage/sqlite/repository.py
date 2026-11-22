@@ -31,7 +31,7 @@ from rag_engine.domain import (
     SyncState,
     thaw_context,
 )
-from rag_engine.domain.invariants import check_generation_monotonic
+from rag_engine.domain.invariants import check_generation_monotonic, check_version_transition
 from rag_engine.storage.sqlite import codec
 
 T = TypeVar("T")
@@ -130,23 +130,31 @@ class SqliteReader:
             params.append(limit)
         return self._map(self._all(sql, params), codec.document_from_row)
 
-    def count_documents(self, source_id: SourceId, status: DocumentStatus | None = None) -> int:
-        if status is None:
-            row = self._one("SELECT COUNT(*) FROM documents WHERE source_id = ?", (str(source_id),))
-        else:
-            row = self._one(
-                "SELECT COUNT(*) FROM documents WHERE source_id = ? AND status = ?",
-                (str(source_id), status.value),
-            )
+    def count_documents(
+        self,
+        source_id: SourceId,
+        status: DocumentStatus | None = None,
+        *,
+        has_version: bool | None = None,
+    ) -> int:
+        sql = "SELECT COUNT(*) FROM documents WHERE source_id = ?"
+        params: list[Any] = [str(source_id)]
+        if status is not None:
+            sql += " AND status = ?"
+            params.append(status.value)
+        if has_version is not None:
+            sql += " AND current_version_id IS " + ("NOT NULL" if has_version else "NULL")
+        row = self._one(sql, params)
         return int(row[0]) if row is not None else 0
 
     def get_version(self, version_id: DocumentVersionId) -> DocumentVersion | None:
-        row = self._one("SELECT * FROM versions WHERE id = ?", (str(version_id),))
+        row = self._one("SELECT * FROM document_versions WHERE id = ?", (str(version_id),))
         return None if row is None else codec.version_from_row(row)
 
     def list_versions(self, document_id: DocumentId) -> Sequence[DocumentVersion]:
         rows = self._all(
-            "SELECT * FROM versions WHERE document_id = ? ORDER BY seq", (str(document_id),)
+            "SELECT * FROM document_versions WHERE document_id = ? ORDER BY seq",
+            (str(document_id),),
         )
         return self._map(rows, codec.version_from_row)
 
@@ -258,6 +266,15 @@ class SqliteWriter(SqliteReader):
     # -- documents and versions ---------------------------------------------------------
 
     def put_document(self, document: Document) -> None:
+        check_version_transition(self.get_document(document.id), document)
+        if document.current_version_id is not None:
+            version = self.get_version(document.current_version_id)
+            if version is None or version.document_id != document.id:
+                raise RagError(
+                    ErrorCode.E_INTEGRITY,
+                    "the current version must exist and belong to the document",
+                    context={"document": str(document.id)},
+                )
         self._run(
             "INSERT INTO documents (id, source_id, source_key, current_version_id, status,"
             " duplicate_of, missing_since, title, tags_json, created_at, updated_at)"
@@ -296,10 +313,11 @@ class SqliteWriter(SqliteReader):
                 )
             return
         self._run(
-            "INSERT INTO versions (id, document_id, seq, content_hash, size_bytes, mtime_ns, mime,"
-            " detected_by, parser_id, parser_version, normalizer_version, chunker_fingerprint,"
-            " text_purged, parse_warnings_json, created_at)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO document_versions (id, document_id, seq, content_hash, size_bytes,"
+            " mtime_ns, mime, detected_by, parser_id, parser_version, normalizer_version,"
+            " chunker_fingerprint,"
+            " text_purged, parse_warnings_json, normalized_text, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 str(version.id),
                 str(version.document_id),
@@ -315,12 +333,16 @@ class SqliteWriter(SqliteReader):
                 version.chunker_fingerprint,
                 int(version.text_purged),
                 codec.dumps(list(version.parse_warnings)),
+                version.normalized_text,
                 codec.ts(version.created_at),
             ),
         )
 
     def mark_text_purged(self, version_id: DocumentVersionId) -> None:
-        cursor = self._run("UPDATE versions SET text_purged = 1 WHERE id = ?", (str(version_id),))
+        cursor = self._run(
+            "UPDATE document_versions SET text_purged = 1, normalized_text = NULL WHERE id = ?",
+            (str(version_id),),
+        )
         if cursor.rowcount == 0:
             raise RagError(ErrorCode.E_INTEGRITY, "unknown version")
 

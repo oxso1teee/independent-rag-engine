@@ -19,7 +19,7 @@ from typing import Annotated
 import typer
 
 from rag_engine import __version__
-from rag_engine.cli.container import Container, DefaultContainer, Services
+from rag_engine.cli.context import Container, Services
 from rag_engine.cli.exit_codes import ExitCode, exit_code_for
 from rag_engine.domain import ErrorCode, RagError, SourcePolicy
 from rag_engine.ingestion.identity import RebasePlan
@@ -243,9 +243,11 @@ def build_app(container: Container) -> typer.Typer:
         dry_run: Annotated[
             bool, typer.Option("--dry-run", help="Report what would change; write nothing.")
         ] = False,
-        allow_mass_delete: Annotated[
+        accept_mass_delete: Annotated[
             bool,
-            typer.Option("--allow-mass-delete", help="Proceed although the delete guard tripped."),
+            typer.Option(
+                "--accept-mass-delete", help="Confirm a disappearance the delete guard stopped."
+            ),
         ] = False,
         json_output: JsonOption = False,
     ) -> None:
@@ -258,7 +260,7 @@ def build_app(container: Container) -> typer.Typer:
             for name in names:
                 try:
                     run = services.ingest.plan if dry_run else services.ingest.run
-                    reports.append(run(name, allow_mass_delete=allow_mass_delete))
+                    reports.append(run(name, accept_mass_delete=accept_mass_delete))
                 except RagError as error:
                     if source:
                         raise
@@ -308,6 +310,8 @@ def build_app(container: Container) -> typer.Typer:
             typer.echo("No sources registered.")
         for s in result.sources:
             docs = ", ".join(f"{n} {k}" for k, n in s.documents.items()) or "no documents"
+            if s.awaiting_first_ingest:
+                docs += f" ({s.awaiting_first_ingest} awaiting first ingestion)"
             typer.echo(f"{s.name}: {docs}")
         jobs = ", ".join(f"{n} {k}" for k, n in result.jobs.items()) or "empty"
         typer.echo(f"jobs: {jobs}")
@@ -337,9 +341,9 @@ def _describe(report: IngestReport) -> str:
     return f"{report.source} ({verb}): " + ", ".join(parts) + suffix
 
 
-def main(argv: Sequence[str] | None = None, *, container: Container | None = None) -> int:
+def main(argv: Sequence[str] | None, *, container: Container) -> int:
     """Entry point; returns the process exit code."""
-    app = build_app(container or DefaultContainer())
+    app = build_app(container)
     try:
         app(args=None if argv is None else list(argv), prog_name="rag")
     except SystemExit as exit_:  # the parser reports --help, --version and usage errors this way

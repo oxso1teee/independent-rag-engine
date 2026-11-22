@@ -6,36 +6,63 @@ fixed, derandomised profile.
 
 | Directory | Marker | What it proves |
 |---|---|---|
-| `tests/unit` | `unit` | Pure logic: domain models and invariants, glob rules, MIME table, errors, config, CLI basics |
+| `tests/unit` | `unit` | Pure logic: domain models and invariants, glob rules, MIME table (UTF-8, cp1251, koi8-r, UTF-16, binaries), guard and retry rules, exit codes, errors, config, CLI basics |
 | `tests/contract` | `contract` | One suite per port, run against every adapter (`SourceAdapter` runs against the in-memory and the filesystem source) |
 | `tests/architecture` | `architecture` | The import contracts reject violations |
-| `tests/integration` | `integration` | Real SQLite and real directories: unit of work, migrations, WAL and single-writer behaviour, change detection, identity and rebase, mass-delete protection, job queue, crash recovery, repository operations |
+| `tests/integration` | `integration` | Real SQLite and real directories: unit of work, migrations (including an upgrade of a real v1 database), WAL and single-writer behaviour, change detection, identity and rebase, mass-delete protection, job queue, repository operations, ingest log events |
 | `tests/e2e` | `e2e` | The `rag` command in-process (injected container, fake clock) and as a real process |
-| `tests/performance` | `performance` | NFR-04 on 1000 files, measured |
+| `tests/chaos` | `chaos` | `SIGKILL` at every stage (below) |
+| `tests/integrity` | `integrity` | Data-model invariants and a model-based test of ingestion |
+| `tests/perf` | `perf` | NFR-04 on 1000 files, measured; **not** part of the pull-request CI |
 
-## Failure injection and recovery
+The pull-request CI runs `pytest -m "not perf"`. `make test-all` does the same with coverage.
+`make perf` runs the budgets separately.
 
-- A child process is killed with `os._exit` in the middle of a transaction
-  (`test_state_survives_an_interrupted_transaction`) and in the middle of a job
-  (`test_a_crash_in_the_middle_of_processing_is_recovered_after_restart`); the next process
-  finds consistent state, a released lock and the job still leased, recovers it after the
-  lease expires and processes it exactly once more.
-- A migration that fails halfway is rolled back; a tampered migration is detected.
-- Handlers that raise, workers that lose their lease, and jobs that crash their worker until
-  they are declared dead.
+## Failure injection (`tests/chaos`)
+
+A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test
+then checks that the database opens, `integrity_check` and `foreign_key_check` pass, the
+interrupted work is entirely absent or entirely present, and a second run reaches exactly the
+state of an uninterrupted run (compared on a backup copy). Points: after scan, at the start
+of apply, in the middle of apply (half of the documents written), before commit, after commit
+before garbage collection, in the middle of garbage collection, in the middle of a job
+(lease recovered, no duplicate, no job processed twice), and in the middle of migration `0002`
+(old schema intact, retried cleanly, both backups present). `tests/integration` additionally
+covers a kill inside a plain transaction.
+
+## Data integrity (`tests/integrity`)
+
+`checks.py` holds the invariants as `check_*` functions (no orphans, version ownership,
+unversioned documents are not searchable, sync state and documents agree, one active job per
+document, index state mirrors the migrations). They run at teardown of every test that uses the
+`workspace` fixture. `test_ingestion_model.py` is a Hypothesis state machine: random sequences
+of create/modify/delete/rename/wait/rescan (including steps around the 30-day grace boundary)
+are compared with a naive model of the specification after every rescan; identities must not
+change. Changing the grace period in the model by one day makes it fail.
 
 ## NFR-04
 
-`tests/performance/test_nfr04_rescan.py` ingests 1000 files, drains the queue through a spy
-parser, then rescans. It asserts: at most 5 s, 0 parser calls, 0 jobs, and an identical hash of
-the logical database dump (`tests/workspace.py: logical_dump`). Run it with
-`uv run pytest tests/performance -s` to see the measured times.
+`tests/perf/test_nfr04_rescan.py` ingests 1000 files, drains the queue through a spy parser,
+then rescans. It asserts: at most 5 s, 0 parser calls, 0 jobs, and an identical hash of the
+logical database dump (`tests/workspace.py: logical_dump`).
+
+Measured on 2026-11-22 with `make perf` (4 vCPU, Python 3.12.3, SQLite 3.45.1, ext4, three runs
+on the code of the Phase 2 compliance PR):
+
+| Run | First scan, 1000 files | Rescan, 1000 unchanged (service) | Rescan through the CLI |
+|---|---|---|---|
+| 1 | 0.315 s | 0.099 s | 0.048 s |
+| 2 | 0.358 s | 0.093 s | 0.065 s |
+| 3 | 0.311 s | 0.102 s | 0.068 s |
+
+Budget: 5 s. Parser calls on rescan: 0. Jobs created: 0. Logical database dump: unchanged.
 
 ## Running
 
 ```bash
 make test        # unit tests only
-make test-all    # everything, with coverage and the domain coverage gate (90 %)
+make test-all    # everything except perf, with coverage and the domain coverage gate (90 %)
+make perf        # NFR-04, run before a phase is closed
 make check       # lint, types, architecture, all tests
 ```
 

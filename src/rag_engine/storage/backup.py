@@ -6,9 +6,6 @@ import sqlite3
 from pathlib import Path
 
 from rag_engine.domain import ErrorCode, RagError
-from rag_engine.storage.sqlite.connection import connect
-
-_TABLES = ("sources", "documents", "versions", "sync_state", "jobs", "index_state")
 
 
 def backup_database(source: Path, destination: Path) -> Path:
@@ -30,6 +27,8 @@ def backup_database(source: Path, destination: Path) -> Path:
             "the database to back up does not exist",
             context={"path": str(source)},
         )
+    from rag_engine.storage.sqlite.connection import connect  # lazy: avoids an import cycle
+
     destination.parent.mkdir(parents=True, exist_ok=True)
     partial = destination.with_name(destination.name + ".partial")
     partial.unlink(missing_ok=True)
@@ -52,17 +51,27 @@ def backup_database(source: Path, destination: Path) -> Path:
         raise
     finally:
         origin.close()
+    partial.chmod(0o600)
     partial.replace(destination)
     return destination
 
 
 def _verify(origin: sqlite3.Connection, copy_path: Path) -> None:
+    from rag_engine.storage.sqlite.connection import connect  # lazy: avoids an import cycle
+
     copy = connect(copy_path, busy_timeout_ms=5000, read_only=True)
     try:
         verdict = copy.execute("PRAGMA integrity_check").fetchall()
         if [row[0] for row in verdict] != ["ok"]:
             raise RagError(ErrorCode.E_INTEGRITY, "the backup failed its integrity check")
-        for table in _TABLES:
+        tables = [
+            row[0]
+            for row in origin.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+                " ORDER BY name"
+            )
+        ]
+        for table in tables:
             expected = origin.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]  # noqa: S608
             actual = copy.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]  # noqa: S608
             if expected != actual:

@@ -5,9 +5,10 @@ include_external_packages = True
 # Dependency direction: every layer may import only the layers below it.
 # Layers in one row (separated by "|") are independent of each other.
 [importlinter:contract:layers]
-name = Layered architecture: cli > adapters > ports > domain
+name = Layered architecture: container > cli > ingestion > adapters > ports > domain
 type = layers
 layers =
+    rag_engine.container
     rag_engine.cli
     rag_engine.ingestion
     rag_engine.storage | rag_engine.system | rag_engine.testing | rag_engine.observability | rag_engine.config
@@ -86,6 +87,7 @@ source_modules =
     rag_engine.system
     rag_engine.ingestion
 forbidden_modules =
+    rag_engine.container
     rag_engine.cli
     rag_engine.testing
     rag_engine.__main__
@@ -99,8 +101,10 @@ forbidden_modules =
     rag_engine.storage
     rag_engine.system
     sqlite3
-    structlog
     pydantic
     pydantic_settings
     typer
     click
+# Logging goes through rag_engine.observability (which wraps structlog), so third-party
+# modules are only forbidden as *direct* imports of ingestion.
+allow_indirect_imports = True

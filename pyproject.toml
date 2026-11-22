@@ -5,6 +5,8 @@ description = "Modular, local-first RAG engine for reliable knowledge retrieval,
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
+    "charset-normalizer>=3.4",
+    "filetype>=1.2",
     "numpy>=2.0",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
@@ -13,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-rag = "rag_engine.cli:main"
+rag = "rag_engine.container:main"
 
 [dependency-groups]
 dev = [
@@ -56,6 +58,10 @@ strict = true
 files = ["src", "tests"]
 plugins = ["pydantic.mypy"]
 
+[[tool.mypy.overrides]]
+module = ["filetype", "filetype.*"]
+ignore_missing_imports = true  # the library ships no type information
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
@@ -66,7 +72,9 @@ markers = [
     "architecture: import-boundary checks (spawns a subprocess)",
     "integration: real SQLite and filesystem, no network",
     "e2e: whole command-line flows against a temporary workspace",
-    "performance: measured acceptance thresholds",
+    "perf: measured budgets (NFR); not part of the pull-request CI, run with `make perf`",
+    "chaos: failure injection, including SIGKILL at defined points",
+    "integrity: data-model invariants and property-based model checks",
 ]
 
 [tool.coverage.run]

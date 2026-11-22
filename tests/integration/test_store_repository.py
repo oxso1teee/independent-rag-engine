@@ -37,16 +37,17 @@ from tests.factories import (
 
 
 def seed(store: SqliteStore, ids: IdFactory) -> tuple[Source, Document, DocumentVersion]:
+    """A source with one document that has its first committed version."""
     source = make_source(ids)
     version_id = ids.document_version_id()
-    document = make_document(
-        document_id=ids.document_id(), source_id=source.id, version_id=version_id
-    )
-    version = make_version(version_id=version_id, document_id=document.id)
+    waiting = make_document(document_id=ids.document_id(), source_id=source.id, version_id=None)
+    version = make_version(version_id=version_id, document_id=waiting.id)
+    document = replace(waiting, current_version_id=version_id)
     with store.unit_of_work().begin() as writer:
         writer.put_source(source)
-        writer.put_document(document)
+        writer.put_document(waiting)  # discovered: active, no version yet
         writer.put_version(version)
+        writer.put_document(document)  # first commit
     return source, document, version
 
 
@@ -57,7 +58,7 @@ def test_documents_can_be_listed_filtered_counted_and_paged(
     with store.unit_of_work().begin() as writer:
         writer.put_source(source)
         for i in range(5):
-            status = DocumentStatus.PENDING if i % 2 else DocumentStatus.FAILED
+            status = DocumentStatus.ACTIVE if i % 2 else DocumentStatus.FAILED
             writer.put_document(
                 make_document(
                     document_id=ids.document_id(),
@@ -69,7 +70,8 @@ def test_documents_can_be_listed_filtered_counted_and_paged(
             )
     reader = store.reader()
     assert reader.count_documents(source.id) == 5
-    assert reader.count_documents(source.id, DocumentStatus.PENDING) == 2
+    assert reader.count_documents(source.id, DocumentStatus.ACTIVE) == 2
+    assert reader.count_documents(source.id, has_version=False) == 5
     page = reader.list_documents(source.id, limit=2)
     assert [d.source_key.value for d in page] == ["k0.md", "k1.md"]
     nxt = reader.list_documents(source.id, after=page[-1].source_key, limit=2)
@@ -229,7 +231,7 @@ def test_sql_metacharacters_are_plain_data(store: SqliteStore, ids: IdFactory) -
         document_id=ids.document_id(),
         source_id=source.id,
         version_id=None,
-        status=DocumentStatus.PENDING,
+        status=DocumentStatus.ACTIVE,
         key=f'we"ird/{hostile}.md',
     )
     with store.unit_of_work().begin() as writer:
@@ -240,3 +242,58 @@ def test_sql_metacharacters_are_plain_data(store: SqliteStore, ids: IdFactory) -
     assert reader.get_document_by_key(source.id, document.source_key) == document
     assert reader.get_source_by_name("x' OR '1'='1") is None
     assert len(reader.list_sources()) == 1
+
+
+def test_first_version_commit_and_the_rules_around_it(store: SqliteStore, ids: IdFactory) -> None:
+    source = make_source(ids)
+    waiting = make_document(document_id=ids.document_id(), source_id=source.id, version_id=None)
+    version = make_version(version_id=ids.document_version_id(), document_id=waiting.id)
+    with store.unit_of_work().begin() as writer:
+        writer.put_source(source)
+        writer.put_document(waiting)
+    reader = store.reader()
+    stored = reader.get_document(waiting.id)
+    assert stored is not None and not stored.is_searchable
+    assert reader.count_documents(source.id, DocumentStatus.ACTIVE, has_version=False) == 1
+    assert reader.count_documents(source.id, DocumentStatus.ACTIVE, has_version=True) == 0
+
+    def link(document: Document) -> None:
+        with store.unit_of_work().begin() as writer:
+            writer.put_document(document)
+
+    with pytest.raises(RagError):  # the version does not exist yet
+        link(replace(waiting, current_version_id=version.id))
+    other = make_document(document_id=ids.document_id(), source_id=source.id, version_id=None)
+    other = replace(other, source_key=SourceKey("other.md"))
+    with store.unit_of_work().begin() as writer:
+        writer.put_document(other)
+        writer.put_version(version)
+    with pytest.raises(RagError):  # the version belongs to another document
+        link(replace(other, current_version_id=version.id))
+
+    link(replace(waiting, current_version_id=version.id))  # the first commit
+    committed = reader.get_document(waiting.id)
+    assert committed is not None and committed.is_searchable
+    assert reader.count_documents(source.id, DocumentStatus.ACTIVE, has_version=True) == 1
+    with pytest.raises(RagError):  # a document never goes back to "no version"
+        link(waiting)
+    assert reader.get_document(waiting.id) == committed
+
+
+def test_normalized_text_is_stored_and_dropped_on_purge(store: SqliteStore, ids: IdFactory) -> None:
+    _, document, version = seed(store, ids)
+    with_text = replace(
+        version,
+        id=ids.document_version_id(),
+        seq=2,
+        content_hash=ContentHash.of_bytes(b"other"),
+        normalized_text=b"x\x9cK\x04\x00\x00b\x00b",
+    )
+    with store.unit_of_work().begin() as writer:
+        writer.put_version(with_text)
+    assert store.reader().get_version(with_text.id) == with_text
+    with store.unit_of_work().begin() as writer:
+        writer.mark_text_purged(with_text.id)
+    purged = store.reader().get_version(with_text.id)
+    assert purged is not None and purged.text_purged and purged.normalized_text is None
+    assert document.id == purged.document_id

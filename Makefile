@@ -1,4 +1,4 @@
-.PHONY: sync lint format typecheck test test-all arch audit check
+.PHONY: sync lint format typecheck test test-all perf arch audit check
 
 sync:
 	uv sync --frozen
@@ -18,8 +18,11 @@ test:
 	uv run pytest -m unit
 
 test-all:
-	uv run pytest --cov=rag_engine --cov-report=term-missing
+	uv run pytest -m "not perf" --cov=rag_engine --cov-report=term-missing
 	uv run coverage report --include="src/rag_engine/domain/*" --fail-under=90
+
+perf:
+	uv run pytest -m perf -s --no-cov
 
 arch:
 	uv run lint-imports

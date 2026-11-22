@@ -93,6 +93,17 @@ class LlmSettings(_Section):
         return self
 
 
+class IngestSettings(_Section):
+    """Retry and lease behaviour of the ingestion job queue."""
+
+    max_attempts: int = Field(default=5, ge=1, le=100)
+    retry_base_delay_s: float = Field(default=30.0, ge=0, le=86_400)
+    retry_factor: float = Field(default=2.0, ge=1, le=10)
+    retry_max_delay_s: float = Field(default=3600.0, ge=0, le=604_800)
+    retry_jitter: float = Field(default=0.2, ge=0, le=1)
+    lease_s: float = Field(default=300.0, gt=0, le=86_400)
+
+
 class LoggingSettings(_Section):
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     json_output: bool = True
@@ -109,6 +120,7 @@ class Settings(BaseSettings):
     profile: ResourceProfile = ResourceProfile.LOW
     limits: LimitOverrides = Field(default_factory=LimitOverrides)
     storage: StorageSettings = Field(default_factory=StorageSettings)
+    ingest: IngestSettings = Field(default_factory=IngestSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)

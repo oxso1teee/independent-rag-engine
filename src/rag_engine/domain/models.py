@@ -104,7 +104,6 @@ class Source:
 
 
 class DocumentStatus(StrEnum):
-    PENDING = "pending"  # discovered, not yet ingested: has no version
     ACTIVE = "active"
     MISSING = "missing"
     DELETED = "deleted"
@@ -113,6 +112,13 @@ class DocumentStatus(StrEnum):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Document:
+    """One entry of a source.
+
+    ``current_version_id`` is ``None`` from the first discovery until the first successful
+    indexing commit; such a document is ``active`` but *not searchable* (it has no chunks).
+    Once set, it never goes back to ``None`` (see ``check_version_transition``).
+    """
+
     id: DocumentId
     source_id: SourceId
     source_key: SourceKey
@@ -126,10 +132,6 @@ class Document:
     updated_at: datetime
 
     def __post_init__(self) -> None:
-        if self.status is DocumentStatus.ACTIVE:
-            require(self.current_version_id is not None, "an active document needs a version")
-        if self.status is DocumentStatus.PENDING:
-            require(self.current_version_id is None, "a pending document has no version yet")
         require(self.duplicate_of != self.id, "a document cannot duplicate itself")
         require(
             (self.status is DocumentStatus.MISSING) == (self.missing_since is not None),
@@ -140,6 +142,11 @@ class Document:
         _require_utc(self.created_at, "created_at")
         _require_utc(self.updated_at, "updated_at")
         require(self.updated_at >= self.created_at, "updated_at precedes created_at")
+
+    @property
+    def is_searchable(self) -> bool:
+        """Only active documents that already have a committed version take part in retrieval."""
+        return self.status is DocumentStatus.ACTIVE and self.current_version_id is not None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -158,10 +165,15 @@ class DocumentVersion:
     chunker_fingerprint: str
     text_purged: bool = False
     parse_warnings: tuple[str, ...] = ()
+    normalized_text: bytes | None = None  # zlib-compressed; dropped when the text is purged
     created_at: datetime
 
     def __post_init__(self) -> None:
         require(self.seq >= 1, "version sequence starts at 1", seq=self.seq)
+        require(
+            not (self.text_purged and self.normalized_text is not None),
+            "a version with purged text keeps no normalized text",
+        )
         require(self.size_bytes >= 0 and self.mtime_ns >= 0, "negative size or mtime")
         _require_utc(self.created_at, "created_at")
 

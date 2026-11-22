@@ -3,7 +3,29 @@
 Format: [Keep a Changelog](https://keepachangelog.com/); versions follow the phases of the
 roadmap until a release is cut.
 
-## [Unreleased] - Phase 2: SQLite core and document ingestion
+## [Unreleased]
+
+### Phase 2 compliance corrections (review against the specification)
+- Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
+  `normalized_text`, `UNIQUE (document_id, content_hash)`, no `pending` status. Documents
+  without a version are `active` and not searchable until their first commit. Phase 4's
+  migration becomes v3.
+- Automatic verified backup before migrating a populated database; foreign-key-safe table
+  rebuilds in the migration runner; the schema version is mirrored from `schema_migrations`.
+- Mass-delete guard: `max(10, 20 %)` plus `empty_scan` and `all_known_gone`; the flag is
+  `--accept-mass-delete` (`--allow-mass-delete` is removed).
+- CLI exit codes follow the error category.
+- Retry delays have jitter; retry and lease parameters are `[ingest]` settings.
+- MIME detection on `filetype` and `charset-normalizer` (cp1251, koi8-r, cp866, UTF-16 with BOM);
+  the encoding is stored with the job.
+- Ingestion emits structured stage events (numbers only).
+- Composition root moved to `rag_engine/container.py` (new entry point); storage split into
+  `core.py`, `uow.py`, `backup.py`; tests reorganised into `perf`, `chaos`, `integrity`; PR CI
+  excludes `perf`.
+- New tests: `SIGKILL` at every stage, invariants at teardown, a model-based ingestion test.
+- ADRs 0005-0007; ADR 0004 amended.
+
+## Phase 2: SQLite core and document ingestion
 
 ### Added
 - SQLite store: WAL, single writer lock (`E_STORE_LOCKED`), unit of work with rollback,

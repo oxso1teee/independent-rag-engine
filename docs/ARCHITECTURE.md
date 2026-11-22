@@ -7,7 +7,8 @@ adapters are injected at a single composition root.
 ## Layers and the dependency rule
 
 ```
-cli                                                       application entry points (thin)
+container                                                 composition root: configuration, adapters, entry point
+cli                                                       command line (thin)
 ingestion                                                 use cases of the ingestion pipeline
 storage | system | testing | observability | config       adapters and cross-cutting services
 ports                                                     Protocol contracts
@@ -15,11 +16,13 @@ domain                                                    identifiers, models, i
 ```
 
 A layer may import only from layers below it; layers on the same row are independent.
-`ingestion` additionally may not import `storage`, `system`, `sqlite3`, `structlog`,
-`pydantic` or the CLI framework: it receives its store, clock and adapters through
-constructors and sees them only as ports. Later pipeline modules (parsing, chunking,
-embedding, retrieval, rerank, context, generation, orchestrator, evaluation) follow the
-same rule. `cli` is the composition root.
+`ingestion` additionally may not import `storage`, `system`, `sqlite3`, `pydantic` or the
+CLI framework directly: it receives its store, clock and adapters through constructors and sees
+them only as ports (logging goes through `observability`). Later pipeline modules (parsing,
+chunking, embedding, retrieval, rerank, context, generation, orchestrator, evaluation) follow
+the same rule. [`container.py`](../src/rag_engine/container.py) is the only place that reads
+configuration and creates adapters; the command line receives a `Container` (a protocol in
+`cli/context.py`), so tests substitute fakes.
 
 The rules are executable: [`.importlinter`](../.importlinter) declares them and CI runs
 `lint-imports`. They also forbid the domain from touching I/O or third-party libraries,
@@ -110,24 +113,36 @@ character trigrams: deterministic, meaningful lexical similarity, no model), `Sc
 
 ## Storage (`rag_engine.storage`)
 
-SQLite is the system of record ([data model](DATA_MODEL.md)).
+SQLite is the system of record ([data model](DATA_MODEL.md)). Files: `sqlite/core.py` (store,
+opening, migration, index-state bootstrap), `sqlite/uow.py` (unit of work),
+`sqlite/connection.py`, `sqlite/repository.py` (SQL), `sqlite/codec.py` (row mapping),
+`backup.py`, `migrations/`.
 
 - **Connections.** One connection per reading thread (`query_only`, never blocked by a
   writer thanks to WAL) and one writer connection. WAL mode is required: the store refuses
   to open where it is unavailable (`E_RESOURCE_GATE`), as it does for SQLite older than 3.35.
-  `busy_timeout` is 5 s; every connection is closed by `SqliteStore.close()`.
+  `foreign_keys=ON`, `synchronous=NORMAL`, `busy_timeout` 5 s; `SqliteStore.close()` closes
+  every connection. The database file is created owner-only (`0600`).
 - **Single writer.** A unit of work first takes an exclusive `flock` on
   `<database>.writer.lock` and then runs `BEGIN IMMEDIATE`. A second writer, in this or
   another process, gets `E_STORE_LOCKED` (retryable); `writer_timeout_s` lets a caller wait
   instead. The operating system releases the lock when the holder dies.
 - **Unit of work.** `Store.unit_of_work().begin()` yields the only object that can change
   data. It commits on normal exit and rolls back on any exception; nesting is refused. The
-  store never reads the clock: timestamps are passed in.
+  store never reads the clock: timestamps are passed in. Writing a document checks that its
+  current version exists, belongs to it, and is never withdrawn once set.
 - **Migrations.** Numbered SQL files in `storage/migrations/`, applied in order, each in its
   own transaction together with its `schema_migrations` row (version, name, SHA-256 checksum,
   time). Applied migrations are re-verified on every start: a changed script is
   `E_INTEGRITY`, a database from a newer engine is `E_MIGRATION_REQUIRED`, a failing script is
-  rolled back and named in the error.
+  rolled back and named in the error. A script that rebuilds tables declares
+  `-- migrate: foreign_keys=off`; the runner then disables foreign keys outside the
+  transaction, runs `foreign_key_check` before committing and re-enables them. The schema
+  version is owned by `schema_migrations`; `index_state.schema_version` mirrors it and no
+  script edits it. Before migrating a database that already has a version, the runner takes a
+  verified backup `<db>.pre-migration-v<from>-to-v<to>.bak` (never overwritten, owner-only).
+  Schema v1 is published and immutable (its checksum is pinned in a test); v2 corrects it
+  ([ADR 0005](adr/0005-data-model-alignment.md)); Phase 4 starts at v3.
 - **Read-only open.** `open_store_read_only` never migrates, creates files or takes the writer
   lock; `--dry-run` uses it.
 - **Backup.** `backup_database` runs `VACUUM INTO` a temporary file, verifies
@@ -141,9 +156,9 @@ One scan, `IngestService.run(source)`:
    globs, symlinks skipped unless the policy follows them (and then only inside the root),
    oversized files skipped, unreadable directories reported as unreadable *subtrees*.
 2. `ChangeDetector` compares each entry with its `SyncState`. If `(size, mtime)` equals the
-   stored signal the file is not read; otherwise it is hashed (SHA-256) and its MIME type
-   detected from the content. Result per entry: `unchanged`, `new`, `modified`, `deleted` or
-   `inaccessible`.
+   stored signal the file is not read; otherwise it is hashed (SHA-256) and its MIME type and
+   encoding are detected from the content. Result per entry: `unchanged`, `new`, `modified`,
+   `deleted` or `inaccessible`.
 3. Moves are recognised when exactly one vanished and one new entry share a content hash
    that no other document holds; the `DocumentId` is kept. Anything ambiguous stays separate.
 4. The mass-delete guard runs on the vanished set (below).
@@ -151,7 +166,10 @@ One scan, `IngestService.run(source)`:
    `ingest_doc` jobs together. If nothing changed, no transaction is opened.
 6. Tombstones older than the source's grace period are garbage-collected.
 
-Parsing, chunking and embedding are later phases; the queued jobs wait for them.
+Each stage logs `stage.start/done/failed` under one `request_id`; events contain numbers and
+codes, never paths or text. Parsing, chunking and embedding are later phases; the queued jobs
+wait for them. A new document is `active` with no version: it is not searchable until its first
+commit.
 
 **Identity.** A document is `(source, key)`; its `DocumentId` never changes while the key
 exists. A source's root is part of its identity: registering the same name with another root
@@ -160,35 +178,35 @@ is `E_SOURCE_LOCATOR_CHANGED`, and the only way to move a source is `rag source 
 content matches.
 
 **Mass-delete protection.** Nothing is changed, and `E_MASS_DELETE_GUARD` is raised, when a
-scan finds no documents at all while some are tracked, or when at least two tracked
-documents (more than 20 %) vanished at once. An unreadable directory never produces
-deletions, and a missing root is `E_SOURCE_NOT_FOUND`. `--allow-mass-delete` overrides the
-guard. Deletions are tombstones (`missing`): reversible while the grace period
-(`delete_grace_days`, default 30) runs; a reappearing file returns with the same id.
+scan finds no document at all while some are known (`empty_scan`), when every known document
+vanished (`all_known_gone`), or when more than `max(10, 20 %)` of the known documents vanished
+(`threshold`). `--accept-mass-delete` confirms. An unreadable directory never produces
+deletions and a missing root is `E_SOURCE_NOT_FOUND`. Deletions are tombstones (`missing`):
+reversible while the grace period (`delete_grace_days`, default 30) runs; a reappearing file
+returns with the same id.
 
 **Job queue.** `JobQueue`/`Worker` over the `jobs` table: idempotent enqueue, lease with
-heartbeat, retry with exponential backoff (30 s, 60 s, ... capped at 1 h), at most 5 attempts,
-then `dead`. Non-retryable errors go `dead` immediately, so a poison file never blocks the
-queue. Expired leases are recovered on every claim; a worker that lost its lease is fenced
-off by the attempt number.
+heartbeat, retry with exponential backoff and jitter, then `dead`; non-retryable errors go
+`dead` immediately, so a poison file never blocks the queue. Expired leases are recovered on
+every claim; a worker that lost its lease is fenced off by the attempt number.
+`available_at` is the time before which a job must not be claimed.
 
-### Assumed parameters
+### Parameters
 
-The specification documents available to this repository state only the 20 % threshold.
-These values are therefore assumptions, kept as named constants and covered by tests:
+See [ADR 0006](adr/0006-ingestion-safety-and-queue.md) for which values are specified and which
+are assumptions. Queue parameters are settings (`[ingest]`); safety rules are fixed.
 
 | Parameter | Value | Where |
 |---|---|---|
-| Mass-delete ratio / minimum count | > 20 % and ≥ 2 documents | `ingestion/lifecycle.py` |
+| Mass-delete threshold | `max(10, 20 %)`, plus `empty_scan` and `all_known_gone` | `ingestion/lifecycle.py` |
 | Grace period | 30 days (per source) | `SourcePolicy.delete_grace_days` |
 | Maximum file size | 50 MiB (per source) | `SourcePolicy.max_file_bytes` |
-| Job attempts / backoff / lease | 5 / 30 s × 2, cap 1 h / 300 s | `ingestion/jobs.py` `RetryPolicy` |
-| Index state placeholders | `none` until schema v2 | `storage/sqlite/store.py` |
+| Attempts / base / factor / cap / jitter / lease | 5 / 30 s / 2 / 1 h / 20 % / 300 s | `[ingest]` |
 
 ## Command line
 
-`rag source add|list|rebase`, `rag ingest [--dry-run]`, `rag status`; `--json` prints one JSON
-document. Commands contain no logic: they call services obtained from the injected
-`Container`. Exit codes are listed in `cli/exit_codes.py` (`3` configuration, `4` source not
-found, `5` root changed, `6` mass-delete guard, `7` store locked, `8` migration required,
-`9` integrity, `10` resource, `11` unsupported format; `2` usage; `1` unexpected).
+`rag source add|list|rebase`, `rag ingest [--dry-run] [--accept-mass-delete]`, `rag status`;
+`--json` prints one JSON document (errors included). Commands contain no logic: they call
+services from the injected `Container`. Exit codes follow the error category: `0` ok, `1`
+unexpected, `2` user/usage, `3` config, `4` source, `5` parse, `6` provider, `7` resource,
+`8` storage, `9` integrity; the exact error code is in the output.

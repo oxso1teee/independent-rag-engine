@@ -35,7 +35,6 @@ class SpyParser:
         self.calls += 1
 
 
-@pytest.mark.performance
 def test_rescan_of_1000_unchanged_files(
     workspace: Workspace, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -71,7 +70,6 @@ def test_rescan_of_1000_unchanged_files(
     assert rescan_seconds <= BUDGET_SECONDS
 
 
-@pytest.mark.performance
 def test_rescan_through_the_command_line_stays_within_budget(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
