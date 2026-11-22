@@ -15,6 +15,7 @@ from hypothesis import strategies as st
 
 from rag_engine.chunking.fixed import FixedChunker
 from rag_engine.chunking.recursive import RecursiveChunker
+from rag_engine.chunking.structure import StructureAwareChunker
 from rag_engine.chunking.tokens import HeuristicTokenCounter
 from rag_engine.domain import BlockKind, Chunk, ChunkPolicy, ParsedDocument
 from rag_engine.ports import Chunker, TokenCounter
@@ -43,6 +44,7 @@ P, H, L, T, C, Q = (
 FACTORIES: dict[str, Callable[[TokenCounter], Chunker]] = {
     "fixed": FixedChunker,
     "recursive": RecursiveChunker,
+    "structure_aware": StructureAwareChunker,
 }
 
 
@@ -145,8 +147,8 @@ def test_repeated_text_is_marked_as_duplicate_and_not_indexed(chunker: Chunker) 
 
 def test_overlap_repeats_the_end_of_the_previous_chunk(chunker: Chunker) -> None:
     document = DOCUMENTS["prose"]
-    overlapping = run(chunker, document, SMALL_POLICY)
-    plain = run(chunker, document, NO_OVERLAP)
+    overlapping = [c for c in run(chunker, document, SMALL_POLICY) if c.level == 0]
+    plain = [c for c in run(chunker, document, NO_OVERLAP) if c.level == 0]
     shared = [overlap_tokens_between(a, b, COUNTER) for a, b in itertools.pairwise(overlapping)]
     limit = SMALL_POLICY.target_tokens * SMALL_POLICY.overlap_ratio + 1
     assert any(tokens > 0 for tokens in shared)

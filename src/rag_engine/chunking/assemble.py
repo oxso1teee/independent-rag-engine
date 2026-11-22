@@ -16,9 +16,10 @@ from rag_engine.domain import (
     DocumentVersionId,
     ParsedDocument,
     TextHash,
+    chunker_fingerprint,
     detect_language,
 )
-from rag_engine.ports import TokenCounter
+from rag_engine.ports import Chunker, TokenCounter
 
 _KIND = {
     BlockKind.PARAGRAPH: ChunkKind.PARAGRAPH,
@@ -28,6 +29,24 @@ _KIND = {
     BlockKind.CODE: ChunkKind.CODE,
     BlockKind.QUOTE: ChunkKind.QUOTE,
 }
+
+
+def policy_fingerprint(
+    chunker: Chunker, counter: TokenCounter, policy: ChunkPolicy, normalizer_version: str
+) -> str:
+    """The fingerprint of a strategy: its identity, every size parameter and the counter."""
+    return chunker_fingerprint(
+        chunker.chunker_id,
+        chunker.version,
+        {
+            "target": policy.target_tokens,
+            "max": policy.max_tokens,
+            "min": policy.min_tokens,
+            "overlap": policy.overlap_ratio,
+            "counter": counter.counter_id,
+        },
+        normalizer_version,
+    )
 
 
 @dataclass(frozen=True, slots=True)

@@ -47,17 +47,25 @@ persistence of chunks.
    script-aware, deterministic and errs on the high side; `HfTokenCounter` counts with a local
    `tokenizer.json` (optional extra). The counter id is part of the chunker fingerprint.
 9. **Chunking.** Strategies: `structure_aware` (headed documents), `recursive` (paragraph,
-   sentence, word) and `fixed` (unstructured text). Leaves target 256 tokens, never exceed
-   384 (unless a single table row or code line cannot be split: `oversize`) and merge small
-   neighbours up to the target. Overlap (12 %) exists only inside the prose of one section,
-   never across a heading. Tables and code are not cut inside a row or line when they fit.
-   Chunk ids are `ChunkId.derive(version, fingerprint, ordinal)`: the same input and policy give
-   the same chunks.
-10. **Two levels.** A leaf's parent is the section that ends at the next heading of any level;
-    sections do not nest, so each character belongs to one parent. A leaf merged from several
-    small sections has the section of its first block as parent. Parents are not indexed and
-    keep the whole section text for expansion at answer time. Documents without headings
-    have leaves only.
+   sentence, word) and `fixed` (unstructured text). Leaves target 256 tokens and never exceed
+   384: a sentence, table row, code line or word that is longer is cut at word or character
+   boundaries, so the `oversize` flag stays false for these strategies (it remains part of the
+   model for strategies that cannot split). A too-small last chunk is merged into its
+   neighbour. Overlap (12 % of the target) repeats whole sentences, or words when no sentence
+   fits, of the previous chunk, only between prose chunks of one section, never across a
+   heading and never next to a table or code. Tables and code are not cut inside a row or line
+   when they fit. Chunks are exact slices of the normalised text. Chunk ids are
+   `ChunkId.derive(version, fingerprint, ordinal)`: the same input and policy give the same
+   chunks.
+10. **Two levels.** A section starts at a heading of any level and ends at the next heading;
+    sections do not nest, so each character belongs to one parent. A heading without text of its
+    own joins the section it introduces; a section smaller than `min_tokens` (or following one)
+    is merged with its neighbour when the result fits the target and the next heading is not of
+    a higher level. A group with two or more leaves gets a parent chunk (level 1) that holds the
+    whole group including its heading, and the leaves exclude that heading; a group with one
+    leaf keeps its heading in the leaf and has no parent. Parents are not indexed and keep the
+    whole section text for expansion at answer time. Text without a heading above it, and
+    documents without headings, have leaves only.
 11. **Duplicates inside a version.** A repeated chunk text keeps its first occurrence
     indexed; later ones are marked `is_duplicate` and not indexed.
 12. **Language.** `detect_language` classifies by script: Cyrillic `ru`, Latin script `en`,

@@ -8,14 +8,13 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from rag_engine.chunking.assemble import ChunkAssembler, Group
+from rag_engine.chunking.assemble import ChunkAssembler, Group, policy_fingerprint
 from rag_engine.chunking.pack import Packer, Piece
 from rag_engine.domain import (
     Chunk,
     ChunkPolicy,
     DocumentVersionId,
     ParsedDocument,
-    chunker_fingerprint,
 )
 from rag_engine.ports import TokenCounter
 
@@ -28,18 +27,7 @@ class RecursiveChunker:
         self._counter = counter
 
     def fingerprint(self, policy: ChunkPolicy, normalizer_version: str) -> str:
-        return chunker_fingerprint(
-            self.chunker_id,
-            self.version,
-            {
-                "target": policy.target_tokens,
-                "max": policy.max_tokens,
-                "min": policy.min_tokens,
-                "overlap": policy.overlap_ratio,
-                "counter": self._counter.counter_id,
-            },
-            normalizer_version,
-        )
+        return policy_fingerprint(self, self._counter, policy, normalizer_version)
 
     def chunk(
         self,
