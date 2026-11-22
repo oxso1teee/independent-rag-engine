@@ -30,6 +30,7 @@ EXPECTED = {
     "en_config_reference.md": ("md", "structure_aware"),
     "en_faq.txt": ("txt", "recursive"),
     "en_release_process.md": ("md", "structure_aware"),
+    "en_report.pdf": ("pdf", "recursive"),
     "en_single_paragraph.txt": ("txt", "fixed"),
     "en_status_page.html": ("html", "structure_aware"),
     "mixed_api_notes.md": ("md", "structure_aware"),
@@ -38,6 +39,7 @@ EXPECTED = {
     "ru_instruction.md": ("md", "structure_aware"),
     "ru_legacy_cp1251.txt": ("txt", "recursive"),
     "ru_page.html": ("html", "structure_aware"),
+    "ru_report.pdf": ("pdf", "recursive"),
     "ru_policy.txt": ("txt", "recursive"),
     "ru_repeated_notes.txt": ("txt", "recursive"),
 }
@@ -121,3 +123,16 @@ def test_sections_with_several_leaves_have_a_parent_that_contains_them() -> None
 def test_a_code_block_is_kept_whole_when_it_fits() -> None:
     chunks = process("en_backup_guide.md").chunks
     assert any("def run_backup" in c.text and "return verify(target)" in c.text for c in chunks)
+
+
+@pytest.mark.parametrize("name", ["en_report.pdf", "ru_report.pdf"])
+def test_pdf_reports_keep_their_pages_and_lose_running_titles(name: str) -> None:
+    done = process(name)
+    text = done.parsed.document.normalized_text
+    assert done.parsed.document.title and "headers_footers_removed" in done.parsed.document.warnings
+    for furniture in ("Backup report", "Отчёт по резервному копированию", "Page ", "Стр."):
+        assert furniture not in text
+    pages = [c.page_start for c in done.chunks if c.level == 0]
+    assert all(page is not None for page in pages) and pages == sorted(p for p in pages if p)
+    assert min(p for p in pages if p) == 1 and max(p for p in pages if p) == 5
+    assert all(len(b.text) > 100 for b in done.parsed.document.blocks)  # joined, not line by line

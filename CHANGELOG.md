@@ -57,6 +57,12 @@ project until a release is cut.
 - Architecture contracts: `parsing` and `chunking` join the independent adapter row and may not
   import storage, configuration, ingestion, the network or each other; negative tests run the
   project's own configuration against planted violations.
+- PDF parser (optional extra `pdf`, `pypdf`): text layer to page-numbered paragraphs; lines joined
+  by layout heuristics, hyphenated line ends and ligatures repaired, running titles and page
+  numbers removed, title, author and date from the file; password-protected files
+  (`encrypted`), scans (`no_text_layer`), damaged files, page, text and block limits and a time
+  limit end as `E_PARSE_FAILED` with a reason. Source cleaners run on the original lines. A
+  test helper builds PDFs without fixtures or network; two PDF reports join `corpus_mini`.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
