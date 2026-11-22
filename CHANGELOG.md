@@ -54,6 +54,9 @@ project until a release is cut.
   --cleaner` stores validated line cleaners with the source; `SourceRegistry.open` reads a
   document through its source; the container builds counter, limits, strategy and parsers from
   `[parsing]` and `[chunking]` (`Processing`).
+- Architecture contracts: `parsing` and `chunking` join the independent adapter row and may not
+  import storage, configuration, ingestion, the network or each other; negative tests run the
+  project's own configuration against planted violations.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
