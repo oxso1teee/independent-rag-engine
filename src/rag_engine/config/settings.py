@@ -104,6 +104,40 @@ class IngestSettings(_Section):
     lease_s: float = Field(default=300.0, gt=0, le=86_400)
 
 
+class ParsingSettings(_Section):
+    """Limits applied to every document and the formats parsed in a separate process."""
+
+    max_text_chars: int = Field(default=20_000_000, ge=1_000, le=500_000_000)
+    max_blocks: int = Field(default=200_000, ge=10, le=10_000_000)
+    max_pages: int = Field(default=2_000, ge=1, le=100_000)
+    max_archive_mb: int = Field(default=200, ge=1, le=10_240)
+    max_archive_ratio: int = Field(default=100, ge=2, le=10_000)
+    max_archive_entries: int = Field(default=10_000, ge=1, le=1_000_000)
+    max_nesting: int = Field(default=200, ge=2, le=10_000)
+    timeout_s: float = Field(default=60.0, gt=0, le=3600)
+    isolate: tuple[Literal["pdf", "docx", "html", "md", "txt"], ...] = ("pdf", "docx", "html")
+    isolation_memory_mb: int = Field(default=1024, ge=128, le=65_536)
+
+
+class ChunkingSettings(_Section):
+    """Chunk size policy and the token counter."""
+
+    target_tokens: int = Field(default=256, ge=16, le=8192)
+    max_tokens: int = Field(default=384, ge=16, le=8192)
+    min_tokens: int = Field(default=48, ge=1, le=8192)
+    overlap_ratio: float = Field(default=0.12, ge=0, lt=0.5)
+    counter: Literal["heuristic", "tokenizers"] = "heuristic"
+    tokenizer_json: Path | None = None
+
+    @model_validator(mode="after")
+    def _check_sizes(self) -> ChunkingSettings:
+        if not self.min_tokens <= self.target_tokens <= self.max_tokens:
+            raise ValueError("chunking sizes need min_tokens <= target_tokens <= max_tokens")
+        if self.counter == "tokenizers" and self.tokenizer_json is None:
+            raise ValueError("chunking.tokenizer_json is required for the 'tokenizers' counter")
+        return self
+
+
 class LoggingSettings(_Section):
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     json_output: bool = True
@@ -121,6 +155,8 @@ class Settings(BaseSettings):
     limits: LimitOverrides = Field(default_factory=LimitOverrides)
     storage: StorageSettings = Field(default_factory=StorageSettings)
     ingest: IngestSettings = Field(default_factory=IngestSettings)
+    parsing: ParsingSettings = Field(default_factory=ParsingSettings)
+    chunking: ChunkingSettings = Field(default_factory=ChunkingSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)

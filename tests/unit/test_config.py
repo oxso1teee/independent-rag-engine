@@ -183,3 +183,73 @@ def test_read_secret_comes_from_the_environment_only() -> None:
 def test_profiles_are_consistent() -> None:
     assert set(PROFILE_LIMITS) == set(ResourceProfile) == {ResourceProfile.LOW}
     assert Settings().profile is ResourceProfile.LOW
+
+
+# ------------------------------------------------------- parsing and chunking
+
+
+def test_parsing_and_chunking_defaults() -> None:
+    settings = load_settings()
+    assert settings.parsing.max_text_chars == 20_000_000
+    assert settings.parsing.isolate == ("pdf", "docx", "html")
+    assert settings.parsing.timeout_s == 60
+    assert (settings.chunking.target_tokens, settings.chunking.max_tokens) == (256, 384)
+    assert settings.chunking.min_tokens == 48
+    assert settings.chunking.overlap_ratio == 0.12
+    assert settings.chunking.counter == "heuristic"
+
+
+def test_parsing_and_chunking_can_be_configured(tmp_path: Path) -> None:
+    path = write(
+        tmp_path,
+        '[parsing]\nmax_pages = 50\nisolate = ["pdf"]\n\n'
+        '[chunking]\ntarget_tokens = 192\nmax_tokens = 256\ncounter = "tokenizers"\n'
+        'tokenizer_json = "models/tokenizer.json"\n',
+    )
+    settings = load_settings(path)
+    assert settings.parsing.max_pages == 50 and settings.parsing.isolate == ("pdf",)
+    assert settings.chunking.target_tokens == 192
+    assert settings.chunking.tokenizer_json == Path("models/tokenizer.json")
+
+
+def test_environment_overrides_parsing_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RAG_PARSING__TIMEOUT_S", "5")
+    monkeypatch.setenv("RAG_CHUNKING__OVERLAP_RATIO", "0.2")
+    settings = load_settings()
+    assert settings.parsing.timeout_s == 5 and settings.chunking.overlap_ratio == 0.2
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "[chunking]\nmin_tokens = 300\n",  # min above target
+        "[chunking]\ntarget_tokens = 400\n",  # target above max
+        '[chunking]\ncounter = "tokenizers"\n',  # needs a tokenizer file
+        '[chunking]\ncounter = "magic"\n',
+        "[chunking]\noverlap_ratio = 0.5\n",
+        "[parsing]\ntimeout_s = 0\n",
+        "[parsing]\nmax_pages = 0\n",
+        '[parsing]\nisolate = ["pdf", "exe"]\n',
+        "[parsing]\nunknown_limit = 1\n",
+    ],
+)
+def test_invalid_parsing_and_chunking_settings_are_rejected(tmp_path: Path, body: str) -> None:
+    with pytest.raises(RagError) as info:
+        load_settings(write(tmp_path, body))
+    assert info.value.code is ErrorCode.E_CONFIG_INVALID
+    fields = str(info.value.context["fields"])
+    assert "parsing" in fields or "chunking" in fields
+
+
+def test_parse_limits_validate_and_default_to_the_settings_defaults() -> None:
+    from rag_engine.ports import ParseHints, ParseLimits
+
+    limits = ParseLimits()
+    settings = load_settings().parsing
+    assert limits.max_text_chars == settings.max_text_chars
+    assert limits.max_pages == settings.max_pages
+    assert limits.timeout_s == settings.timeout_s
+    assert ParseHints().limits == limits and ParseHints().encoding is None
+    for bad in ({"max_blocks": 0}, {"timeout_s": 0}, {"max_nesting": -1}):
+        with pytest.raises(RagError):
+            ParseLimits(**bad)

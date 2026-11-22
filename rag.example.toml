@@ -30,6 +30,26 @@ enabled = false
 # provider = "local"
 # model = "your-embedding-model"
 
+# Limits applied to every document; exceeding one is an error, never a silent truncation.
+[parsing]
+# max_text_chars = 20000000
+# max_blocks = 200000
+# max_pages = 2000
+# max_archive_mb = 200
+# max_archive_ratio = 100
+# timeout_s = 60
+# isolate = ["pdf", "docx", "html"]   # formats parsed in a separate worker process
+# isolation_memory_mb = 1024
+
+# Chunk size policy (tokens) and token counter.
+[chunking]
+# target_tokens = 256
+# max_tokens = 384
+# min_tokens = 48
+# overlap_ratio = 0.12
+# counter = "heuristic"           # or "tokenizers" together with tokenizer_json
+# tokenizer_json = "models/tokenizer.json"
+
 [llm]
 enabled = false
 # provider = "local"

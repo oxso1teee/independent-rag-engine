@@ -61,6 +61,23 @@ def thaw_context(value: Mapping[str, ContextValue]) -> dict[str, object]:
     return thawed if isinstance(thawed, dict) else {}
 
 
+class ParseReason(StrEnum):
+    """Stable tokens that say *why* a document could not be parsed (never document text)."""
+
+    CORRUPT = "corrupt"
+    ENCRYPTED = "encrypted"
+    NO_TEXT_LAYER = "no_text_layer"
+    TOO_LARGE = "too_large"
+    TOO_MANY_PAGES = "too_many_pages"
+    TOO_MANY_BLOCKS = "too_many_blocks"
+    TOO_DEEP = "too_deep"
+    ZIP_BOMB = "zip_bomb"
+    TIMEOUT = "timeout"
+    MEMORY = "memory"
+    WORKER_FAILED = "worker_failed"
+    ENCODING = "encoding"
+
+
 class ErrorCategory(StrEnum):
     USER = "user"
     CONFIG = "config"
@@ -200,3 +217,8 @@ def require(condition: bool, message: str, **context: ContextValue) -> None:
     """Raise :class:`RagError` (``E_INTEGRITY``) unless ``condition`` holds."""
     if not condition:
         raise violation(message, **context)
+
+
+def parse_failed(reason: ParseReason, message: str, **context: ContextValue) -> RagError:
+    """``E_PARSE_FAILED`` with a machine-readable reason in its context."""
+    return RagError(ErrorCode.E_PARSE_FAILED, message, context={"reason": reason.value, **context})

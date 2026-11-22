@@ -15,7 +15,7 @@ from rag_engine.ports.llm import (
     ModelLimits,
     TokenUsage,
 )
-from rag_engine.ports.parser import ParseHints, Parser
+from rag_engine.ports.parser import ParseHints, ParseLimits, Parser
 from rag_engine.ports.rerank import Candidate, RerankBudget, RerankedCandidate, Reranker
 from rag_engine.ports.source import (
     ScanIssue,
@@ -47,6 +47,7 @@ __all__ = [
     "MetadataWriter",
     "ModelLimits",
     "ParseHints",
+    "ParseLimits",
     "Parser",
     "RerankBudget",
     "RerankedCandidate",
