@@ -435,6 +435,7 @@ def _describe(report: IngestReport) -> str:
         ("unsupported", report.unsupported),
         ("skipped", report.skipped),
         ("collected", report.gc_removed),
+        ("duplicate link(s) updated", report.duplicates),
     ):
         if value:
             parts.append(f"{value} {label}")

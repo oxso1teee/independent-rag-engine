@@ -8,7 +8,11 @@ every step.
 from __future__ import annotations
 
 from rag_engine.domain import DocumentStatus, JobStatus, SyncStatus
-from rag_engine.domain.invariants import check_current_version, check_sync_state_matches_document
+from rag_engine.domain.invariants import (
+    check_current_version,
+    check_duplicate_graph,
+    check_sync_state_matches_document,
+)
 from rag_engine.ports import MetadataReader
 from rag_engine.storage.migrations import load_packaged_migrations
 
@@ -57,6 +61,25 @@ def check_sync_consistency(reader: MetadataReader) -> None:
             )
 
 
+def check_duplicates(reader: MetadataReader) -> None:
+    """``duplicate_of`` follows the content exactly: among the active documents of one raw hash
+    the smallest id is the original, the others point to it, nothing else has a link."""
+    for source in reader.list_sources():
+        documents = list(reader.list_documents(source.id))
+        by_key = {s.source_key: s.last_content_hash for s in reader.list_sync_states(source.id)}
+        hashes = {d.id: by_key[d.source_key] for d in documents if by_key.get(d.source_key)}
+        check_duplicate_graph(documents, hashes)  # type: ignore[arg-type]
+        live = [d for d in documents if d.status is DocumentStatus.ACTIVE and d.id in hashes]
+        for document in live:
+            group = [d.id for d in live if hashes[d.id] == hashes[document.id]]
+            original = min(group)
+            expected = None if document.id == original else original
+            assert document.duplicate_of == expected, "duplicate_of does not follow the content"
+        for document in documents:
+            if document not in live:
+                assert document.duplicate_of is None, "a document that is not active has a link"
+
+
 def check_jobs(reader: MetadataReader) -> None:
     """At most one active job per document; finished jobs carry no lease."""
     seen: set[tuple[str, str, str]] = set()
@@ -81,5 +104,6 @@ def check_store_invariants(reader: MetadataReader) -> None:
     check_no_orphans(reader)
     check_current_versions(reader)
     check_sync_consistency(reader)
+    check_duplicates(reader)
     check_jobs(reader)
     check_index_state(reader)
