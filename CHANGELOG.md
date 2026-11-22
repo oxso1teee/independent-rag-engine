@@ -10,6 +10,9 @@ project until a release is cut.
   `check_block_provenance`, `check_duplicate_graph`; ADR 0008 defines the contracts.
 - Ports: `ParseLimits`, `ParseHints.encoding/limits`, `Parser.normalizer_version`; domain
   `ParseReason` and `parse_failed`; settings sections `[parsing]` and `[chunking]`.
+- Parsing: idempotent text normalisation (prose and code modes), exactly-once entity decoding,
+  validated per-source cleaners that version the normaliser, and `TextAssembler`, which builds
+  `normalized_text`, block offsets and heading paths together.
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
