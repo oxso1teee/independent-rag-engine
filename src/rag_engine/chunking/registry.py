@@ -2,11 +2,29 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from rag_engine.chunking.fixed import FixedChunker
 from rag_engine.chunking.recursive import RecursiveChunker
 from rag_engine.chunking.structure import StructureAwareChunker
+from rag_engine.chunking.tokens import HeuristicTokenCounter
+from rag_engine.chunking.tokens_hf import HfTokenCounter
 from rag_engine.domain import BlockKind, ErrorCode, ParsedDocument, RagError
 from rag_engine.ports import Chunker, TokenCounter
+
+
+def build_counter(kind: str, tokenizer_json: Path | None = None) -> TokenCounter:
+    """The configured token counter: the heuristic one, or exact counting with a local file."""
+    if kind == "heuristic":
+        return HeuristicTokenCounter()
+    if kind == "tokenizers" and tokenizer_json is not None:
+        return HfTokenCounter(tokenizer_json)
+    raise RagError(
+        ErrorCode.E_CONFIG_INVALID,
+        "unknown token counter, or the tokenizers counter has no tokenizer file",
+        context={"counter": kind},
+    )
+
 
 AUTO = "auto"
 STRATEGIES = (AUTO, "structure_aware", "recursive", "fixed")

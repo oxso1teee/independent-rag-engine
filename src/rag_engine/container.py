@@ -13,16 +13,20 @@ from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
+from rag_engine.chunking.registry import ChunkerRegistry, build_counter
 from rag_engine.cli import main as cli_main
-from rag_engine.cli.context import Container, Services
-from rag_engine.config import IngestSettings, load_settings
-from rag_engine.domain import ErrorCode, IdFactory, RagError, Source
+from rag_engine.cli.context import Container, Processing, Services
+from rag_engine.config import IngestSettings, ParsingSettings, Settings, load_settings
+from rag_engine.domain import ChunkPolicy, ErrorCode, IdFactory, RagError, Source
 from rag_engine.ingestion.identity import AdapterFactory, SourceRegistry
 from rag_engine.ingestion.jobs import JobQueue, RetryPolicy
+from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.service import IngestService
 from rag_engine.ingestion.sources import FilesystemSource
 from rag_engine.observability import configure_logging
-from rag_engine.ports import Clock, SourceAdapter, Store
+from rag_engine.parsing.cleaners import compile_cleaners
+from rag_engine.parsing.registry import default_parsers
+from rag_engine.ports import Clock, ParseLimits, SourceAdapter, Store
 from rag_engine.storage.sqlite import open_store, open_store_read_only
 from rag_engine.system import SystemClock, system_id_factory
 
@@ -42,6 +46,39 @@ def retry_policy(settings: IngestSettings) -> RetryPolicy:
         jitter=settings.retry_jitter,
         lease_s=settings.lease_s,
     )
+
+
+def parse_limits(settings: ParsingSettings) -> ParseLimits:
+    return ParseLimits(
+        max_text_chars=settings.max_text_chars,
+        max_blocks=settings.max_blocks,
+        max_pages=settings.max_pages,
+        max_archive_bytes=settings.max_archive_mb * 1024 * 1024,
+        max_archive_ratio=settings.max_archive_ratio,
+        max_archive_entries=settings.max_archive_entries,
+        max_nesting=settings.max_nesting,
+        timeout_s=settings.timeout_s,
+    )
+
+
+def build_processing(settings: Settings, clock: Clock, ids: IdFactory) -> Processing:
+    """Parsing and chunking as configured; the token counter is created once."""
+    chunking = settings.chunking
+    counter = build_counter(chunking.counter, chunking.tokenizer_json)
+    policy = ChunkPolicy(
+        target_tokens=chunking.target_tokens,
+        max_tokens=chunking.max_tokens,
+        min_tokens=chunking.min_tokens,
+        overlap_ratio=chunking.overlap_ratio,
+    )
+
+    def build(cleaners: Sequence[str], strategy: str | None) -> DocumentProcessor:
+        parsers = default_parsers(compile_cleaners(cleaners) if cleaners else None)
+        return DocumentProcessor(
+            parsers, clock, ChunkerRegistry(counter, strategy or chunking.strategy)
+        )
+
+    return Processing(ids, policy, parse_limits(settings.parsing), build)
 
 
 def build_services(
@@ -91,6 +128,11 @@ class DefaultContainer:
             )
         finally:
             store.close()
+
+    def processing(self, config: Path | None) -> Processing:
+        settings = load_settings(config)
+        configure_logging(settings.logging.level, json_output=settings.logging.json_output)
+        return build_processing(settings, SystemClock(), system_id_factory())
 
 
 def main(argv: Sequence[str] | None = None) -> int:

@@ -48,6 +48,12 @@ project until a release is cut.
   plain text, a cp1251 file, tiny sections, empty headings, tables, code) produced by a
   deterministic generator, with a corpus test that checks parser and strategy choice, the chunk
   invariants under two policies, determinism, language, heading paths and parents.
+- `rag chunks DOC`: parses and chunks a file (or, with `--source`, a document of a registered
+  source with that source's cleaners) and prints the chunks as text or `--json`; `--cleaner`,
+  `--strategy` and `--full` options; no database is needed for a plain file. `rag source add
+  --cleaner` stores validated line cleaners with the source; `SourceRegistry.open` reads a
+  document through its source; the container builds counter, limits, strategy and parsers from
+  `[parsing]` and `[chunking]` (`Processing`).
 
 ### Phase 2 refinements
 - Schema v2 (`0002_align_data_model.sql`, forward only; `0001` untouched): `document_versions`,
