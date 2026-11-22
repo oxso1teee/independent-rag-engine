@@ -18,4 +18,8 @@ def default_parsers(cleaners: CleanerSet | None = None) -> list[Parser]:
         from rag_engine.parsing.pdf import PdfParser
 
         parsers.append(PdfParser(cleaners))
+    if find_spec("docx") is not None:
+        from rag_engine.parsing.docx import DocxParser
+
+        parsers.append(DocxParser(cleaners))
     return parsers

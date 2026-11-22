@@ -22,6 +22,7 @@ from rag_engine.ingestion.processing import DocumentProcessor, ParsedResult, rea
 from rag_engine.ingestion.sources import FilesystemSource
 from rag_engine.observability import configure_logging
 from rag_engine.parsing.cleaners import CleanerSet, compile_cleaners
+from rag_engine.parsing.docx import DOCX_MIME
 from rag_engine.parsing.html import HtmlParser
 from rag_engine.parsing.md import MarkdownParser
 from rag_engine.parsing.registry import default_parsers
@@ -29,6 +30,7 @@ from rag_engine.parsing.txt import TxtParser
 from rag_engine.ports import ParseHints, ParseLimits
 from rag_engine.testing import FakeClock
 from tests.chunking_checks import check_chunks
+from tests.docx_builder import build_docx, encrypted_docx_stub
 from tests.factories import make_ids
 from tests.pdf_builder import build_pdf
 from tests.workspace import Workspace
@@ -97,6 +99,16 @@ def test_a_supported_format_without_an_installed_parser_says_so() -> None:
     assert info.value.code is ErrorCode.E_UNSUPPORTED_FORMAT
     assert info.value.context["mime"] == "application/pdf"
     assert "optional extra" in info.value.message
+
+
+def test_a_docx_is_parsed_when_its_extra_is_installed() -> None:
+    result = parse(build_docx([("h1", "Plan"), ("p", "Do the work.")]), "plan.docx")
+    assert (result.parser_id, result.mime.mime) == ("docx", DOCX_MIME)
+    assert result.document.title == "Plan"
+    assert [b.kind.value for b in result.document.blocks] == ["heading", "paragraph"]
+    with pytest.raises(RagError) as info:
+        parse(encrypted_docx_stub(), "locked.docx")
+    assert info.value.code is ErrorCode.E_UNSUPPORTED_FORMAT  # not recognised as a Word file
 
 
 def test_a_pdf_is_parsed_when_its_extra_is_installed() -> None:

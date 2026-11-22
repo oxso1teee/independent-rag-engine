@@ -16,11 +16,13 @@ from hypothesis import strategies as st
 
 from rag_engine.domain import ErrorCode, ParsedDocument, RagError
 from rag_engine.domain.invariants import check_block_provenance
+from rag_engine.parsing.docx import DOCX_MIME, DocxParser
 from rag_engine.parsing.html import HtmlParser
 from rag_engine.parsing.md import MarkdownParser
 from rag_engine.parsing.pdf import PdfParser
 from rag_engine.parsing.txt import TxtParser
 from rag_engine.ports import ParseHints, ParseLimits, Parser
+from tests.docx_builder import build_docx
 from tests.pdf_builder import build_pdf
 
 CLEAN_FAILURES = {ErrorCode.E_PARSE_FAILED, ErrorCode.E_UNSUPPORTED_FORMAT}
@@ -37,6 +39,17 @@ class Case:
 
 
 CASES: dict[str, Case] = {
+    "docx": Case(
+        make=DocxParser,
+        mime=DOCX_MIME,
+        extension="docx",
+        samples=(
+            build_docx([("h1", "Title"), ("p", "A paragraph."), ("li", "one"), ("li", "two")]),
+            build_docx([("p", "Привет, мир."), ("table", [["a", "b"], ["1", "2"]])], title="Т"),
+            build_docx([("quote", "quoted"), ("code", "x = 1"), ("h2", "Part"), ("p", "text")]),
+            build_docx([("p", "single paragraph without anything else")]),
+        ),
+    ),
     "html": Case(
         make=HtmlParser,
         mime="text/html",
