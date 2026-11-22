@@ -89,7 +89,8 @@ trip) of the measurements below; they exist to catch an accidental quadratic ste
 initial budgets they may be revised with new measurements.
 
 Measured on 2026-11-22 with `make perf` (4 vCPU, Python 3.12.3, three runs on the code of the
-hardening PR; seconds, heuristic token counter, default chunk policy 256/384/48/12 %):
+hardening PR; seconds, heuristic token counter, default chunk policy 256/384/48/12 %). Sizes
+in the table are *characters* of generated text: "1 MB" of Cyrillic Markdown is 1.8 MB on disk.):
 
 | Measurement | Run 1 | Run 2 | Run 3 | Budget |
 |---|---|---|---|---|
@@ -104,9 +105,59 @@ hardening PR; seconds, heuristic token counter, default chunk policy 256/384/48/
 | DOCX, 2000 paragraphs, parse + chunk | 2.08 | 2.21 | 2.17 | 10 |
 | Isolated worker: start + first document | 0.95 | 0.79 | 0.74 | 5 |
 | Isolated worker: one more 20 KB document | 0.004 | 0.005 | 0.004 | 0.5 |
-| Peak Python memory, Markdown 2 MB parse + chunk | 25 MB | 25 MB | 25 MB | 150 MB |
+| Peak Python memory (`tracemalloc`), Markdown of 2 million characters (3.6 MB) parse + chunk | 25 MB | 25 MB | 25 MB | 150 MB |
 
 The worker adds under a second once per process and a few milliseconds per document.
+
+## Memory
+
+Measured on 2026-11-22 (4 vCPU, Python 3.12.3, Linux) with generated documents, each parsed in a
+fresh process (scripts are not part of the repository; the perf test above repeats the
+`tracemalloc` case). Sizes are millions of characters of normalised text (Mchar).
+
+**Python-level peak, parse + chunk (`tracemalloc`), MB per Mchar**
+
+| Format | 0.5 Mchar | 1 Mchar | 2 Mchar |
+|---|---|---|---|
+| Plain text | 5.0 | 5.0 | n/a |
+| HTML | 11.0 | 9.4 | n/a |
+| DOCX | 12.0 | 10.0 | 9.4 |
+| Markdown (Cyrillic) | 12.9 | 12.4 | 12.4 |
+| PDF | about 2 MB in total for up to 100 pages (the text is small) | | |
+
+**Growth of the peak resident set (RSS) over the 70 MB of a process that has only imported the
+code, at 4 Mchar (2 Mchar for DOCX), MB per Mchar:** Markdown 9.0, HTML 5.8, DOCX 5.4, plain text
+1.8 for parsing and 3.5 for parsing and chunking, PDF about 0.
+
+**Smallest worker cap (`isolation_memory_mb`, `RLIMIT_DATA`) that still parsed the document**,
+among 192, 256, 320, 384, 448, 512 and larger:
+
+| Document | Result |
+|---|---|
+| any format up to 4 Mchar (Markdown 7 MB on disk) | 256 MB suffices; 192 MB did not |
+| HTML, 16.3 Mchar (16.5 MB) | 384 MB (320 MB failed) |
+| Markdown, 16.4 Mchar (28.6 MB) | 448 MB (384 MB failed) |
+| plain text, 19.0 Mchar (19 MB) | 320 MB |
+
+What this means, and what it does not:
+
+- The figures are not interchangeable. `tracemalloc` sees Python allocations only, adds its own
+  overhead and misses native memory (the HTML parser's C library, the allocator); RSS growth
+  misses memory that the process had already mapped and freed, so it under-reports small
+  documents; the worker cap counts *virtual* data segment, including about 200 MB that exist
+  before the first document. A ratio such as "N times the text" is only meaningful together
+  with its metric and its unit (characters, not bytes).
+- **Conservative budget.** Main process: 15 MB per Mchar on top of a 70 MB baseline (the worst
+  measured Python-level peak is 12.9). Worker: 250 MB plus 14 MB per Mchar (the worst measured
+  need is 448 MB at 16.4 Mchar, which this rule covers); the default text limit of 20 Mchar
+  gives about 530 MB against the default cap of 1024 MB. Do not set `isolation_memory_mb` below
+  512 MB when documents of that size are expected.
+- Not measured: DOCX and PDF documents near the archive and page limits, several workers or
+  concurrent documents, other Python versions, another allocator or kernel.
+- **Known limitation.** When a cap is too small, the HTML parser's native allocation can fail
+  inside the C library; the worker then reports `corrupt` (`SelectolaxError`) instead of
+  `memory` (seen at 256 MB with a 16 Mchar page). The failure is still contained and clean, but
+  its reason is misleading.
 
 ## Running
 

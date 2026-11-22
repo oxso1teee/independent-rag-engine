@@ -39,7 +39,7 @@ enabled = false
 # max_archive_ratio = 100
 # timeout_s = 60
 # isolate = ["pdf", "docx", "html"]   # formats parsed in a separate worker process
-# isolation_memory_mb = 1024         # data-segment cap of the worker; [] disables isolation
+# isolation_memory_mb = 1024         # worker data-segment cap (plan 250 MB + 14 MB per million characters); isolate = [] disables isolation
 
 # Chunk size policy (tokens), strategy and token counter.
 [chunking]

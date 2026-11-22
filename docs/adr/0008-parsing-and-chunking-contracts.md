@@ -99,6 +99,18 @@ persistence of chunks.
 - Dependencies: Markdown (`markdown-it-py`) and HTML (`selectolax`) parsing are in the core;
   `pypdf` and `python-docx` are extras (`[pdf]`, `[docx]`); `tokenizers` is the extra
   `[tokenizers]` because it brings network-capable packages that exact counting does not need.
-- Peak memory of one document is about six times its text; the default text limit (20 million
-  characters) keeps it well under the isolation memory limit.
+- **Memory grows with the number of characters of the normalised text**, not with the size of
+  the file (a Python string takes 1, 2 or 4 bytes per character; Cyrillic Markdown is about 1.8
+  bytes per character on disk). Three different quantities are involved and must not be
+  mixed: the Python-level peak (`tracemalloc`: every Python allocation, no native one), the
+  growth of the peak resident set (native memory included, but memory freed earlier in the
+  process is reused, so small documents show almost no growth) and the data segment that the
+  worker cap limits (`RLIMIT_DATA`: virtual, about 200 MB before any document is read).
+  Measured, parsing and chunking one document needs about 5 MB per million characters for
+  plain text and 9 to 13 MB for HTML, DOCX and Markdown (Python-level peak); a PDF costs
+  little, its text is small. **Conservative budget: 15 MB per million characters plus the
+  interpreter baseline.** For the worker, plan 250 MB plus 14 MB per million characters: the
+  default text limit (20 million characters) then needs about 530 MB, and the default cap
+  (`isolation_memory_mb = 1024`) leaves a margin of about two. The measurements and their
+  limits are in [TESTING.md](../TESTING.md#memory).
 - Chunk and version storage, embeddings and indexes are not part of these contracts.
