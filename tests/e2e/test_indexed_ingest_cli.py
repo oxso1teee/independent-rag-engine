@@ -6,12 +6,14 @@ import json
 from pathlib import Path
 
 import httpx
+import numpy as np
 import pytest
 
 from rag_engine.cli.main import main
 from rag_engine.container import DefaultContainer
 from rag_engine.domain import SourceKey
 from rag_engine.storage.sqlite import open_store_read_only
+from rag_engine.storage.vector_flat import FlatVectorIndex
 
 DIGEST = "a" * 64
 
@@ -50,7 +52,7 @@ def test_configured_ingest_publishes_current_version(
     container = DefaultContainer()
     prefix = ["--config", str(config), "--db", str(db)]
     assert main([*prefix, "source", "add", "notes", str(root)], container=container) == 0
-    assert main([*prefix, "ingest", "notes"], container=container) == 0
+    assert main([*prefix, "ingest", "notes", "--json"], container=container) == 0
     store = open_store_read_only(db)
     try:
         source = store.reader().get_source_by_name("notes")
@@ -62,3 +64,13 @@ def test_configured_ingest_publishes_current_version(
         assert metadata is not None and metadata.index_generation == 1
     finally:
         store.close()
+    assert metadata.active_embedding_model_id is not None
+    index = FlatVectorIndex(metadata.active_embedding_model_id, 4)
+    assert index.refresh(db)
+    assert not index.refresh(db)
+    assert len(index) >= 1
+    assert index.search(np.asarray([1, 0, 0, 0], dtype=np.float32), 1)
+    (root / "a.md").write_text("# Changed heading\n\nA new paragraph.\n")
+    assert main([*prefix, "ingest", "notes", "--json"], container=container) == 0
+    assert index.refresh(db)
+    assert index.generation == 2
