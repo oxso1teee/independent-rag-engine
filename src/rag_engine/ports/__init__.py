@@ -1,6 +1,6 @@
 """Ports: Protocol contracts between the core and its adapters. No implementations."""
 
-from rag_engine.ports.cache import EmbeddingCache, StoredEmbedding
+from rag_engine.ports.cache import EmbeddingCache, EmbeddingCacheWriter, StoredEmbedding
 from rag_engine.ports.chunker import Chunker, ChunkerSelector
 from rag_engine.ports.clock import Clock
 from rag_engine.ports.embedding import EmbeddingProvider, Vectors
@@ -36,6 +36,7 @@ __all__ = [
     "Clock",
     "Delta",
     "EmbeddingCache",
+    "EmbeddingCacheWriter",
     "EmbeddingProvider",
     "FinishReason",
     "GenerationParams",

@@ -18,6 +18,8 @@ from rag_engine.domain import (
     DocumentStatus,
     DocumentVersion,
     DocumentVersionId,
+    EmbeddingModel,
+    EmbeddingModelId,
     ErrorCode,
     IndexMetadata,
     IngestionJob,
@@ -30,10 +32,11 @@ from rag_engine.domain import (
     SourceKey,
     SyncState,
 )
+from rag_engine.ports.cache import EmbeddingCache, EmbeddingCacheWriter
 
 
 @runtime_checkable
-class MetadataReader(Protocol):
+class MetadataReader(EmbeddingCache, Protocol):
     """Read-only access; safe to use concurrently with a writer."""
 
     def get_source(self, source_id: SourceId) -> Source | None: ...
@@ -97,9 +100,11 @@ class MetadataReader(Protocol):
 
     def get_index_metadata(self) -> IndexMetadata | None: ...
 
+    def get_embedding_model(self, model_id: EmbeddingModelId) -> EmbeddingModel | None: ...
+
 
 @runtime_checkable
-class MetadataWriter(MetadataReader, Protocol):
+class MetadataWriter(MetadataReader, EmbeddingCacheWriter, Protocol):
     """Mutations; obtainable only from :meth:`UnitOfWork.begin`."""
 
     # sources ---------------------------------------------------------------------------
@@ -132,6 +137,10 @@ class MetadataWriter(MetadataReader, Protocol):
         ...
 
     def mark_text_purged(self, version_id: DocumentVersionId) -> None: ...
+
+    def put_embedding_model(self, model: EmbeddingModel) -> None:
+        """Insert an immutable model definition, or verify the existing definition."""
+        ...
 
     # sync state ------------------------------------------------------------------------
     def put_sync_state(self, state: SyncState) -> None: ...

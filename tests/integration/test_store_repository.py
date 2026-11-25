@@ -13,6 +13,8 @@ from rag_engine.domain import (
     Document,
     DocumentStatus,
     DocumentVersion,
+    EmbeddingModel,
+    EmbeddingModelId,
     ErrorCode,
     IdFactory,
     JobKind,
@@ -212,7 +214,7 @@ def test_index_generation_is_monotonic(store: SqliteStore) -> None:
 def test_stored_embedding_validates_its_shape() -> None:
     vector = np.ones(4, dtype=np.float32)
     ok = StoredEmbedding(
-        text_hash=TextHash.of_text("x"),
+        embedding_input_hash=TextHash.of_text("x"),
         vector=vector,
         norm=2.0,
         created_at=T0,
@@ -222,6 +224,52 @@ def test_stored_embedding_validates_its_shape() -> None:
         replace(ok, vector=np.ones((2, 2), dtype=np.float32))
     with pytest.raises(RagError):
         replace(ok, norm=-1.0)
+    with pytest.raises(RagError):
+        replace(ok, vector=np.array([float("nan")], dtype=np.float32))
+
+
+def test_embedding_cache_is_content_addressed_and_transactional(store: SqliteStore) -> None:
+    model_id = EmbeddingModelId.build(
+        provider="test",
+        name="unit",
+        revision="1",
+        dimension=4,
+        normalized=True,
+        query_prefix="",
+        document_prefix="",
+    )
+    model = EmbeddingModel(
+        id=model_id,
+        provider="test",
+        name="unit",
+        revision="1",
+        dimension=4,
+        normalized=True,
+        max_input_tokens=64,
+        created_at=T0,
+    )
+    key = TextHash.of_text("heading\nbody")
+    vector = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    item = StoredEmbedding(key, vector, 1.0, T0)
+
+    with store.unit_of_work().begin() as writer:
+        writer.put_embedding_model(model)
+        writer.put_many(model_id, [item, item])
+    reader = store.reader()
+    assert reader.get_embedding_model(model_id) == model
+    cached = reader.get_many(model_id, [key, TextHash.of_text("missing")])
+    assert list(cached) == [key]
+    np.testing.assert_array_equal(cached[key].vector, vector)
+
+    with pytest.raises(RagError), store.unit_of_work().begin() as writer:
+        writer.put_many(
+            model_id,
+            [replace(item, vector=np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32))],
+        )
+    assert len(reader.get_many(model_id, [key])) == 1
+    with store.unit_of_work().begin() as writer:
+        assert writer.delete_unreferenced(model_id) == 1
+    assert reader.get_many(model_id, [key]) == {}
 
 
 def test_sql_metacharacters_are_plain_data(store: SqliteStore, ids: IdFactory) -> None:

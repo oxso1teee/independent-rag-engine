@@ -7,9 +7,11 @@ interpolated fragments are fixed literals chosen in this module.
 from __future__ import annotations
 
 import sqlite3
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime, timedelta
 from typing import Any, TypeVar
+
+import numpy as np
 
 from rag_engine.domain import (
     Document,
@@ -17,6 +19,8 @@ from rag_engine.domain import (
     DocumentStatus,
     DocumentVersion,
     DocumentVersionId,
+    EmbeddingModel,
+    EmbeddingModelId,
     ErrorCode,
     IndexMetadata,
     IngestionJob,
@@ -29,9 +33,11 @@ from rag_engine.domain import (
     SourceId,
     SourceKey,
     SyncState,
+    TextHash,
     thaw_context,
 )
 from rag_engine.domain.invariants import check_generation_monotonic, check_version_transition
+from rag_engine.ports.cache import StoredEmbedding
 from rag_engine.storage.sqlite import codec
 
 T = TypeVar("T")
@@ -157,6 +163,36 @@ class SqliteReader:
             (str(document_id),),
         )
         return self._map(rows, codec.version_from_row)
+
+    def get_embedding_model(self, model_id: EmbeddingModelId) -> EmbeddingModel | None:
+        row = self._one("SELECT * FROM embedding_models WHERE id = ?", (str(model_id),))
+        return None if row is None else codec.embedding_model_from_row(row)
+
+    def get_many(
+        self, model_id: EmbeddingModelId, hashes: Sequence[TextHash]
+    ) -> Mapping[TextHash, StoredEmbedding]:
+        found: dict[TextHash, StoredEmbedding] = {}
+        model = self.get_embedding_model(model_id)
+        if model is None:
+            return found
+        for key in dict.fromkeys(hashes):
+            row = self._one(
+                "SELECT vector, dtype, norm, created_at FROM embeddings"
+                " WHERE embedding_input_hash = ? AND model_id = ?",
+                (key.hex, str(model_id)),
+            )
+            if row is None:
+                continue
+            blob = row["vector"]
+            if row["dtype"] != "f16le" or len(blob) != model.dimension * 2:
+                raise RagError(ErrorCode.E_INTEGRITY, "cached embedding has an invalid shape")
+            vector = np.frombuffer(blob, dtype="<f2").astype(np.float32)
+            if not np.isfinite(vector).all():
+                raise RagError(ErrorCode.E_INTEGRITY, "cached embedding has non-finite values")
+            found[key] = StoredEmbedding(
+                key, vector, row["norm"], codec.parse_ts(row["created_at"])
+            )
+        return found
 
     # -- sync state --------------------------------------------------------------------
 
@@ -345,6 +381,77 @@ class SqliteWriter(SqliteReader):
         )
         if cursor.rowcount == 0:
             raise RagError(ErrorCode.E_INTEGRITY, "unknown version")
+
+    def put_embedding_model(self, model: EmbeddingModel) -> None:
+        existing = self.get_embedding_model(model.id)
+        if existing is not None:
+            if existing != model:
+                raise RagError(ErrorCode.E_INTEGRITY, "embedding model definition changed")
+            return
+        self._run(
+            "INSERT INTO embedding_models (id, provider, name, revision, dimension,"
+            " normalized, query_prefix, document_prefix, max_input_tokens, status, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                str(model.id),
+                model.provider,
+                model.name,
+                model.revision,
+                model.dimension,
+                int(model.normalized),
+                model.query_prefix,
+                model.document_prefix,
+                model.max_input_tokens,
+                model.status.value,
+                codec.ts(model.created_at),
+            ),
+        )
+
+    def put_many(self, model_id: EmbeddingModelId, items: Sequence[StoredEmbedding]) -> None:
+        model = self.get_embedding_model(model_id)
+        if model is None:
+            raise RagError(ErrorCode.E_INTEGRITY, "embedding model is not registered")
+        for item in items:
+            vector = item.vector
+            if vector.ndim != 1 or vector.size != model.dimension:
+                raise RagError(ErrorCode.E_EMBED_DIM_MISMATCH, "embedding dimension differs")
+            if not np.isfinite(vector).all():
+                raise RagError(ErrorCode.E_INTEGRITY, "embedding contains non-finite values")
+            packed = np.asarray(vector, dtype="<f2").tobytes()
+            restored = np.frombuffer(packed, dtype="<f2").astype(np.float32)
+            norm = float(np.linalg.norm(restored))
+            if not np.isfinite(norm) or norm <= 0:
+                raise RagError(ErrorCode.E_INTEGRITY, "embedding has invalid norm")
+            if model.normalized and abs(norm - 1.0) >= 1e-3:
+                raise RagError(ErrorCode.E_INTEGRITY, "normalized embedding has invalid norm")
+            old = self._one(
+                "SELECT vector FROM embeddings WHERE embedding_input_hash = ? AND model_id = ?",
+                (item.embedding_input_hash.hex, str(model_id)),
+            )
+            if old is not None:
+                if old["vector"] != packed:
+                    raise RagError(ErrorCode.E_INTEGRITY, "cached embedding changed for one key")
+                continue
+            self._run(
+                "INSERT INTO embeddings (embedding_input_hash, model_id, vector, dtype, norm,"
+                " created_at) VALUES (?, ?, ?, 'f16le', ?, ?)",
+                (
+                    item.embedding_input_hash.hex,
+                    str(model_id),
+                    packed,
+                    norm,
+                    codec.ts(item.created_at),
+                ),
+            )
+
+    def delete_unreferenced(self, model_id: EmbeddingModelId) -> int:
+        cursor = self._run(
+            "DELETE FROM embeddings WHERE model_id = ? AND NOT EXISTS"
+            " (SELECT 1 FROM chunks WHERE chunks.embedding_input_hash ="
+            " embeddings.embedding_input_hash AND chunks.indexed = 1)",
+            (str(model_id),),
+        )
+        return cursor.rowcount
 
     # -- sync state --------------------------------------------------------------------
 

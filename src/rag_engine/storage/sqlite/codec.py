@@ -14,6 +14,7 @@ from rag_engine.domain import (
     DocumentStatus,
     DocumentVersion,
     DocumentVersionId,
+    EmbeddingModel,
     EmbeddingModelId,
     ErrorCode,
     IndexMetadata,
@@ -22,6 +23,7 @@ from rag_engine.domain import (
     JobKind,
     JobStage,
     JobStatus,
+    ModelStatus,
     Sha256Hex,
     Source,
     SourceId,
@@ -50,6 +52,22 @@ def parse_ts_opt(value: str | None) -> datetime | None:
 
 def dumps(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def embedding_model_from_row(row: sqlite3.Row) -> EmbeddingModel:
+    return EmbeddingModel(
+        id=EmbeddingModelId.parse(row["id"]),
+        provider=row["provider"],
+        name=row["name"],
+        revision=row["revision"],
+        dimension=row["dimension"],
+        normalized=bool(row["normalized"]),
+        query_prefix=row["query_prefix"],
+        document_prefix=row["document_prefix"],
+        max_input_tokens=row["max_input_tokens"],
+        status=ModelStatus(row["status"]),
+        created_at=parse_ts(row["created_at"]),
+    )
 
 
 # ------------------------------------------------------------------------ source
