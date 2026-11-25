@@ -15,6 +15,7 @@ from typing import Protocol, runtime_checkable
 
 from rag_engine.domain import (
     Chunk,
+    ChunkId,
     Document,
     DocumentId,
     DocumentStatus,
@@ -37,6 +38,7 @@ from rag_engine.domain import (
     require,
 )
 from rag_engine.ports.cache import EmbeddingCache, EmbeddingCacheWriter
+from rag_engine.ports.lexical import LexicalDocument
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +170,18 @@ class MetadataWriter(MetadataReader, EmbeddingCacheWriter, Protocol):
 
     def index_chunks(self, version_id: DocumentVersionId) -> None:
         """Publish the version's lexical rows in the current writer transaction."""
+        ...
+
+    def rebuild_lexical_index(self) -> None:
+        """Reanalyse existing chunks and replace visible FTS rows atomically."""
+        ...
+
+    def upsert_lexical_documents(self, documents: Sequence[LexicalDocument]) -> None:
+        """Reindex existing visible chunks in the writer transaction."""
+        ...
+
+    def remove_lexical_chunks(self, ids: Sequence[ChunkId]) -> None:
+        """Mark visible chunks unindexed and remove FTS rows atomically."""
         ...
 
     def put_embedding_model(self, model: EmbeddingModel) -> None:

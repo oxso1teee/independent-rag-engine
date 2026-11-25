@@ -18,6 +18,7 @@ from rag_engine.domain import (
     SyncStatus,
 )
 from rag_engine.embedding.service import EmbeddingPlan
+from rag_engine.lexical.analysis import ANALYZER_ID
 from rag_engine.ports import Clock, Store, StoredChunk
 
 
@@ -102,6 +103,8 @@ class IndexPublisher:
             if len({item.chunk.id for item in chunks}) != len(chunks):
                 raise RagError(ErrorCode.E_INTEGRITY, "duplicate chunks in publication")
 
+            if metadata.lexical_analyzer_id != ANALYZER_ID:
+                writer.rebuild_lexical_index()
             writer.put_embedding_model(model)
             writer.put_many(model.id, embeddings.new)
             keys = tuple(embeddings.by_chunk.values())
@@ -112,7 +115,13 @@ class IndexPublisher:
             writer.index_chunks(version.id)
             writer.put_document(replace(document, current_version_id=version.id, updated_at=now))
             writer.put_sync_state(replace(state, status=SyncStatus.OK, last_seen_at=now))
-            writer.update_index_metadata(replace(metadata, active_embedding_model_id=model.id))
+            writer.update_index_metadata(
+                replace(
+                    metadata,
+                    active_embedding_model_id=model.id,
+                    lexical_analyzer_id=ANALYZER_ID,
+                )
+            )
             writer.bump_generation()
             if not writer.complete_job(job.id, job.attempts, now):
                 raise RagError(ErrorCode.E_TIMEOUT, "index publication lost its job lease")

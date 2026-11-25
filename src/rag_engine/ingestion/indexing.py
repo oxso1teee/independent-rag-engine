@@ -22,6 +22,7 @@ from rag_engine.embedding.service import EmbeddingService
 from rag_engine.ingestion.identity import AdapterFactory
 from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.publishing import IndexPublisher
+from rag_engine.lexical.analysis import analyze
 from rag_engine.ports import Clock, ParseLimits, Store, StoredChunk
 
 
@@ -110,8 +111,8 @@ class DocumentIndexingHandler:
             StoredChunk(
                 chunk,
                 plan.by_chunk.get(chunk.id),
-                chunk.text if chunk.indexed else "",
-                " ".join(chunk.heading_path) if chunk.indexed else "",
+                analyze(chunk.text, chunk.language) if chunk.indexed else "",
+                analyze(" ".join(chunk.heading_path), chunk.language) if chunk.indexed else "",
             )
             for chunk in processed.chunks
         ]

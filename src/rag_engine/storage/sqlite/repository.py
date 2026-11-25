@@ -6,6 +6,7 @@ interpolated fragments are fixed literals chosen in this module.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
@@ -29,6 +30,7 @@ from rag_engine.domain import (
     JobId,
     JobKind,
     JobStatus,
+    Language,
     RagError,
     Sha256Hex,
     Source,
@@ -39,7 +41,9 @@ from rag_engine.domain import (
     thaw_context,
 )
 from rag_engine.domain.invariants import check_generation_monotonic, check_version_transition
+from rag_engine.lexical.analysis import analyze
 from rag_engine.ports.cache import StoredEmbedding
+from rag_engine.ports.lexical import LexicalDocument
 from rag_engine.ports.store import StoredChunk
 from rag_engine.storage.sqlite import codec
 
@@ -312,7 +316,8 @@ class SqliteWriter(SqliteReader):
     # -- documents and versions ---------------------------------------------------------
 
     def put_document(self, document: Document) -> None:
-        check_version_transition(self.get_document(document.id), document)
+        previous = self.get_document(document.id)
+        check_version_transition(previous, document)
         if document.current_version_id is not None:
             version = self.get_version(document.current_version_id)
             if version is None or version.document_id != document.id:
@@ -321,6 +326,24 @@ class SqliteWriter(SqliteReader):
                     "the current version must exist and belong to the document",
                     context={"document": str(document.id)},
                 )
+        old_visible = (
+            previous is not None
+            and previous.status is DocumentStatus.ACTIVE
+            and previous.duplicate_of is None
+            and previous.current_version_id is not None
+        )
+        new_visible = (
+            document.status is DocumentStatus.ACTIVE
+            and document.duplicate_of is None
+            and document.current_version_id is not None
+        )
+        if (
+            old_visible
+            and previous is not None
+            and previous.current_version_id is not None
+            and (not new_visible or previous.current_version_id != document.current_version_id)
+        ):
+            self._unindex_chunks(previous.current_version_id)
         self._run(
             "INSERT INTO documents (id, source_id, source_key, current_version_id, status,"
             " duplicate_of, missing_since, title, tags_json, created_at, updated_at)"
@@ -344,8 +367,25 @@ class SqliteWriter(SqliteReader):
                 codec.ts(document.updated_at),
             ),
         )
+        same_version = previous is not None and (
+            previous.current_version_id == document.current_version_id
+        )
+        if (
+            new_visible
+            and not old_visible
+            and same_version
+            and document.current_version_id is not None
+        ):
+            self.index_chunks(document.current_version_id)
+        if same_version and old_visible != new_visible:
+            self.bump_generation()
 
     def delete_document(self, document_id: DocumentId) -> None:
+        previous = self.get_document(document_id)
+        if previous is not None and previous.current_version_id is not None:
+            self._unindex_chunks(previous.current_version_id)
+            if previous.status is DocumentStatus.ACTIVE and previous.duplicate_of is None:
+                self.bump_generation()
         self._run("DELETE FROM documents WHERE id = ?", (str(document_id),))
 
     def put_version(self, version: DocumentVersion) -> None:
@@ -476,6 +516,117 @@ class SqliteWriter(SqliteReader):
                 "INSERT INTO chunks_fts (rowid, body_an, headings_an) VALUES (?, ?, ?)",
                 (row["chunk_rowid"], row["body_an"], row["headings_an"]),
             )
+
+    def _unindex_chunks(self, version_id: DocumentVersionId) -> None:
+        rows = self._all(
+            "SELECT chunk_rowid, body_an, headings_an FROM chunks"
+            " WHERE document_version_id = ? AND indexed = 1",
+            (str(version_id),),
+        )
+        for row in rows:
+            self._run(
+                "INSERT INTO chunks_fts (chunks_fts, rowid, body_an, headings_an)"
+                " VALUES ('delete', ?, ?, ?)",
+                (row["chunk_rowid"], row["body_an"], row["headings_an"]),
+            )
+
+    def rebuild_lexical_index(self) -> None:
+        """Reanalyse all stored chunks and replace the visible FTS index in one UoW."""
+        self._run("INSERT INTO chunks_fts (chunks_fts) VALUES ('delete-all')")
+        rows = self._all(
+            "SELECT chunk_rowid, text, heading_path_json, language FROM chunks WHERE indexed = 1"
+        )
+        for row in rows:
+            language = Language(row["language"])
+            headings = " ".join(json.loads(row["heading_path_json"]))
+            self._run(
+                "UPDATE chunks SET body_an = ?, headings_an = ? WHERE chunk_rowid = ?",
+                (analyze(row["text"], language), analyze(headings, language), row["chunk_rowid"]),
+            )
+        visible = self._all(
+            "SELECT v.id FROM document_versions AS v"
+            " JOIN documents AS d ON d.current_version_id = v.id"
+            " WHERE d.status = 'active' AND d.duplicate_of IS NULL"
+        )
+        for item in visible:
+            self.index_chunks(DocumentVersionId.parse(item["id"]))
+
+    def upsert_lexical_documents(self, documents: Sequence[LexicalDocument]) -> None:
+        changed = False
+        metadata = self.get_index_metadata()
+        if metadata is None or metadata.active_embedding_model_id is None:
+            raise RagError(ErrorCode.E_EMBED_MODEL_MISMATCH, "no active embedding model")
+        for document in documents:
+            row = self._one(
+                "SELECT c.chunk_rowid, c.text, c.body_an, c.headings_an, c.indexed,"
+                " c.embedding_input_hash, c.language, c.is_duplicate FROM chunks AS c"
+                " JOIN document_versions AS v ON v.id = c.document_version_id"
+                " JOIN documents AS d ON d.id = v.document_id"
+                " WHERE c.id = ? AND d.current_version_id = v.id AND d.status = 'active'"
+                " AND d.duplicate_of IS NULL",
+                (str(document.chunk_id),),
+            )
+            if (
+                row is None
+                or row["is_duplicate"]
+                or row["text"] != document.body
+                or row["language"] != document.language.value
+            ):
+                raise RagError(
+                    ErrorCode.E_INTEGRITY, "lexical document does not match a visible chunk"
+                )
+            if (
+                row["embedding_input_hash"] is None
+                or self._one(
+                    "SELECT 1 FROM embeddings WHERE embedding_input_hash = ? AND model_id = ?",
+                    (row["embedding_input_hash"], str(metadata.active_embedding_model_id)),
+                )
+                is None
+            ):
+                raise RagError(ErrorCode.E_INTEGRITY, "lexical chunk has no active embedding")
+            body_an = analyze(document.body, document.language)
+            headings_an = analyze(document.headings, document.language)
+            if not body_an:
+                raise RagError(ErrorCode.E_INTEGRITY, "lexical document has no searchable tokens")
+            if row["indexed"]:
+                self._run(
+                    "INSERT INTO chunks_fts (chunks_fts, rowid, body_an, headings_an)"
+                    " VALUES ('delete', ?, ?, ?)",
+                    (row["chunk_rowid"], row["body_an"], row["headings_an"]),
+                )
+            self._run(
+                "UPDATE chunks SET indexed = 1, body_an = ?, headings_an = ? WHERE chunk_rowid = ?",
+                (body_an, headings_an, row["chunk_rowid"]),
+            )
+            self._run(
+                "INSERT INTO chunks_fts (rowid, body_an, headings_an) VALUES (?, ?, ?)",
+                (row["chunk_rowid"], body_an, headings_an),
+            )
+            changed = True
+        if changed:
+            self.bump_generation()
+
+    def remove_lexical_chunks(self, ids: Sequence[ChunkId]) -> None:
+        changed = False
+        for chunk_id in ids:
+            row = self._one(
+                "SELECT c.chunk_rowid, c.body_an, c.headings_an, c.indexed FROM chunks AS c"
+                " JOIN document_versions AS v ON v.id = c.document_version_id"
+                " JOIN documents AS d ON d.id = v.document_id"
+                " WHERE c.id = ? AND d.current_version_id = v.id AND d.status = 'active'",
+                (str(chunk_id),),
+            )
+            if row is None or not row["indexed"]:
+                continue
+            self._run(
+                "INSERT INTO chunks_fts (chunks_fts, rowid, body_an, headings_an)"
+                " VALUES ('delete', ?, ?, ?)",
+                (row["chunk_rowid"], row["body_an"], row["headings_an"]),
+            )
+            self._run("UPDATE chunks SET indexed = 0 WHERE chunk_rowid = ?", (row["chunk_rowid"],))
+            changed = True
+        if changed:
+            self.bump_generation()
 
     def put_many(self, model_id: EmbeddingModelId, items: Sequence[StoredEmbedding]) -> None:
         model = self.get_embedding_model(model_id)
