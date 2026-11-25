@@ -1,0 +1,133 @@
+"""Offline, CPU-only ONNX embeddings through the optional FastEmbed extra."""
+
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import importlib
+from collections.abc import Iterable, Sequence
+from concurrent.futures import Future, ThreadPoolExecutor
+from pathlib import Path
+from typing import Protocol, cast
+
+import numpy as np
+
+from rag_engine.domain import EmbeddingModel, EmbeddingModelId, ErrorCode, RagError
+from rag_engine.ports.embedding import Vectors
+
+
+class _Backend(Protocol):
+    def embed(
+        self, documents: Sequence[str], *, batch_size: int, parallel: int
+    ) -> Iterable[np.ndarray]: ...
+
+
+def model_directory_digest(directory: Path) -> str:
+    """Fingerprint every local model file, including tokenizer and ONNX weights."""
+    if not directory.is_dir() or directory.is_symlink():
+        raise RagError(ErrorCode.E_CONFIG_INVALID, "ONNX model directory is unavailable")
+    files = sorted(path for path in directory.rglob("*") if path.is_file())
+    if not files or any(path.is_symlink() for path in directory.rglob("*")):
+        raise RagError(ErrorCode.E_CONFIG_INVALID, "ONNX model files are missing or linked")
+    digest = hashlib.sha256()
+    for path in files:
+        name = path.relative_to(directory).as_posix().encode("utf-8")
+        digest.update(len(name).to_bytes(4, "big"))
+        digest.update(name)
+        digest.update(path.stat().st_size.to_bytes(8, "big"))
+        with path.open("rb") as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(block)
+    return digest.hexdigest()
+
+
+class OnnxEmbedder:
+    """Load only explicitly provisioned local files; never download a model on use."""
+
+    def __init__(
+        self,
+        model: EmbeddingModel,
+        model_dir: Path,
+        *,
+        threads: int = 1,
+        backend: _Backend | None = None,
+    ) -> None:
+        if model.provider != "onnx" or not model.normalized or threads < 1:
+            raise RagError(ErrorCode.E_CONFIG_INVALID, "invalid ONNX embedding configuration")
+        if model_directory_digest(model_dir) != model.revision:
+            raise RagError(ErrorCode.E_EMBED_MODEL_MISMATCH, "ONNX model files changed")
+        self._model = model
+        if backend is None:
+            try:
+                fastembed = importlib.import_module("fastembed")
+            except ImportError as exc:
+                raise RagError(
+                    ErrorCode.E_CONFIG_INVALID, "the onnx extra is required for this provider"
+                ) from exc
+            try:
+                backend = cast(
+                    _Backend,
+                    fastembed.TextEmbedding(
+                        model_name=model.name,
+                        specific_model_path=str(model_dir.resolve()),
+                        local_files_only=True,
+                        threads=threads,
+                        providers=["CPUExecutionProvider"],
+                    ),
+                )
+            except (OSError, ValueError, RuntimeError) as exc:
+                raise RagError(
+                    ErrorCode.E_PROVIDER_UNAVAILABLE,
+                    "the local ONNX model could not be loaded",
+                    retryable=False,
+                    context={"error_type": type(exc).__name__},
+                ) from exc
+        self._backend = backend
+        if model_directory_digest(model_dir) != model.revision:
+            raise RagError(ErrorCode.E_EMBED_MODEL_MISMATCH, "ONNX model files changed during load")
+        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rag-onnx")
+        self._active: Future[Vectors] | None = None
+
+    @property
+    def model_id(self) -> EmbeddingModelId:
+        return self._model.id
+
+    @property
+    def dimension(self) -> int:
+        return self._model.dimension
+
+    @property
+    def max_input_tokens(self) -> int:
+        return self._model.max_input_tokens
+
+    async def embed_documents(self, texts: Sequence[str]) -> Vectors:
+        if not texts:
+            return np.zeros((0, self.dimension), dtype=np.float32)
+        if self._active is not None and not self._active.done():
+            raise RagError(ErrorCode.E_RESOURCE_GATE, "previous ONNX inference is still running")
+        self._active = self._executor.submit(self._infer, list(texts))
+        try:
+            vectors = await asyncio.wrap_future(self._active)
+        except (OSError, ValueError, RuntimeError) as exc:
+            raise RagError(
+                ErrorCode.E_PROVIDER_UNAVAILABLE,
+                "ONNX inference failed",
+                retryable=False,
+                context={"error_type": type(exc).__name__},
+            ) from exc
+        if vectors.shape != (len(texts), self.dimension) or not bool(np.isfinite(vectors).all()):
+            raise RagError(ErrorCode.E_EMBED_DIM_MISMATCH, "ONNX returned invalid vectors")
+        norms = np.linalg.norm(vectors, axis=1)
+        if not bool(np.isfinite(norms).all()) or bool((norms == 0).any()):
+            raise RagError(ErrorCode.E_EMBED_DIM_MISMATCH, "ONNX returned zero vectors")
+        return np.asarray(vectors / norms[:, None], dtype=np.float32)
+
+    def _infer(self, texts: list[str]) -> Vectors:
+        rows = list(self._backend.embed(texts, batch_size=len(texts), parallel=1))
+        return np.asarray(rows, dtype=np.float32)
+
+    async def embed_query(self, text: str) -> Vectors:
+        return await self.embed_documents([text])
+
+    def close(self) -> None:
+        self._executor.shutdown(wait=False, cancel_futures=True)
