@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from rag_engine.domain import ErrorCode, IdFactory, RagError
+from rag_engine.domain import DocumentId, ErrorCode, IdFactory, RagError
 from rag_engine.storage.backup import backup_database
 from rag_engine.storage.migrations import (
     Migration,
@@ -45,15 +45,19 @@ def test_new_database_gets_the_latest_schema(tmp_path: Path, clock: FakeClock) -
                 "jobs",
                 "index_state",
                 "schema_migrations",
+                "chunks",
+                "embedding_models",
+                "embeddings",
+                "chunks_fts",
             } <= _tables(conn)
             row = conn.execute("SELECT version, name FROM schema_migrations").fetchall()
-            assert row == [(1, "core"), (2, "align_data_model")]
+            assert row == [(1, "core"), (2, "align_data_model"), (3, "embeddings_and_indexes")]
             assert "versions" not in _tables(conn)
         finally:
             conn.close()
         metadata = store.reader().get_index_metadata()
         assert metadata is not None
-        assert metadata.schema_version == 2
+        assert metadata.schema_version == 3
         assert metadata.index_generation == 0
 
 
@@ -67,7 +71,7 @@ def test_reopening_does_not_reapply_migrations(tmp_path: Path, clock: FakeClock)
         rows = conn.execute("SELECT version, applied_at FROM schema_migrations").fetchall()
     finally:
         conn.close()
-    assert [r[0] for r in rows] == [1, 2]
+    assert [r[0] for r in rows] == [1, 2, 3]
     assert {r[1][:10] for r in rows} == {"2026-01-01"}  # applied once, on the first open
     assert not list(tmp_path.glob("*.bak"))  # a fresh database needs no backup
 
@@ -155,6 +159,51 @@ def test_packaged_migrations_are_valid() -> None:
     migrations = load_packaged_migrations()
     assert [m.version for m in migrations] == list(range(1, len(migrations) + 1))
     assert migrations[0].name == "core"
+    assert migrations[2].name == "embeddings_and_indexes"
+
+
+def test_v3_fts_uses_stable_chunk_rowids(tmp_path: Path, clock: FakeClock) -> None:
+    with open_store(tmp_path / "rag.db", clock) as store:
+        conn = _conn(store.path)
+        try:
+            schema = conn.execute(
+                "SELECT sql FROM sqlite_master WHERE name = 'chunks_fts'"
+            ).fetchone()[0]
+            assert "content='chunks'" in schema
+            assert "content_rowid='chunk_rowid'" in schema
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(chunks)")}
+            assert {"chunk_rowid", "id", "text_hash", "embedding_input_hash"} <= columns
+            assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+            assert conn.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+        finally:
+            conn.close()
+
+
+def test_existing_v2_database_upgrades_without_losing_documents(
+    tmp_path: Path, clock: FakeClock
+) -> None:
+    path = tmp_path / "rag.db"
+    data, counts = build_v1_database(path)
+    conn = _conn(path)
+    try:
+        assert Migrator(load_packaged_migrations()[:2]).apply(conn, T0) == [2]
+        assert conn.execute("SELECT MAX(version) FROM schema_migrations").fetchone() == (2,)
+    finally:
+        conn.close()
+
+    with open_store(path, clock) as store:
+        reader = store.reader()
+        metadata = reader.get_index_metadata()
+        assert metadata is not None and metadata.schema_version == 3
+        assert reader.get_document(DocumentId.parse(data.docs["b"])) is not None
+        conn = _conn(path)
+        try:
+            assert conn.execute("SELECT COUNT(*) FROM documents").fetchone() == (
+                counts["documents"],
+            )
+            assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+        finally:
+            conn.close()
 
 
 def test_statement_splitter_keeps_triggers_whole() -> None:
@@ -257,13 +306,13 @@ def test_upgrade_of_a_real_v1_database_keeps_every_row_and_link(
             assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
             assert conn.execute("PRAGMA integrity_check").fetchone() == ("ok",)
             history = conn.execute("SELECT version, checksum FROM schema_migrations").fetchall()
-            assert [v for v, _ in history] == [1, 2]
+            assert [v for v, _ in history] == [1, 2, 3]
             assert history[0][1] == PUBLISHED_0001_SHA256  # 0001 was neither changed nor re-run
         finally:
             conn.close()
         metadata = store.reader().get_index_metadata()
         assert metadata is not None
-        assert (metadata.schema_version, metadata.index_generation) == (2, 7)  # mirrored, kept
+        assert (metadata.schema_version, metadata.index_generation) == (3, 7)  # mirrored, kept
         source = store.reader().get_source_by_name("notes")
         assert source is not None
         docs = store.reader().list_documents(source.id)  # every row maps back to the domain
@@ -277,7 +326,7 @@ def test_upgrade_of_a_real_v1_database_keeps_every_row_and_link(
         assert [d.is_searchable for d in docs] == [False, True, False, False, False]
     # the automatic backup carries the real versions and opens as a v1 database
     (backup,) = tmp_path.glob("*.bak")
-    assert backup.name == "rag.db.pre-migration-v1-to-v2.bak"
+    assert backup.name == "rag.db.pre-migration-v1-to-v3.bak"
     assert backup.stat().st_mode & 0o777 == 0o600
     old = _conn(backup)
     try:
