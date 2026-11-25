@@ -111,6 +111,7 @@ class IngestSettings(_Section):
     retry_max_delay_s: float = Field(default=3600.0, ge=0, le=604_800)
     retry_jitter: float = Field(default=0.2, ge=0, le=1)
     lease_s: float = Field(default=300.0, gt=0, le=86_400)
+    keep_versions: int = Field(default=3, ge=1, le=1000)
 
 
 class ParsingSettings(_Section):

@@ -128,6 +128,8 @@ class MetadataReader(EmbeddingCache, Protocol):
 
     def get_embedding_model(self, model_id: EmbeddingModelId) -> EmbeddingModel | None: ...
 
+    def list_embedding_models(self) -> Sequence[EmbeddingModel]: ...
+
 
 @runtime_checkable
 class MetadataWriter(MetadataReader, EmbeddingCacheWriter, Protocol):
@@ -164,6 +166,10 @@ class MetadataWriter(MetadataReader, EmbeddingCacheWriter, Protocol):
 
     def mark_text_purged(self, version_id: DocumentVersionId) -> None: ...
 
+    def purge_version_data(self, version_id: DocumentVersionId) -> bool:
+        """Remove old version chunks and text, keeping its metadata; False if already purged."""
+        ...
+
     def put_chunks(self, version_id: DocumentVersionId, chunks: Sequence[StoredChunk]) -> None:
         """Idempotently insert all chunks of one version inside the writer transaction."""
         ...
@@ -186,6 +192,10 @@ class MetadataWriter(MetadataReader, EmbeddingCacheWriter, Protocol):
 
     def put_embedding_model(self, model: EmbeddingModel) -> None:
         """Insert an immutable model definition, or verify the existing definition."""
+        ...
+
+    def switch_active_embedding_model(self, model_id: EmbeddingModelId) -> bool:
+        """Activate a fully staged model and atomically rewrite current chunk references."""
         ...
 
     # sync state ------------------------------------------------------------------------

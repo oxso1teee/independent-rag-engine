@@ -31,6 +31,7 @@ from rag_engine.domain import (
     JobKind,
     JobStatus,
     Language,
+    ModelStatus,
     RagError,
     Sha256Hex,
     Source,
@@ -181,6 +182,12 @@ class SqliteReader:
     def get_embedding_model(self, model_id: EmbeddingModelId) -> EmbeddingModel | None:
         row = self._one("SELECT * FROM embedding_models WHERE id = ?", (str(model_id),))
         return None if row is None else codec.embedding_model_from_row(row)
+
+    def list_embedding_models(self) -> Sequence[EmbeddingModel]:
+        return [
+            codec.embedding_model_from_row(row)
+            for row in self._all("SELECT * FROM embedding_models ORDER BY id")
+        ]
 
     def get_many(
         self, model_id: EmbeddingModelId, hashes: Sequence[TextHash]
@@ -432,6 +439,21 @@ class SqliteWriter(SqliteReader):
         if cursor.rowcount == 0:
             raise RagError(ErrorCode.E_INTEGRITY, "unknown version")
 
+    def purge_version_data(self, version_id: DocumentVersionId) -> bool:
+        version = self.get_version(version_id)
+        if version is None:
+            raise RagError(ErrorCode.E_INTEGRITY, "unknown version")
+        current = self._one(
+            "SELECT 1 FROM documents WHERE current_version_id = ?", (str(version_id),)
+        )
+        if current is not None:
+            raise RagError(ErrorCode.E_INTEGRITY, "current version cannot be purged")
+        if version.text_purged:
+            return False
+        self._run("DELETE FROM chunks WHERE document_version_id = ?", (str(version_id),))
+        self.mark_text_purged(version_id)
+        return True
+
     def put_chunks(self, version_id: DocumentVersionId, chunks: Sequence[StoredChunk]) -> None:
         version = self.get_version(version_id)
         if version is None or version.text_purged:
@@ -504,6 +526,50 @@ class SqliteWriter(SqliteReader):
                 codec.ts(model.created_at),
             ),
         )
+
+    def switch_active_embedding_model(self, model_id: EmbeddingModelId) -> bool:
+        metadata = self.get_index_metadata()
+        model = self.get_embedding_model(model_id)
+        if metadata is None or model is None:
+            raise RagError(ErrorCode.E_EMBED_MODEL_MISMATCH, "model is not staged")
+        if metadata.active_embedding_model_id == model_id:
+            return False
+        if model.status is not ModelStatus.RETIRED:
+            raise RagError(ErrorCode.E_EMBED_MODEL_MISMATCH, "candidate model must be staged")
+        rows = self._all(
+            "SELECT c.chunk_rowid, c.text, c.heading_path_json FROM chunks AS c"
+            " JOIN document_versions AS v ON v.id = c.document_version_id"
+            " JOIN documents AS d ON d.id = v.document_id"
+            " WHERE d.status = 'active' AND d.duplicate_of IS NULL"
+            " AND d.current_version_id = v.id AND c.indexed = 1"
+        )
+        references: list[tuple[str, int]] = []
+        for row in rows:
+            headings = json.loads(row["heading_path_json"])
+            value = model.document_prefix + "\n".join((*headings, row["text"]))
+            key = TextHash.of_text(value).hex
+            if (
+                self._one(
+                    "SELECT 1 FROM embeddings WHERE embedding_input_hash = ? AND model_id = ?",
+                    (key, str(model_id)),
+                )
+                is None
+            ):
+                raise RagError(
+                    ErrorCode.E_EMBED_MODEL_MISMATCH,
+                    "candidate model is missing a visible chunk embedding",
+                )
+            references.append((key, row["chunk_rowid"]))
+        self._run("UPDATE embedding_models SET status = 'retired' WHERE status = 'active'")
+        self._run("UPDATE embedding_models SET status = 'active' WHERE id = ?", (str(model_id),))
+        for key, rowid in references:
+            self._run(
+                "UPDATE chunks SET embedding_input_hash = ? WHERE chunk_rowid = ?",
+                (key, rowid),
+            )
+        self.update_index_metadata(replace(metadata, active_embedding_model_id=model_id))
+        self.bump_generation()
+        return True
 
     def index_chunks(self, version_id: DocumentVersionId) -> None:
         rows = self._all(

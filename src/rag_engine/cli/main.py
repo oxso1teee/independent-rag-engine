@@ -107,6 +107,8 @@ def build_app(container: Container) -> typer.Typer:
     )
     sources = typer.Typer(help="Register and maintain document sources.", rich_markup_mode=None)
     app.add_typer(sources, name="source")
+    indexes = typer.Typer(help="Maintain published indexes.", rich_markup_mode=None)
+    app.add_typer(indexes, name="index")
 
     @app.callback()
     def root(
@@ -265,7 +267,9 @@ def build_app(container: Container) -> typer.Typer:
     ) -> None:
         """Scan sources, record changes and queue the documents that need processing."""
 
-        def work(services: Services) -> tuple[list[IngestReport], list[RagError], list[JobOutcome]]:
+        def work(
+            services: Services,
+        ) -> tuple[list[IngestReport], list[RagError], list[JobOutcome], dict[str, int] | None]:
             names = [source] if source else [s.name for s in services.registry.list()]
             reports: list[IngestReport] = []
             errors: list[RagError] = []
@@ -282,9 +286,20 @@ def build_app(container: Container) -> typer.Typer:
                 if not dry_run and services.index_worker is not None
                 else []
             )
-            return reports, errors, outcomes
+            retention = None
+            if services.maintenance is not None and any(
+                item.error_code is None for item in outcomes
+            ):
+                result = services.maintenance.collect(keep_versions=services.keep_versions)
+                retention = {
+                    "versions_purged": result.versions_purged,
+                    "embeddings_removed": result.embeddings_removed,
+                }
+            return reports, errors, outcomes, retention
 
-        reports, errors, outcomes = _execute(ctx, work, read_only=dry_run, as_json=json_output)
+        reports, errors, outcomes, retention = _execute(
+            ctx, work, read_only=dry_run, as_json=json_output
+        )
         if json_output:
             payload: dict[str, object] = {
                 "dry_run": dry_run,
@@ -301,6 +316,8 @@ def build_app(container: Container) -> typer.Typer:
                     }
                     for outcome in outcomes
                 ]
+            if retention is not None:
+                payload["retention"] = retention
             _emit(payload)
         else:
             if not reports and not errors:
@@ -312,11 +329,85 @@ def build_app(container: Container) -> typer.Typer:
             if outcomes:
                 done = sum(outcome.error_code is None for outcome in outcomes)
                 typer.echo(f"indexing: {done} done, {len(outcomes) - done} failed")
+            if retention is not None and any(retention.values()):
+                typer.echo(
+                    f"retention: {retention['versions_purged']} version(s),"
+                    f" {retention['embeddings_removed']} embedding(s) removed"
+                )
         if errors:
             raise typer.Exit(int(exit_code_for(errors[0])))
         failed = next((item for item in outcomes if item.error_code is not None), None)
         if failed is not None and failed.error_code is not None:
             raise typer.Exit(int(exit_code_for(RagError(failed.error_code, "indexing job failed"))))
+
+    @indexes.command("gc")
+    def index_gc(ctx: typer.Context, json_output: JsonOption = False) -> None:
+        """Purge versions beyond the configured retention count and unused embeddings."""
+
+        def work(services: Services) -> dict[str, int]:
+            if services.maintenance is None:
+                raise RagError(ErrorCode.E_CONFIG_INVALID, "index maintenance is unavailable")
+            result = services.maintenance.collect(keep_versions=services.keep_versions)
+            return {
+                "versions_purged": result.versions_purged,
+                "embeddings_removed": result.embeddings_removed,
+            }
+
+        result = _execute(ctx, work, read_only=False, as_json=json_output)
+        if json_output:
+            _emit(result)
+        else:
+            typer.echo(
+                f"purged {result['versions_purged']} version(s) and"
+                f" {result['embeddings_removed']} embedding(s)"
+            )
+
+    @indexes.command("rebuild")
+    def index_rebuild(
+        ctx: typer.Context,
+        lexical: Annotated[bool, typer.Option("--lexical", help="Rebuild FTS5 rows.")] = False,
+        json_output: JsonOption = False,
+    ) -> None:
+        """Rebuild the lexical index transactionally."""
+        if not lexical:
+            raise _fail(
+                RagError(ErrorCode.E_CONFIG_INVALID, "select --lexical"), as_json=json_output
+            )
+
+        def work(services: Services) -> bool:
+            if services.maintenance is None:
+                raise RagError(ErrorCode.E_CONFIG_INVALID, "index maintenance is unavailable")
+            return services.maintenance.rebuild_lexical(force=True)
+
+        rebuilt = _execute(ctx, work, read_only=False, as_json=json_output)
+        if json_output:
+            _emit({"lexical_rebuilt": rebuilt})
+        else:
+            typer.echo("Lexical index rebuilt.")
+
+    @indexes.command("switch-model")
+    def index_switch_model(ctx: typer.Context, json_output: JsonOption = False) -> None:
+        """Stage the configured embedding model and activate it after complete verification."""
+
+        def work(services: Services) -> bool:
+            if (
+                services.maintenance is None
+                or services.embedding_model is None
+                or services.embedding_service is None
+            ):
+                raise RagError(ErrorCode.E_CONFIG_INVALID, "embedding model is not configured")
+            return services.maintenance.switch_model(
+                services.embedding_model, services.embedding_service
+            )
+
+        switched = _execute(ctx, work, read_only=False, as_json=json_output)
+        if json_output:
+            _emit({"model_switched": switched})
+        else:
+            message = (
+                "Embedding model activated." if switched else "Embedding model already active."
+            )
+            typer.echo(message)
 
     # ---------------------------------------------------------------------- chunks
 

@@ -13,9 +13,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from rag_engine.domain import ChunkPolicy, IdFactory
+from rag_engine.domain import ChunkPolicy, EmbeddingModel, IdFactory
+from rag_engine.embedding.service import EmbeddingService
 from rag_engine.ingestion.identity import SourceRegistry
 from rag_engine.ingestion.jobs import JobQueue, Worker
+from rag_engine.ingestion.maintenance import IndexMaintenance
 from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.service import IngestService
 from rag_engine.ports import ParseLimits, Store
@@ -29,6 +31,10 @@ class Services:
     ingest: IngestService
     queue: JobQueue
     index_worker: Worker | None = None
+    maintenance: IndexMaintenance | None = None
+    embedding_model: EmbeddingModel | None = None
+    embedding_service: EmbeddingService | None = None
+    keep_versions: int = 3
 
 
 @dataclass(frozen=True, slots=True)
