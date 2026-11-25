@@ -42,7 +42,7 @@ Markdown, HTML and plain text work out of the box. Optional formats are separate
 ## Quick start
 
 ```bash
-git clone https://github.com/oxso1teee/independent-rag-engine.git
+git clone https://github.com/puchkovs/independent-rag-engine.git
 cd independent-rag-engine
 uv sync --frozen
 uv run rag --version
