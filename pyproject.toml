@@ -25,6 +25,9 @@ pdf = [
 docx = [
     "python-docx>=1.2.0",
 ]
+onnx = [
+    "fastembed>=0.6,<1",
+]
 
 [project.scripts]
 rag = "rag_engine.container:main"
