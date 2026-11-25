@@ -14,6 +14,7 @@ from typing import Any, TypeVar
 import numpy as np
 
 from rag_engine.domain import (
+    ChunkId,
     Document,
     DocumentId,
     DocumentStatus,
@@ -38,6 +39,7 @@ from rag_engine.domain import (
 )
 from rag_engine.domain.invariants import check_generation_monotonic, check_version_transition
 from rag_engine.ports.cache import StoredEmbedding
+from rag_engine.ports.store import StoredChunk
 from rag_engine.storage.sqlite import codec
 
 T = TypeVar("T")
@@ -163,6 +165,13 @@ class SqliteReader:
             (str(document_id),),
         )
         return self._map(rows, codec.version_from_row)
+
+    def list_chunks(self, version_id: DocumentVersionId) -> Sequence[StoredChunk]:
+        rows = self._all(
+            "SELECT * FROM chunks WHERE document_version_id = ? ORDER BY ordinal",
+            (str(version_id),),
+        )
+        return self._map(rows, codec.stored_chunk_from_row)
 
     def get_embedding_model(self, model_id: EmbeddingModelId) -> EmbeddingModel | None:
         row = self._one("SELECT * FROM embedding_models WHERE id = ?", (str(model_id),))
@@ -381,6 +390,54 @@ class SqliteWriter(SqliteReader):
         )
         if cursor.rowcount == 0:
             raise RagError(ErrorCode.E_INTEGRITY, "unknown version")
+
+    def put_chunks(self, version_id: DocumentVersionId, chunks: Sequence[StoredChunk]) -> None:
+        version = self.get_version(version_id)
+        if version is None or version.text_purged:
+            raise RagError(ErrorCode.E_INTEGRITY, "chunks require a non-purged version")
+        for stored in chunks:
+            chunk = stored.chunk
+            if chunk.document_version_id != version_id or chunk.id != ChunkId.derive(
+                version_id, version.chunker_fingerprint, chunk.ordinal
+            ):
+                raise RagError(ErrorCode.E_INTEGRITY, "chunk identity differs from its version")
+            old = self._one("SELECT * FROM chunks WHERE id = ?", (str(chunk.id),))
+            if old is not None:
+                if codec.stored_chunk_from_row(old) != stored:
+                    raise RagError(ErrorCode.E_INTEGRITY, "stored chunk changed for one id")
+                continue
+            self._run(
+                "INSERT INTO chunks (id, document_version_id, ordinal, level, parent_id,"
+                " kind, text, text_hash, embedding_input_hash, token_count, char_start,"
+                " char_end, heading_path_json, page_start, page_end, language, indexed,"
+                " is_duplicate, oversize, body_an, headings_an)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    str(chunk.id),
+                    str(version_id),
+                    chunk.ordinal,
+                    chunk.level,
+                    None if chunk.parent_id is None else str(chunk.parent_id),
+                    chunk.kind.value,
+                    chunk.text,
+                    chunk.text_hash.hex,
+                    None
+                    if stored.embedding_input_hash is None
+                    else stored.embedding_input_hash.hex,
+                    chunk.token_count,
+                    chunk.char_start,
+                    chunk.char_end,
+                    codec.dumps(list(chunk.heading_path)),
+                    chunk.page_start,
+                    chunk.page_end,
+                    chunk.language.value,
+                    int(chunk.indexed),
+                    int(chunk.is_duplicate),
+                    int(chunk.oversize),
+                    stored.body_an,
+                    stored.headings_an,
+                ),
+            )
 
     def put_embedding_model(self, model: EmbeddingModel) -> None:
         existing = self.get_embedding_model(model.id)

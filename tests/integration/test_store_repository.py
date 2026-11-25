@@ -25,11 +25,12 @@ from rag_engine.domain import (
     SyncStatus,
     TextHash,
 )
-from rag_engine.ports import StoredEmbedding
+from rag_engine.ports import StoredChunk, StoredEmbedding
 from rag_engine.storage.sqlite import SqliteStore
 from tests.factories import (
     FINGERPRINT,
     T0,
+    make_chunk,
     make_document,
     make_job,
     make_source,
@@ -270,6 +271,28 @@ def test_embedding_cache_is_content_addressed_and_transactional(store: SqliteSto
     with store.unit_of_work().begin() as writer:
         assert writer.delete_unreferenced(model_id) == 1
     assert reader.get_many(model_id, [key]) == {}
+
+
+def test_chunks_round_trip_with_parent_and_idempotent_write(
+    store: SqliteStore, ids: IdFactory
+) -> None:
+    _, _, version = seed(store, ids)
+    parent = make_chunk("hello world", version_id=version.id, ordinal=0, level=1)
+    leaf = make_chunk("hello world", version_id=version.id, ordinal=1, parent_id=parent.id)
+    rows = (
+        StoredChunk(parent),
+        StoredChunk(leaf, TextHash.of_text("hello world"), "hello world", ""),
+    )
+    with store.unit_of_work().begin() as writer:
+        writer.put_chunks(version.id, rows)
+        writer.put_chunks(version.id, rows)
+    assert tuple(store.reader().list_chunks(version.id)) == rows
+    with pytest.raises(RagError), store.unit_of_work().begin() as writer:
+        writer.put_chunks(
+            version.id,
+            [StoredChunk(make_chunk("changed", version_id=version.id, ordinal=0))],
+        )
+    assert tuple(store.reader().list_chunks(version.id)) == rows
 
 
 def test_sql_metacharacters_are_plain_data(store: SqliteStore, ids: IdFactory) -> None:

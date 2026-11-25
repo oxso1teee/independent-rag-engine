@@ -25,7 +25,7 @@ from rag_engine.ports.source import (
     SourceIdentity,
     SourceRevision,
 )
-from rag_engine.ports.store import MetadataReader, MetadataWriter, Store, UnitOfWork
+from rag_engine.ports.store import MetadataReader, MetadataWriter, Store, StoredChunk, UnitOfWork
 from rag_engine.ports.tokens import TokenCounter
 from rag_engine.ports.vector import VectorIndex
 
@@ -61,6 +61,7 @@ __all__ = [
     "SourceIdentity",
     "SourceRevision",
     "Store",
+    "StoredChunk",
     "StoredEmbedding",
     "TokenCounter",
     "TokenUsage",
