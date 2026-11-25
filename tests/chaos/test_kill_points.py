@@ -242,10 +242,10 @@ def test_kill_in_the_middle_of_a_migration_leaves_the_old_schema_and_retries(
         assert source is not None
         assert store.reader().count_documents(source.id) == counts["documents"]
         metadata = store.reader().get_index_metadata()
-        assert metadata is not None and metadata.schema_version == 2
+        assert metadata is not None and metadata.schema_version == 3
     assert_database_is_sound(database)
     names = sorted(p.name for p in tmp_path.glob("*.bak"))
     assert names == [
-        "rag.db.pre-migration-v1-to-v2.2.bak",
-        "rag.db.pre-migration-v1-to-v2.bak",
+        "rag.db.pre-migration-v1-to-v3.2.bak",
+        "rag.db.pre-migration-v1-to-v3.bak",
     ]
