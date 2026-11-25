@@ -150,6 +150,12 @@ opening, migration, index-state bootstrap), `sqlite/uow.py` (unit of work),
   lock; `--dry-run` uses it.
 - **Backup.** `backup_database` runs `VACUUM INTO` a temporary file, verifies
   `integrity_check` and per-table row counts, and only then moves it into place.
+- **Lexical index.** Schema v3 keeps FTS5 external-content rows for indexed leaves of
+  active, current document versions. Publication, replacement and deletion update FTS in
+  the writer transaction. The `snowball-ru-en/1` analyzer applies NFC, case folding,
+  `ё` normalization and RU/EN Snowball stemming to both stored text and query tokens.
+  MATCH expressions contain only generated quoted tokens; search uses FTS5 BM25 with
+  headings weighted twice as much as body text and filters candidates before its limit.
 
 ## Ingestion (`rag_engine.ingestion`)
 

@@ -13,6 +13,7 @@ dependencies = [
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
     "selectolax>=1.0",
+    "snowballstemmer>=3.0,<4",
     "structlog>=24.4",
     "typer>=0.15",
 ]
@@ -79,6 +80,10 @@ plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = ["filetype", "filetype.*"]
+ignore_missing_imports = true  # the library ships no type information
+
+[[tool.mypy.overrides]]
+module = ["snowballstemmer", "snowballstemmer.*"]
 ignore_missing_imports = true  # the library ships no type information
 
 [tool.pytest.ini_options]

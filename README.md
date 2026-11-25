@@ -8,8 +8,9 @@ generation, and reproducible evaluation.
 > ingestion: a SQLite store, source discovery, change detection, safe deletion and a
 > persistent job queue, driven by the `rag` command, and document processing: parsers for
 > Markdown, HTML, text, PDF and DOCX and three chunking strategies, previewed with
-> `rag chunks`. Storing chunks, embeddings, retrieval and generation are built on top in later
-> phases.
+> `rag chunks`. With a pinned Ollama or local ONNX embedding model, `rag ingest` now
+> publishes chunks, embeddings and an FTS5 index atomically. Retrieval and generation are
+> later phases.
 
 ## Design goals
 
@@ -49,8 +50,9 @@ uv run rag --version
 make check          # lint, types, architecture, tests
 ```
 
-Register a folder and see what ingestion finds (documents that need processing are queued),
-then preview how a document is parsed and split into chunks (nothing is stored):
+Register a folder and preview parsing and chunking. With embedding enabled in the
+configuration, `rag ingest` processes the queue and publishes each complete version;
+without it, jobs remain queued.
 
 ```bash
 uv run rag source add notes ~/Documents/notes
@@ -77,6 +79,7 @@ src/rag_engine/
   chunking/        token counters, splitting, packing, the fixed, recursive and
                    structure-aware chunkers
   storage/         SQLite store (WAL, single writer, unit of work) and SQL migrations
+  lexical/         RU/EN Snowball analyzer shared by publication and FTS queries
   system/          real clock and identifier entropy
   config/          validated settings and resource profiles
   observability/   structured logging, request correlation, timing
