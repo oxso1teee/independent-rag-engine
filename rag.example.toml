@@ -23,6 +23,7 @@ db_path = "data/rag.db"
 # retry_max_delay_s = 3600
 # retry_jitter = 0.2        # share of a delay that may be randomly shortened
 # lease_s = 300
+# keep_versions = 3      # complete versions retained per document
 
 # Enable embedding to have `rag ingest` process its queue and publish searchable versions.
 # Pin the installed model digest, dimension and input limit; a mismatch stops publication.

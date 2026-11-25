@@ -12,7 +12,7 @@ import asyncio
 import random
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from rag_engine.chunking.registry import ChunkerRegistry, build_counter
@@ -36,6 +36,7 @@ from rag_engine.embedding.service import EmbeddingService
 from rag_engine.ingestion.identity import AdapterFactory, SourceRegistry
 from rag_engine.ingestion.indexing import DocumentIndexingHandler
 from rag_engine.ingestion.jobs import JobQueue, RetryPolicy, Worker
+from rag_engine.ingestion.maintenance import IndexMaintenance
 from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.service import IngestService
 from rag_engine.ingestion.sources import FilesystemSource
@@ -202,6 +203,12 @@ class DefaultContainer:
                 retry_policy(settings.ingest),
                 random.SystemRandom().random,
             )
+            if not read_only:
+                services = replace(
+                    services,
+                    maintenance=IndexMaintenance(store, clock),
+                    keep_versions=settings.ingest.keep_versions,
+                )
             if not read_only and settings.embedding.enabled:
                 built = build_embedding(settings.embedding, clock)
                 processing = build_processing(settings, clock, system_id_factory())
@@ -234,6 +241,10 @@ class DefaultContainer:
                     ingest=services.ingest,
                     queue=services.queue,
                     index_worker=Worker(services.queue, handler, JobKind.INGEST_DOC),
+                    maintenance=services.maintenance,
+                    embedding_model=built.model,
+                    embedding_service=service,
+                    keep_versions=services.keep_versions,
                 )
             yield services
         finally:
