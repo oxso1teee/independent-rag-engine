@@ -8,6 +8,9 @@ from datetime import UTC, datetime
 from typing import Any
 
 from rag_engine.domain import (
+    Chunk,
+    ChunkId,
+    ChunkKind,
     ContentHash,
     Document,
     DocumentId,
@@ -23,6 +26,7 @@ from rag_engine.domain import (
     JobKind,
     JobStage,
     JobStatus,
+    Language,
     ModelStatus,
     Sha256Hex,
     Source,
@@ -33,8 +37,10 @@ from rag_engine.domain import (
     SourceRevision,
     SyncState,
     SyncStatus,
+    TextHash,
     thaw_context,
 )
+from rag_engine.ports.store import StoredChunk
 
 
 def ts(value: datetime) -> str:
@@ -67,6 +73,36 @@ def embedding_model_from_row(row: sqlite3.Row) -> EmbeddingModel:
         max_input_tokens=row["max_input_tokens"],
         status=ModelStatus(row["status"]),
         created_at=parse_ts(row["created_at"]),
+    )
+
+
+def stored_chunk_from_row(row: sqlite3.Row) -> StoredChunk:
+    chunk = Chunk(
+        id=ChunkId(row["id"]),
+        document_version_id=DocumentVersionId.parse(row["document_version_id"]),
+        ordinal=row["ordinal"],
+        level=row["level"],
+        parent_id=None if row["parent_id"] is None else ChunkId(row["parent_id"]),
+        kind=ChunkKind(row["kind"]),
+        text=row["text"],
+        text_hash=TextHash(row["text_hash"]),
+        token_count=row["token_count"],
+        char_start=row["char_start"],
+        char_end=row["char_end"],
+        heading_path=tuple(json.loads(row["heading_path_json"])),
+        page_start=row["page_start"],
+        page_end=row["page_end"],
+        language=Language(row["language"]),
+        indexed=bool(row["indexed"]),
+        is_duplicate=bool(row["is_duplicate"]),
+        oversize=bool(row["oversize"]),
+    )
+    digest = row["embedding_input_hash"]
+    return StoredChunk(
+        chunk=chunk,
+        embedding_input_hash=None if digest is None else TextHash(digest),
+        body_an=row["body_an"],
+        headings_an=row["headings_an"],
     )
 
 

@@ -9,10 +9,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from contextlib import AbstractContextManager
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
 from rag_engine.domain import (
+    Chunk,
     Document,
     DocumentId,
     DocumentStatus,
@@ -31,8 +33,26 @@ from rag_engine.domain import (
     SourceId,
     SourceKey,
     SyncState,
+    TextHash,
+    require,
 )
 from rag_engine.ports.cache import EmbeddingCache, EmbeddingCacheWriter
+
+
+@dataclass(frozen=True, slots=True)
+class StoredChunk:
+    """A chunk plus the derived data needed by the two persistent indexes."""
+
+    chunk: Chunk
+    embedding_input_hash: TextHash | None = None
+    body_an: str = ""
+    headings_an: str = ""
+
+    def __post_init__(self) -> None:
+        require(
+            not self.chunk.indexed or self.embedding_input_hash is not None,
+            "an indexed chunk needs an embedding input hash",
+        )
 
 
 @runtime_checkable
@@ -75,6 +95,10 @@ class MetadataReader(EmbeddingCache, Protocol):
 
     def list_versions(self, document_id: DocumentId) -> Sequence[DocumentVersion]:
         """Versions ordered by ``seq``."""
+        ...
+
+    def list_chunks(self, version_id: DocumentVersionId) -> Sequence[StoredChunk]:
+        """All chunks of a version ordered by ordinal."""
         ...
 
     def get_sync_state(self, source_id: SourceId, key: SourceKey) -> SyncState | None: ...
@@ -137,6 +161,10 @@ class MetadataWriter(MetadataReader, EmbeddingCacheWriter, Protocol):
         ...
 
     def mark_text_purged(self, version_id: DocumentVersionId) -> None: ...
+
+    def put_chunks(self, version_id: DocumentVersionId, chunks: Sequence[StoredChunk]) -> None:
+        """Idempotently insert all chunks of one version inside the writer transaction."""
+        ...
 
     def put_embedding_model(self, model: EmbeddingModel) -> None:
         """Insert an immutable model definition, or verify the existing definition."""
