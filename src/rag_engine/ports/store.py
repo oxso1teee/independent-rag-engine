@@ -166,6 +166,10 @@ class MetadataWriter(MetadataReader, EmbeddingCacheWriter, Protocol):
         """Idempotently insert all chunks of one version inside the writer transaction."""
         ...
 
+    def index_chunks(self, version_id: DocumentVersionId) -> None:
+        """Publish the version's lexical rows in the current writer transaction."""
+        ...
+
     def put_embedding_model(self, model: EmbeddingModel) -> None:
         """Insert an immutable model definition, or verify the existing definition."""
         ...

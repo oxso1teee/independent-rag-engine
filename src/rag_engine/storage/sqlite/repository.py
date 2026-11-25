@@ -464,6 +464,18 @@ class SqliteWriter(SqliteReader):
             ),
         )
 
+    def index_chunks(self, version_id: DocumentVersionId) -> None:
+        rows = self._all(
+            "SELECT chunk_rowid, body_an, headings_an FROM chunks"
+            " WHERE document_version_id = ? AND indexed = 1 ORDER BY ordinal",
+            (str(version_id),),
+        )
+        for row in rows:
+            self._run(
+                "INSERT INTO chunks_fts (rowid, body_an, headings_an) VALUES (?, ?, ?)",
+                (row["chunk_rowid"], row["body_an"], row["headings_an"]),
+            )
+
     def put_many(self, model_id: EmbeddingModelId, items: Sequence[StoredEmbedding]) -> None:
         model = self.get_embedding_model(model_id)
         if model is None:
