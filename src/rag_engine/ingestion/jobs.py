@@ -135,6 +135,15 @@ class JobQueue:
     def snapshot(self) -> dict[JobStatus, int]:
         return self._store.reader().count_jobs()
 
+    def committed(self, job: IngestionJob) -> bool:
+        """Whether a handler already completed this attempt in its publication transaction."""
+        stored = self._store.reader().get_job(job.id)
+        return (
+            stored is not None
+            and stored.status is JobStatus.DONE
+            and stored.attempts == job.attempts
+        )
+
 
 JobHandler = Callable[[IngestionJob, Callable[[], bool]], None]
 """``handler(job, heartbeat)``; ``heartbeat()`` extends the lease and returns whether it is held."""
@@ -172,6 +181,8 @@ class Worker:
                 ErrorCode.E_INTEGRITY, "unexpected error while processing a job", retryable=True
             )
             return JobOutcome(job, self._queue.fail(job, unexpected), unexpected.code)
+        if self._queue.committed(job):
+            return JobOutcome(job, JobStatus.DONE)
         if not self._queue.complete(job):
             # The lease was lost while working: someone else owns the job now.
             return JobOutcome(replace(job), JobStatus.LEASED, ErrorCode.E_TIMEOUT)
