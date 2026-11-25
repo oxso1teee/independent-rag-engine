@@ -24,11 +24,17 @@ db_path = "data/rag.db"
 # retry_jitter = 0.2        # share of a delay that may be randomly shortened
 # lease_s = 300
 
-# A provider that is enabled must name its model; the LLM also needs its context window.
+# Enable embedding to have `rag ingest` process its queue and publish searchable versions.
+# Pin the installed model digest, dimension and input limit; a mismatch stops publication.
 [embedding]
 enabled = false
-# provider = "local"
+# provider = "ollama"  # or "onnx" with model_dir set to local model files
 # model = "your-embedding-model"
+# revision = "installed-model-sha256-digest"
+# dimension = 1024
+# max_input_tokens = 8192
+# base_url = "http://127.0.0.1:11434"
+# model_dir = "/path/to/local/onnx/model"
 
 # Limits applied to every document; exceeding one is an error, never a silent truncation.
 [parsing]

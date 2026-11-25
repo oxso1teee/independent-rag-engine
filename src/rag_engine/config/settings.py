@@ -63,6 +63,15 @@ class EmbeddingSettings(_Section):
     enabled: bool = False
     provider: ProviderName | None = None
     model: ModelName | None = None
+    revision: str | None = Field(default=None, pattern=r"^[^#\s]+$")
+    dimension: int | None = Field(default=None, ge=1, le=65536)
+    max_input_tokens: int = Field(default=8192, ge=1)
+    query_prefix: str = ""
+    document_prefix: str = ""
+    base_url: str = "http://127.0.0.1:11434"
+    model_dir: Path | None = None
+    timeout_s: float = Field(default=180.0, gt=0, le=3600)
+    batch_tokens: int = Field(default=4096, ge=1)
     api_key_env: EnvVarName | None = None
 
     @model_validator(mode="after")

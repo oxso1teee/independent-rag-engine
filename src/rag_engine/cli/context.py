@@ -15,7 +15,7 @@ from typing import Protocol
 
 from rag_engine.domain import ChunkPolicy, IdFactory
 from rag_engine.ingestion.identity import SourceRegistry
-from rag_engine.ingestion.jobs import JobQueue
+from rag_engine.ingestion.jobs import JobQueue, Worker
 from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.service import IngestService
 from rag_engine.ports import ParseLimits, Store
@@ -28,6 +28,7 @@ class Services:
     registry: SourceRegistry
     ingest: IngestService
     queue: JobQueue
+    index_worker: Worker | None = None
 
 
 @dataclass(frozen=True, slots=True)

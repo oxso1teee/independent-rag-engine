@@ -8,18 +8,34 @@ through constructors.
 
 from __future__ import annotations
 
+import asyncio
 import random
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 
 from rag_engine.chunking.registry import ChunkerRegistry, build_counter
 from rag_engine.cli import main as cli_main
 from rag_engine.cli.context import Container, Processing, Services
 from rag_engine.config import IngestSettings, ParsingSettings, Settings, load_settings
-from rag_engine.domain import ChunkPolicy, ErrorCode, IdFactory, RagError, Source
+from rag_engine.config.settings import EmbeddingSettings
+from rag_engine.domain import (
+    ChunkPolicy,
+    EmbeddingModel,
+    EmbeddingModelId,
+    ErrorCode,
+    IdFactory,
+    JobKind,
+    RagError,
+    Source,
+)
+from rag_engine.embedding.ollama import OllamaEmbedder
+from rag_engine.embedding.onnx import OnnxEmbedder
+from rag_engine.embedding.service import EmbeddingService
 from rag_engine.ingestion.identity import AdapterFactory, SourceRegistry
-from rag_engine.ingestion.jobs import JobQueue, RetryPolicy
+from rag_engine.ingestion.indexing import DocumentIndexingHandler
+from rag_engine.ingestion.jobs import JobQueue, RetryPolicy, Worker
 from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.service import IngestService
 from rag_engine.ingestion.sources import FilesystemSource
@@ -27,7 +43,7 @@ from rag_engine.observability import configure_logging
 from rag_engine.parsing.cleaners import compile_cleaners
 from rag_engine.parsing.isolation import ParserWorker
 from rag_engine.parsing.registry import default_parsers
-from rag_engine.ports import Clock, ParseLimits, SourceAdapter, Store
+from rag_engine.ports import Clock, EmbeddingProvider, ParseLimits, SourceAdapter, Store
 from rag_engine.storage.sqlite import open_store, open_store_read_only
 from rag_engine.system import SystemClock, system_id_factory
 
@@ -36,6 +52,57 @@ def filesystem_adapter(source: Source) -> SourceAdapter:
     if source.locator is None:
         raise RagError(ErrorCode.E_CONFIG_INVALID, "only filesystem sources can be ingested")
     return FilesystemSource(Path(source.locator), source.policy)
+
+
+@dataclass(slots=True)
+class BuiltEmbedding:
+    model: EmbeddingModel
+    provider: EmbeddingProvider
+
+    async def aclose(self) -> None:
+        if isinstance(self.provider, OllamaEmbedder):
+            await self.provider.aclose()
+        elif isinstance(self.provider, OnnxEmbedder):
+            self.provider.close()
+
+
+def build_embedding(settings: EmbeddingSettings, clock: Clock) -> BuiltEmbedding:
+    """Construct a pinned provider; ONNX verifies its local digest on load."""
+    if not settings.enabled or settings.provider is None or settings.model is None:
+        raise RagError(ErrorCode.E_CONFIG_INVALID, "embedding is not configured")
+    if settings.revision is None or settings.dimension is None:
+        raise RagError(ErrorCode.E_CONFIG_INVALID, "embedding identity is incomplete")
+    model = EmbeddingModel(
+        id=EmbeddingModelId.build(
+            provider=settings.provider,
+            name=settings.model,
+            revision=settings.revision,
+            dimension=settings.dimension,
+            normalized=True,
+            query_prefix=settings.query_prefix,
+            document_prefix=settings.document_prefix,
+        ),
+        provider=settings.provider,
+        name=settings.model,
+        revision=settings.revision,
+        dimension=settings.dimension,
+        normalized=True,
+        query_prefix=settings.query_prefix,
+        document_prefix=settings.document_prefix,
+        max_input_tokens=settings.max_input_tokens,
+        created_at=clock.now(),
+    )
+    if settings.provider == "ollama":
+        provider: EmbeddingProvider = OllamaEmbedder(
+            model, base_url=settings.base_url, timeout_s=settings.timeout_s
+        )
+    elif settings.provider == "onnx":
+        if settings.model_dir is None:
+            raise RagError(ErrorCode.E_CONFIG_INVALID, "embedding.model_dir is required")
+        provider = OnnxEmbedder(model, settings.model_dir)
+    else:
+        raise RagError(ErrorCode.E_CONFIG_INVALID, "unsupported embedding provider")
+    return BuiltEmbedding(model, provider)
 
 
 def retry_policy(settings: IngestSettings) -> RetryPolicy:
@@ -124,8 +191,9 @@ class DefaultContainer:
             if read_only
             else open_store(path, clock, writer_timeout_s=5.0)
         )
+        built = None
         try:
-            yield build_services(
+            services = build_services(
                 store,
                 path,
                 clock,
@@ -134,7 +202,43 @@ class DefaultContainer:
                 retry_policy(settings.ingest),
                 random.SystemRandom().random,
             )
+            if not read_only and settings.embedding.enabled:
+                built = build_embedding(settings.embedding, clock)
+                processing = build_processing(settings, clock, system_id_factory())
+                limits = settings.effective_limits()
+                service = EmbeddingService(
+                    built.provider,
+                    built.model,
+                    build_counter(settings.chunking.counter, settings.chunking.tokenizer_json),
+                    clock,
+                    batch_size=limits.embed_batch,
+                    batch_tokens=settings.embedding.batch_tokens,
+                    concurrency=limits.embed_concurrency,
+                    timeout_s=settings.embedding.timeout_s,
+                )
+                handler = DocumentIndexingHandler(
+                    store,
+                    clock,
+                    processing.ids,
+                    filesystem_adapter,
+                    lambda cleaners: processing.build(cleaners, None),
+                    service,
+                    built.model,
+                    processing.limits,
+                    processing.policy,
+                )
+                services = Services(
+                    store=services.store,
+                    db_path=services.db_path,
+                    registry=services.registry,
+                    ingest=services.ingest,
+                    queue=services.queue,
+                    index_worker=Worker(services.queue, handler, JobKind.INGEST_DOC),
+                )
+            yield services
         finally:
+            if built is not None:
+                asyncio.run(built.aclose())
             store.close()
 
     def processing(self, config: Path | None) -> Processing:
