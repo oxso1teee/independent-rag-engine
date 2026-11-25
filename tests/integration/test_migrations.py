@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from rag_engine.domain import ErrorCode, IdFactory, RagError
+from rag_engine.domain import DocumentId, ErrorCode, IdFactory, RagError
 from rag_engine.storage.backup import backup_database
 from rag_engine.storage.migrations import (
     Migration,
@@ -195,7 +195,7 @@ def test_existing_v2_database_upgrades_without_losing_documents(
         reader = store.reader()
         metadata = reader.get_index_metadata()
         assert metadata is not None and metadata.schema_version == 3
-        assert reader.get_document(data.docs["b"]) is not None
+        assert reader.get_document(DocumentId.parse(data.docs["b"])) is not None
         conn = _conn(path)
         try:
             assert conn.execute("SELECT COUNT(*) FROM documents").fetchone() == (
