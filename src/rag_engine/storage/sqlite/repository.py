@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import replace
 from datetime import datetime, timedelta
 from typing import Any, TypeVar
 
@@ -442,7 +443,7 @@ class SqliteWriter(SqliteReader):
     def put_embedding_model(self, model: EmbeddingModel) -> None:
         existing = self.get_embedding_model(model.id)
         if existing is not None:
-            if existing != model:
+            if existing != replace(model, created_at=existing.created_at):
                 raise RagError(ErrorCode.E_INTEGRITY, "embedding model definition changed")
             return
         self._run(
