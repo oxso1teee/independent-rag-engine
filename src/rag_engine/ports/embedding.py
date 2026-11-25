@@ -17,7 +17,8 @@ type Vectors = NDArray[np.float32]
 class EmbeddingProvider(Protocol):
     """Turns text into vectors.
 
-    Query/document prefixes belong to the model description, not to callers.
+    The embedding service applies prefixes from the model description before calling
+    this port; adapters must not add a second prefix.
     Implementations raise ``E_EMBED_DIM_MISMATCH`` rather than return vectors of the
     wrong size, and fail instead of silently truncating over-long input.
     """
