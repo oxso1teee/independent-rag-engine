@@ -25,6 +25,7 @@ from rag_engine.cli.exit_codes import ExitCode, exit_code_for
 from rag_engine.cli.render import chunks_to_dict, describe_chunks
 from rag_engine.domain import ErrorCode, RagError, SourceKey, SourcePolicy
 from rag_engine.ingestion.identity import RebasePlan
+from rag_engine.ingestion.jobs import JobOutcome
 from rag_engine.ingestion.processing import read_limited
 from rag_engine.ingestion.service import IngestReport, StoreStatus, collect_status
 from rag_engine.ports import ParseLimits
@@ -264,7 +265,7 @@ def build_app(container: Container) -> typer.Typer:
     ) -> None:
         """Scan sources, record changes and queue the documents that need processing."""
 
-        def work(services: Services) -> tuple[list[IngestReport], list[RagError]]:
+        def work(services: Services) -> tuple[list[IngestReport], list[RagError], list[JobOutcome]]:
             names = [source] if source else [s.name for s in services.registry.list()]
             reports: list[IngestReport] = []
             errors: list[RagError] = []
@@ -276,9 +277,14 @@ def build_app(container: Container) -> typer.Typer:
                     if source:
                         raise
                     errors.append(error)
-            return reports, errors
+            outcomes = (
+                services.index_worker.run_until_idle()
+                if not dry_run and services.index_worker is not None
+                else []
+            )
+            return reports, errors, outcomes
 
-        reports, errors = _execute(ctx, work, read_only=dry_run, as_json=json_output)
+        reports, errors, outcomes = _execute(ctx, work, read_only=dry_run, as_json=json_output)
         if json_output:
             payload: dict[str, object] = {
                 "dry_run": dry_run,
@@ -286,6 +292,15 @@ def build_app(container: Container) -> typer.Typer:
             }
             if errors:
                 payload["errors"] = [e.to_dict() for e in errors]
+            if outcomes:
+                payload["indexing"] = [
+                    {
+                        "job_id": str(outcome.job.id),
+                        "status": outcome.status.value,
+                        "error_code": outcome.error_code.value if outcome.error_code else None,
+                    }
+                    for outcome in outcomes
+                ]
             _emit(payload)
         else:
             if not reports and not errors:
@@ -294,8 +309,14 @@ def build_app(container: Container) -> typer.Typer:
                 typer.echo(_describe(report))
             for error in errors:
                 typer.echo(f"error [{error.code.value}]: {error.message}", err=True)
+            if outcomes:
+                done = sum(outcome.error_code is None for outcome in outcomes)
+                typer.echo(f"indexing: {done} done, {len(outcomes) - done} failed")
         if errors:
             raise typer.Exit(int(exit_code_for(errors[0])))
+        failed = next((item for item in outcomes if item.error_code is not None), None)
+        if failed is not None and failed.error_code is not None:
+            raise typer.Exit(int(exit_code_for(RagError(failed.error_code, "indexing job failed"))))
 
     # ---------------------------------------------------------------------- chunks
 
