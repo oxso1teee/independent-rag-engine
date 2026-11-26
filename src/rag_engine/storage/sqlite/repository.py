@@ -739,10 +739,7 @@ class SqliteWriter(SqliteReader):
         cursor = self._run(
             "DELETE FROM embeddings WHERE model_id = ? AND NOT EXISTS"
             " (SELECT 1 FROM chunks AS c"
-            " JOIN document_versions AS v ON v.id = c.document_version_id"
-            " JOIN documents AS d ON d.current_version_id = v.id"
-            " WHERE c.embedding_input_hash = embeddings.embedding_input_hash"
-            " AND d.status = 'active')",
+            " WHERE c.embedding_input_hash = embeddings.embedding_input_hash)",
             (str(model_id),),
         )
         return cursor.rowcount

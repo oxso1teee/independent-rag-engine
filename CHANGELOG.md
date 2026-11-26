@@ -11,7 +11,7 @@ project until a release is cut.
 - `rag doctor --integrity` checks the read-only SQLite snapshot, foreign keys, model identity,
   vector shape and norm, current versions, chunk provenance, FTS consistency and index generation.
 - Replaced-version chunks lose their indexed flag when unpublished. Embedding GC retains vectors
-  referenced by active current versions and removes orphan cache entries.
+  referenced by any retained chunk and removes orphan cache entries after version data is purged.
 - NFR-05 checks actual re-embedding after one paragraph edit in a 100-plus-chunk document;
   model-based random operations and failure injection exercise integrity and rollback.
 
