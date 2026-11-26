@@ -18,7 +18,7 @@ from rag_engine.ports.embedding import Vectors
 
 class _Backend(Protocol):
     def embed(
-        self, documents: Sequence[str], *, batch_size: int, parallel: int
+        self, documents: Sequence[str], *, batch_size: int, parallel: int | None
     ) -> Iterable[np.ndarray]: ...
 
 
@@ -65,6 +65,29 @@ class OnnxEmbedder:
                     ErrorCode.E_CONFIG_INVALID, "the onnx extra is required for this provider"
                 ) from exc
             try:
+                if model.name == "intfloat/multilingual-e5-small":
+                    if (
+                        model.dimension != 384
+                        or model.max_input_tokens > 512
+                        or model.query_prefix != "query: "
+                        or model.document_prefix != "passage: "
+                    ):
+                        raise RagError(
+                            ErrorCode.E_CONFIG_INVALID,
+                            "E5-small requires 384 dimensions, 512 tokens, and E5 prefixes",
+                        )
+                    supported = fastembed.TextEmbedding.list_supported_models()
+                    if not any(item["model"] == model.name for item in supported):
+                        metadata = importlib.import_module("fastembed.common.model_description")
+                        fastembed.TextEmbedding.add_custom_model(
+                            model=model.name,
+                            pooling=metadata.PoolingType.MEAN,
+                            normalization=True,
+                            sources=metadata.ModelSource(hf=model.name),
+                            dim=384,
+                            model_file="onnx/model.onnx",
+                            license="mit",
+                        )
                 backend = cast(
                     _Backend,
                     fastembed.TextEmbedding(
@@ -123,7 +146,7 @@ class OnnxEmbedder:
         return np.asarray(vectors / norms[:, None], dtype=np.float32)
 
     def _infer(self, texts: list[str]) -> Vectors:
-        rows = list(self._backend.embed(texts, batch_size=len(texts), parallel=1))
+        rows = list(self._backend.embed(texts, batch_size=len(texts), parallel=None))
         return np.asarray(rows, dtype=np.float32)
 
     async def embed_query(self, text: str) -> Vectors:
