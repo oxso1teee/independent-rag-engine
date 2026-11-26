@@ -76,7 +76,13 @@ def test_configured_ingest_publishes_current_version(
         assert source is not None
         document = store.reader().get_document_by_key(source.id, SourceKey("a.md"))
         assert document is not None and document.current_version_id is not None
-        assert store.reader().list_chunks(document.current_version_id)
+        first_chunk = next(
+            stored
+            for stored in store.reader().list_chunks(document.current_version_id)
+            if stored.chunk.indexed
+        )
+        first_embedding_key = first_chunk.embedding_input_hash
+        assert first_embedding_key is not None
         metadata = store.reader().get_index_metadata()
         assert metadata is not None and metadata.index_generation == 1
     finally:
@@ -135,6 +141,10 @@ def test_configured_ingest_publishes_current_version(
     (root / "a.md").write_text("# Новые заметки\n\nМашины быстро едут по дороге.\n")
     assert main([*prefix, "ingest", "notes", "--json"], container=container) == 0
     assert check_integrity(db).ok
+    with open_store_read_only(db) as retained_store:
+        assert first_embedding_key in retained_store.reader().get_many(
+            metadata.active_embedding_model_id, [first_embedding_key]
+        )
     assert index.refresh(db)
     assert index.generation == 2
     assert not lexical.search("indexing", 5)
@@ -232,6 +242,9 @@ def test_configured_ingest_publishes_current_version(
         assert collected.versions_purged == 1
         assert collected.embeddings_removed >= 1
         assert unused not in store.reader().get_many(replacement.id, [unused])
+        assert first_embedding_key not in store.reader().get_many(
+            metadata.active_embedding_model_id, [first_embedding_key]
+        )
         assert maintenance.collect(keep_versions=1).versions_purged == 0
         assert maintenance.rebuild_lexical(force=True)
         assert not maintenance.rebuild_lexical()
