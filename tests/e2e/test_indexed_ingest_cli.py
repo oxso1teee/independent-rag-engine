@@ -285,8 +285,9 @@ def test_configured_ingest_publishes_current_version(
     assert not lexical.search("машина", 5)
 
 
+@pytest.mark.parametrize("with_headings", [False, True])
 def test_one_paragraph_edit_reembeds_at_most_three_of_hundred_chunks(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, with_headings: bool
 ) -> None:
     embedded: list[str] = []
 
@@ -311,15 +312,17 @@ def test_one_paragraph_edit_reembeds_at_most_three_of_hundred_chunks(
     root.mkdir()
     path = root / "long.md"
     paragraphs = [
-        f"Paragraph {number}. " + "This unique section contains documented facts. " * 18
-        for number in range(100)
+        f"Paragraph {number}. " + "This unique section contains documented facts. " * 17
+        for number in range(98)
     ]
 
     def write_document() -> None:
-        sections = (
-            f"## Section {number}\n\n{paragraph}" for number, paragraph in enumerate(paragraphs)
-        )
-        path.write_text("# Long document\n\n" + "\n\n".join(sections))
+        sections = [
+            f"## Section {number}\n\n{paragraph}" if with_headings else paragraph
+            for number, paragraph in enumerate(paragraphs)
+        ]
+        prefix = "# Long document\n\n" if with_headings else ""
+        path.write_text(prefix + "\n\n".join(sections))
 
     write_document()
     db = tmp_path / "rag.db"
@@ -339,16 +342,10 @@ def test_one_paragraph_edit_reembeds_at_most_three_of_hundred_chunks(
         assert source is not None
         document = store.reader().get_document_by_key(source.id, SourceKey("long.md"))
         assert document is not None and document.current_version_id is not None
-        assert (
-            len(
-                [
-                    c
-                    for c in store.reader().list_chunks(document.current_version_id)
-                    if c.chunk.indexed
-                ]
-            )
-            >= 100
-        )
+        indexed = [
+            c for c in store.reader().list_chunks(document.current_version_id) if c.chunk.indexed
+        ]
+        assert len(indexed) == 100
     embedded.clear()
     paragraphs[50] += " A changed sentence with a distinctive ending."
     write_document()

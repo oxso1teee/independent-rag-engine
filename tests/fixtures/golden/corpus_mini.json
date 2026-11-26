@@ -93,7 +93,7 @@
  "en_faq.txt": {
   "author": null,
   "blocks": ["paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph"],
-  "chunker": ["recursive", "1", "e0d3ee48ee4c93e2"],
+  "chunker": ["recursive", "2", "e87c12f6671d9f7b"],
   "content_hash": "4b3505af6e9e4458",
   "encoding": "utf_8",
   "language": "en",
@@ -104,17 +104,18 @@
   "title": null,
   "warnings": [],
   "chunks": [
-   [0, 0, null, "paragraph", 250, 0, 762, "93b58c6428bc", [], "en", null, null, false],
-   [1, 0, null, "paragraph", 156, 701, 1165, "ce9227ebf086", [], "en", null, null, false],
-   [2, 0, null, "paragraph", 140, 1104, 1519, "606e443aaba9", [], "en", null, null, false],
-   [3, 0, null, "paragraph", 145, 1457, 1890, "fde3888b0b81", [], "en", null, null, false],
-   [4, 0, null, "paragraph", 155, 1828, 2293, "52a0f8b19dcf", [], "en", null, null, false],
-   [5, 0, null, "paragraph", 155, 2225, 2683, "bb88665b1a9d", [], "en", null, null, false],
-   [6, 0, null, "paragraph", 145, 2618, 3052, "fb4a702524aa", [], "en", null, null, false],
-   [7, 0, null, "paragraph", 137, 2993, 3398, "5393c2f5c36e", [], "en", null, null, false],
-   [8, 0, null, "paragraph", 143, 3334, 3758, "3372ba8198ac", [], "en", null, null, false],
-   [9, 0, null, "paragraph", 137, 3699, 4105, "034b4a4dd942", [], "en", null, null, false],
-   [10, 0, null, "paragraph", 155, 4041, 4503, "263d7f0545d4", [], "en", null, null, false]
+   [0, 0, null, "paragraph", 128, 0, 386, "76617575dac6", [], "en", null, null, false],
+   [1, 0, null, "paragraph", 122, 388, 762, "4c3f5ff78759", [], "en", null, null, false],
+   [2, 0, null, "paragraph", 134, 764, 1165, "c709c650f0f4", [], "en", null, null, false],
+   [3, 0, null, "paragraph", 118, 1167, 1519, "2cfb47e32467", [], "en", null, null, false],
+   [4, 0, null, "paragraph", 122, 1521, 1890, "90d47b7a3d66", [], "en", null, null, false],
+   [5, 0, null, "paragraph", 133, 1892, 2293, "3ae19a2a1f32", [], "en", null, null, false],
+   [6, 0, null, "paragraph", 130, 2295, 2683, "f2a29214ce2d", [], "en", null, null, false],
+   [7, 0, null, "paragraph", 121, 2685, 3052, "973c71abe497", [], "en", null, null, false],
+   [8, 0, null, "paragraph", 115, 3054, 3398, "db0c2f522cec", [], "en", null, null, false],
+   [9, 0, null, "paragraph", 120, 3400, 3758, "291f95b831d4", [], "en", null, null, false],
+   [10, 0, null, "paragraph", 115, 3760, 4105, "242545ef2bec", [], "en", null, null, false],
+   [11, 0, null, "paragraph", 132, 4107, 4503, "0284440e64bf", [], "en", null, null, false]
   ]
  },
  "en_handbook.docx": {
@@ -165,7 +166,7 @@
  "en_report.pdf": {
   "author": null,
   "blocks": ["paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph"],
-  "chunker": ["recursive", "1", "e0d3ee48ee4c93e2"],
+  "chunker": ["recursive", "2", "e87c12f6671d9f7b"],
   "content_hash": "43cd28bb69cc8414",
   "encoding": null,
   "language": "en",
@@ -177,15 +178,15 @@
   "warnings": ["headers_footers_removed"],
   "chunks": [
    [0, 0, null, "paragraph", 172, 0, 522, "b8fbf3ad0fc4", [], "en", 1, 1, false],
-   [1, 0, null, "paragraph", 219, 459, 1128, "c374c58f8e42", [], "en", 1, 2, false],
-   [2, 0, null, "paragraph", 223, 1060, 1723, "c4e39a83f7bc", [], "en", 2, 2, false],
+   [1, 0, null, "paragraph", 159, 524, 1015, "0be34b3f17f3", [], "en", 1, 1, false],
+   [2, 0, null, "paragraph", 236, 1017, 1723, "376ea28c4706", [], "en", 2, 2, false],
    [3, 0, null, "paragraph", 89, 1661, 1931, "4d817358bfdb", [], "en", 2, 2, false],
-   [4, 0, null, "paragraph", 199, 1834, 2445, "f62f46327af1", [], "en", 2, 3, false],
-   [5, 0, null, "paragraph", 183, 2381, 2938, "5747b8588934", [], "en", 3, 3, false],
-   [6, 0, null, "paragraph", 203, 2834, 3460, "de6841f34822", [], "en", 3, 4, false],
-   [7, 0, null, "paragraph", 185, 3401, 3952, "9e2a6d831ea5", [], "en", 4, 4, false],
-   [8, 0, null, "paragraph", 189, 3887, 4448, "df7e8dcf4815", [], "en", 4, 5, false],
-   [9, 0, null, "paragraph", 190, 4383, 4952, "f7b23f61e012", [], "en", 5, 5, false]
+   [4, 0, null, "paragraph", 170, 1933, 2445, "831fb304c7cb", [], "en", 3, 3, false],
+   [5, 0, null, "paragraph", 160, 2447, 2938, "2a976eb5ef3d", [], "en", 3, 3, false],
+   [6, 0, null, "paragraph", 172, 2940, 3460, "3cf5e97ebf2d", [], "en", 4, 4, false],
+   [7, 0, null, "paragraph", 164, 3462, 3952, "b846c77b9098", [], "en", 4, 4, false],
+   [8, 0, null, "paragraph", 165, 3954, 4448, "eaee4964f8d2", [], "en", 5, 5, false],
+   [9, 0, null, "paragraph", 166, 4450, 4952, "93bdeb4d0fcd", [], "en", 5, 5, false]
   ]
  },
  "en_single_paragraph.txt": {
@@ -393,7 +394,7 @@
  "ru_legacy_cp1251.txt": {
   "author": null,
   "blocks": ["paragraph", "paragraph", "paragraph", "paragraph"],
-  "chunker": ["recursive", "1", "e0d3ee48ee4c93e2"],
+  "chunker": ["recursive", "2", "e87c12f6671d9f7b"],
   "content_hash": "51a528453e2899fb",
   "encoding": "cp1251",
   "language": "ru",
@@ -407,7 +408,7 @@
    [0, 0, null, "paragraph", 252, 0, 464, "b7cd93a722f2", [], "ru", null, null, false],
    [1, 0, null, "paragraph", 252, 466, 933, "e0e15d3abb2e", [], "ru", null, null, false],
    [2, 0, null, "paragraph", 256, 935, 1407, "01a9ad3768a6", [], "ru", null, null, false],
-   [3, 0, null, "paragraph", 225, 1359, 1774, "cf06961e68f6", [], "ru", null, null, false],
+   [3, 0, null, "paragraph", 197, 1409, 1774, "d14a7ac561bf", [], "ru", null, null, false],
    [4, 0, null, "paragraph", 101, 1725, 1910, "2abb473c5aed", [], "ru", null, null, false]
   ]
  },
@@ -437,7 +438,7 @@
  "ru_policy.txt": {
   "author": null,
   "blocks": ["paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph"],
-  "chunker": ["recursive", "1", "e0d3ee48ee4c93e2"],
+  "chunker": ["recursive", "2", "e87c12f6671d9f7b"],
   "content_hash": "67d18239c5b82b7f",
   "encoding": "utf_8",
   "language": "ru",
@@ -453,19 +454,22 @@
    [2, 0, null, "paragraph", 251, 938, 1402, "cfc5adf1f1af", [], "ru", null, null, false],
    [3, 0, null, "paragraph", 246, 1404, 1861, "4a42393cd08a", [], "ru", null, null, false],
    [4, 0, null, "paragraph", 254, 1863, 2334, "ab737cb848c6", [], "ru", null, null, false],
-   [5, 0, null, "paragraph", 228, 2294, 2712, "04fcf94a6f2a", [], "ru", null, null, false],
-   [6, 0, null, "paragraph", 217, 2669, 3071, "be1d4692cbb1", [], "ru", null, null, false],
-   [7, 0, null, "paragraph", 219, 3023, 3428, "c9033ec35e08", [], "ru", null, null, false],
-   [8, 0, null, "paragraph", 240, 3380, 3824, "3ac24c886ca3", [], "ru", null, null, false],
-   [9, 0, null, "paragraph", 221, 3776, 4185, "c398683b14e7", [], "ru", null, null, false],
-   [10, 0, null, "paragraph", 225, 4137, 4550, "0078f2a09c26", [], "ru", null, null, false],
-   [11, 0, null, "paragraph", 169, 4502, 4810, "68e8941586cb", [], "ru", null, null, false]
+   [5, 0, null, "paragraph", 204, 2336, 2712, "f9ea04294ac0", [], "ru", null, null, false],
+   [6, 0, null, "paragraph", 93, 2669, 2839, "2eb3960dacdf", [], "ru", null, null, false],
+   [7, 0, null, "paragraph", 188, 2841, 3190, "ca564bcba7f1", [], "ru", null, null, false],
+   [8, 0, null, "paragraph", 102, 3141, 3328, "8035c03e6088", [], "ru", null, null, false],
+   [9, 0, null, "paragraph", 196, 3330, 3692, "61f7358ff420", [], "ru", null, null, false],
+   [10, 0, null, "paragraph", 99, 3643, 3824, "25a2b59c8f1c", [], "ru", null, null, false],
+   [11, 0, null, "paragraph", 193, 3826, 4185, "cb743887193a", [], "ru", null, null, false],
+   [12, 0, null, "paragraph", 95, 4137, 4308, "5f150d255878", [], "ru", null, null, false],
+   [13, 0, null, "paragraph", 208, 4310, 4695, "5f636b9558a8", [], "ru", null, null, false],
+   [14, 0, null, "paragraph", 92, 4645, 4810, "9ebdb5dbdbd1", [], "ru", null, null, false]
   ]
  },
  "ru_repeated_notes.txt": {
   "author": null,
   "blocks": ["paragraph", "paragraph", "paragraph", "paragraph"],
-  "chunker": ["recursive", "1", "e0d3ee48ee4c93e2"],
+  "chunker": ["recursive", "2", "e87c12f6671d9f7b"],
   "content_hash": "1db4deca9fc29e8e",
   "encoding": "utf_8",
   "language": "ru",
@@ -477,13 +481,13 @@
   "warnings": [],
   "chunks": [
    [0, 0, null, "paragraph", 235, 0, 436, "93d952ca4a89", [], "ru", null, null, false],
-   [1, 0, null, "paragraph", 92, 387, 556, "68bdb3573687", [], "ru", null, null, false]
+   [1, 0, null, "paragraph", 64, 438, 556, "a687c3c574d2", [], "ru", null, null, false]
   ]
  },
  "ru_report.pdf": {
   "author": null,
   "blocks": ["paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph", "paragraph"],
-  "chunker": ["recursive", "1", "e0d3ee48ee4c93e2"],
+  "chunker": ["recursive", "2", "e87c12f6671d9f7b"],
   "content_hash": "b1f331b79655b661",
   "encoding": null,
   "language": "ru",
@@ -496,18 +500,21 @@
   "chunks": [
    [0, 0, null, "paragraph", 191, 0, 351, "265832631074", [], "ru", 1, 1, false],
    [1, 0, null, "paragraph", 234, 301, 731, "b123034ec35f", [], "ru", 1, 1, false],
-   [2, 0, null, "paragraph", 215, 683, 1080, "47129f0e090c", [], "ru", 1, 2, false],
-   [3, 0, null, "paragraph", 221, 1035, 1443, "22449b45a031", [], "ru", 2, 2, false],
-   [4, 0, null, "paragraph", 242, 1393, 1840, "0ef671eb4a02", [], "ru", 2, 2, false],
-   [5, 0, null, "paragraph", 95, 1800, 1972, "ed5f1573fbea", [], "ru", 2, 2, false],
+   [2, 0, null, "paragraph", 150, 683, 957, "434ba4a40e7d", [], "ru", 1, 1, false],
+   [3, 0, null, "paragraph", 187, 959, 1306, "54860fc21aba", [], "ru", 2, 2, false],
+   [4, 0, null, "paragraph", 248, 1258, 1718, "1221a3c71152", [], "ru", 2, 2, false],
+   [5, 0, null, "paragraph", 165, 1669, 1972, "cbb106ea349a", [], "ru", 2, 2, false],
    [6, 0, null, "paragraph", 254, 1974, 2444, "8c681f593c51", [], "ru", 3, 3, false],
-   [7, 0, null, "paragraph", 219, 2404, 2807, "e925085ab924", [], "ru", 3, 3, false],
-   [8, 0, null, "paragraph", 227, 2764, 3185, "7ee1d32cc904", [], "ru", 3, 4, false],
-   [9, 0, null, "paragraph", 236, 3136, 3574, "d0b3028c74ac", [], "ru", 4, 4, false],
-   [10, 0, null, "paragraph", 229, 3526, 3947, "b328f7c17649", [], "ru", 4, 4, false],
-   [11, 0, null, "paragraph", 217, 3899, 4300, "ad1f8af420de", [], "ru", 4, 5, false],
-   [12, 0, null, "paragraph", 230, 4255, 4681, "2d3a20590303", [], "ru", 5, 5, false],
-   [13, 0, null, "paragraph", 166, 4632, 4939, "e5c0cf57ce1c", [], "ru", 5, 5, false]
+   [7, 0, null, "paragraph", 195, 2446, 2807, "446a9012b469", [], "ru", 3, 3, false],
+   [8, 0, null, "paragraph", 91, 2764, 2929, "cdf0f461bad8", [], "ru", 3, 3, false],
+   [9, 0, null, "paragraph", 209, 2931, 3321, "55128c65cf8c", [], "ru", 4, 4, false],
+   [10, 0, null, "paragraph", 102, 3272, 3458, "9d1644da1343", [], "ru", 4, 4, false],
+   [11, 0, null, "paragraph", 196, 3460, 3823, "15f3a7dd1546", [], "ru", 4, 4, false],
+   [12, 0, null, "paragraph", 93, 3778, 3947, "51ee1af3603b", [], "ru", 4, 4, false],
+   [13, 0, null, "paragraph", 190, 3949, 4300, "815298c18417", [], "ru", 5, 5, false],
+   [14, 0, null, "paragraph", 100, 4255, 4438, "caa61f8cd35e", [], "ru", 5, 5, false],
+   [15, 0, null, "paragraph", 205, 4440, 4820, "137de95ca5c6", [], "ru", 5, 5, false],
+   [16, 0, null, "paragraph", 92, 4771, 4939, "bf69b6b8c1c1", [], "ru", 5, 5, false]
   ]
  }
 }
