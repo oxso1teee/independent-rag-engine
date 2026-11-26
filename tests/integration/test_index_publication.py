@@ -24,6 +24,7 @@ from rag_engine.ingestion.jobs import JobQueue
 from rag_engine.ingestion.publishing import IndexPublisher
 from rag_engine.ports import StoredChunk, StoredEmbedding
 from rag_engine.storage.sqlite import SqliteStore
+from rag_engine.storage.sqlite.repository import SqliteWriter
 from rag_engine.testing import FakeClock
 from tests.factories import (
     T0,
@@ -36,7 +37,7 @@ from tests.factories import (
 
 
 def test_publication_is_atomic_and_fenced(
-    store: SqliteStore, clock: FakeClock, ids: IdFactory
+    store: SqliteStore, clock: FakeClock, ids: IdFactory, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     source = make_source(ids)
     waiting = make_document(document_id=ids.document_id(), source_id=source.id, version_id=None)
@@ -89,6 +90,20 @@ def test_publication_is_atomic_and_fenced(
     assert missing.value.code is ErrorCode.E_INTEGRITY
     assert store.reader().get_version(version.id) is None
     assert store.reader().get_document(waiting.id) == waiting
+    assert store.reader().get_index_metadata().index_generation == 0  # type: ignore[union-attr]
+
+    original_index_chunks = SqliteWriter.index_chunks
+
+    def fail_after_chunks(self: SqliteWriter, version_id: object) -> None:
+        del self, version_id
+        raise RuntimeError("injected failure before FTS publication")
+
+    monkeypatch.setattr(SqliteWriter, "index_chunks", fail_after_chunks)
+    with pytest.raises(RuntimeError, match="injected failure"):
+        publisher.publish(job, version, [stored], plan, model, None)
+    monkeypatch.setattr(SqliteWriter, "index_chunks", original_index_chunks)
+    assert store.reader().get_version(version.id) is None
+    assert store.reader().get_embedding_model(model.id) is None
     assert store.reader().get_index_metadata().index_generation == 0  # type: ignore[union-attr]
 
     assert publisher.publish(job, version, [stored], plan, model, None)

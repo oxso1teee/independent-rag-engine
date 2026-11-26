@@ -15,3 +15,4 @@ supersedes the old one.
 | [0008](0008-parsing-and-chunking-contracts.md) | Parsing and chunking contracts | Accepted |
 | [0009](0009-transactional-index-publication.md) | Transactional index publication and schema v3 | Accepted |
 | [0010](0010-embedding-input-identity.md) | Embedding input and model identity | Accepted |
+| [0011](0011-read-only-integrity-inspection.md) | Read-only integrity inspection | Accepted |

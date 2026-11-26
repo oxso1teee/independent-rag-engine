@@ -62,6 +62,7 @@ uv run rag status
 uv run rag chunks ~/Documents/notes/guide.md
 uv run rag index gc                 # purge old versions and unused embeddings
 uv run rag index rebuild --lexical  # rebuild FTS5 in one transaction
+uv run rag doctor --integrity        # inspect SQLite, published FTS and vectors read-only
 # after changing the configured embedding model:
 uv run rag index switch-model      # stage every visible vector, then activate atomically
 uv run python eval/scripts/chunk_grid.py   # chunk shapes at 192/256/384 tokens; ranks nothing

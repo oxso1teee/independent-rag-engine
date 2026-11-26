@@ -29,6 +29,7 @@ from rag_engine.ingestion.jobs import JobOutcome
 from rag_engine.ingestion.processing import read_limited
 from rag_engine.ingestion.service import IngestReport, StoreStatus, collect_status
 from rag_engine.ports import ParseLimits
+from rag_engine.storage.integrity import check_integrity
 from rag_engine.storage.sqlite import StoreNotInitialised
 
 JsonOption = Annotated[bool, typer.Option("--json", help="Print one JSON document.")]
@@ -109,6 +110,40 @@ def build_app(container: Container) -> typer.Typer:
     app.add_typer(sources, name="source")
     indexes = typer.Typer(help="Maintain published indexes.", rich_markup_mode=None)
     app.add_typer(indexes, name="index")
+
+    @app.command("doctor")
+    def doctor(
+        ctx: typer.Context,
+        integrity: Annotated[
+            bool, typer.Option("--integrity", help="Check SQLite and published indexes.")
+        ] = False,
+        json_output: JsonOption = False,
+    ) -> None:
+        """Inspect the store without changing it."""
+        if not integrity:
+            raise _fail(
+                RagError(ErrorCode.E_CONFIG_INVALID, "select --integrity"), as_json=json_output
+            )
+        report = _execute(
+            ctx, lambda s: check_integrity(s.db_path), read_only=True, as_json=json_output
+        )
+        result = {
+            "ok": report.ok,
+            "errors": list(report.errors),
+            "published_chunks": report.published_chunks,
+            "embeddings": report.embeddings,
+            "index_generation": report.index_generation,
+        }
+        if json_output:
+            _emit(result)
+        else:
+            typer.echo("Integrity OK" if report.ok else "Integrity failed")
+            for error in report.errors:
+                typer.echo(f"  {error}")
+        if not report.ok:
+            raise typer.Exit(
+                int(exit_code_for(RagError(ErrorCode.E_INTEGRITY, "integrity failed")))
+            )
 
     @app.callback()
     def root(

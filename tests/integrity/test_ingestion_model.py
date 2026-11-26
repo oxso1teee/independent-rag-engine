@@ -21,6 +21,7 @@ from hypothesis.stateful import RuleBasedStateMachine, invariant, precondition, 
 
 from rag_engine.container import build_services, filesystem_adapter
 from rag_engine.domain import Document, DocumentId
+from rag_engine.storage.integrity import check_integrity
 from rag_engine.storage.sqlite import open_store
 from rag_engine.testing import FakeClock
 from tests.factories import make_ids
@@ -162,6 +163,7 @@ class IngestionMachine(RuleBasedStateMachine):
     @invariant()
     def data_model_invariants_hold(self) -> None:
         check_store_invariants(self.store.reader())
+        assert check_integrity(self.workdir / "rag.db").ok
 
 
 @pytest.mark.integrity
