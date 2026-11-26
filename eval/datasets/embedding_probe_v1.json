@@ -1,0 +1,32 @@
+{
+  "documents": [
+    {"id": "ru-sun", "text": "Солнечная батарея преобразует свет в электричество с помощью фотоэлектрических элементов."},
+    {"id": "ru-wind", "text": "Ветряная турбина вырабатывает электричество при вращении лопастей потоком воздуха."},
+    {"id": "ru-bee", "text": "Пчёлы опыляют цветковые растения и собирают нектар для производства мёда."},
+    {"id": "ru-ant", "text": "Муравьи живут колониями и переносят пищу в подземные гнёзда."},
+    {"id": "ru-sqlite", "text": "Режим WAL в SQLite позволяет читателям работать параллельно с одним писателем."},
+    {"id": "ru-postgres", "text": "PostgreSQL использует многоверсионность для изоляции параллельных транзакций."},
+    {"id": "ru-volga", "text": "Волга впадает в Каспийское море и является одной из крупнейших рек Европы."},
+    {"id": "ru-don", "text": "Дон впадает в Азовское море и проходит через юг России."},
+    {"id": "en-sun", "text": "A photovoltaic panel converts sunlight into electricity using semiconductor cells."},
+    {"id": "en-wind", "text": "A wind turbine generates electricity when moving air turns its blades."},
+    {"id": "en-bee", "text": "Bees pollinate flowering plants while collecting nectar for honey."},
+    {"id": "en-ant", "text": "Ant colonies carry food into nests beneath the ground."},
+    {"id": "en-sqlite", "text": "SQLite write-ahead logging lets readers proceed alongside one writer."},
+    {"id": "en-postgres", "text": "PostgreSQL uses multiversion concurrency control to isolate transactions."},
+    {"id": "en-volga", "text": "The Volga River ends in the Caspian Sea and crosses European Russia."},
+    {"id": "en-don", "text": "The Don River flows into the Sea of Azov in southern Russia."}
+  ],
+  "questions": [
+    {"language": "ru", "text": "Как получают ток из солнечного света?", "gold": ["ru-sun", "en-sun"]},
+    {"language": "ru", "text": "Какие насекомые делают мёд и опыляют цветы?", "gold": ["ru-bee", "en-bee"]},
+    {"language": "ru", "text": "Куда впадает река Волга?", "gold": ["ru-volga", "en-volga"]},
+    {"language": "ru", "text": "Что в SQLite разрешает читать во время записи?", "gold": ["ru-sqlite", "en-sqlite"]},
+    {"language": "ru", "text": "В какое море впадает Дон?", "gold": ["ru-don", "en-don"]},
+    {"language": "en", "text": "Which technology turns air movement into electric power?", "gold": ["en-wind", "ru-wind"]},
+    {"language": "en", "text": "What insects move food into underground colonies?", "gold": ["en-ant", "ru-ant"]},
+    {"language": "en", "text": "Where does the Volga River empty?", "gold": ["en-volga", "ru-volga"]},
+    {"language": "en", "text": "Which database uses multiversion transaction isolation?", "gold": ["en-postgres", "ru-postgres"]},
+    {"language": "en", "text": "How do photovoltaic cells make electricity?", "gold": ["en-sun", "ru-sun"]}
+  ]
+}

@@ -18,6 +18,12 @@ fixed, derandomised profile.
 The pull-request CI runs `pytest -m "not perf"`. `make test-all` does the same with coverage.
 `make perf` runs the budgets separately.
 
+Phase 4's real-model probe and detailed exact dense-search measurements are opt-in local
+commands in `eval/scripts/bakeoff_embedders.py` and `eval/scripts/benchmark_dense.py`. The
+model probe is not a CI quality gate; it needs installed model weights and its small synthetic
+dataset cannot establish a default. Measurements and limits are in
+[`EMBEDDING_BAKEOFF.md`](EMBEDDING_BAKEOFF.md).
+
 ## Failure injection (`tests/chaos`)
 
 A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test

@@ -68,8 +68,9 @@ uv run rag index switch-model      # stage every visible vector, then activate a
 uv run python eval/scripts/chunk_grid.py   # chunk shapes at 192/256/384 tokens; ranks nothing
 ```
 
-The installed environment (including development tools) is about 190 MB; the runtime
-dependencies alone take about 60 MB.
+The local development environment used for Phase 4 measurements occupied 368 MB on disk
+(including optional dependencies and development tools, excluding model weights). Install size
+depends on selected extras and platform.
 
 ## Repository layout
 
@@ -102,6 +103,7 @@ eval/scripts/      reproducible reports (chunk-size grid)
 - [Data model](docs/DATA_MODEL.md)
 - [Development guide](docs/DEVELOPMENT.md)
 - [Testing](docs/TESTING.md)
+- [Phase 4 embedding measurements](docs/EMBEDDING_BAKEOFF.md)
 - [Changelog](CHANGELOG.md)
 - [Architecture decision records](docs/adr/README.md)
 

@@ -16,3 +16,4 @@ supersedes the old one.
 | [0009](0009-transactional-index-publication.md) | Transactional index publication and schema v3 | Accepted |
 | [0010](0010-embedding-input-identity.md) | Embedding input and model identity | Accepted |
 | [0011](0011-read-only-integrity-inspection.md) | Read-only integrity inspection | Accepted |
+| [0012](0012-embedding-default-evaluation.md) | Embedding default evaluation (D-03) | Proposed |
