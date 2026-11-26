@@ -28,9 +28,25 @@ of apply, in the middle of apply (half of the documents written), before commit,
 before garbage collection, in the middle of garbage collection, in the middle of a job
 (lease recovered, no duplicate, no job processed twice), and in the middle of migration `0002`
 (old schema intact, retried cleanly, both backups present). `tests/integration` additionally
-covers a kill inside a plain transaction.
+covers a kill inside a plain transaction and an injected failure between chunk insertion and FTS
+publication. A child is killed after FTS writes during indexed publication; its retry publishes
+one complete version. The indexed e2e test kills a model switch inside its final transaction,
+verifies that the previous model and generation remain active, then resumes the switch.
 
 ## Data integrity (`tests/integrity`)
+
+`rag doctor --integrity` opens a read-only SQLite snapshot. It checks SQLite and foreign keys,
+document/version ownership, current pointers, compressed text and chunk offsets, content hashes,
+deterministic chunk IDs, the FTS row set, active-model coverage, vector dimensions, finite norms,
+model IDs, and index generation. Deliberately corrupted copies exercise each class of error and
+verify that inspection does not alter the database. The model-based ingestion test runs doctor
+after every operation in 80 sequences of 22 steps (1760 steps total); the indexed e2e test also
+checks doctor after 1000 deterministic lexical, rebuild, GC and search operations.
+
+The one-paragraph NFR-05 scenario publishes at least 100 indexed chunks with stable section
+headings, edits one paragraph, and counts actual provider inputs. It requires 1–3 new embeddings
+and a sound store. These section boundaries prevent unrelated chunk boundaries from shifting.
+Long unsectioned paragraphs can still shift later boundaries and exceed this budget.
 
 `checks.py` holds the invariants as `check_*` functions (no orphans, version ownership,
 unversioned documents are not searchable, sync state and documents agree, one active job per

@@ -595,6 +595,10 @@ class SqliteWriter(SqliteReader):
                 " VALUES ('delete', ?, ?, ?)",
                 (row["chunk_rowid"], row["body_an"], row["headings_an"]),
             )
+        self._run(
+            "UPDATE chunks SET indexed = 0 WHERE document_version_id = ? AND indexed = 1",
+            (str(version_id),),
+        )
 
     def rebuild_lexical_index(self) -> None:
         """Reanalyse all stored chunks and replace the visible FTS index in one UoW."""
@@ -734,8 +738,11 @@ class SqliteWriter(SqliteReader):
     def delete_unreferenced(self, model_id: EmbeddingModelId) -> int:
         cursor = self._run(
             "DELETE FROM embeddings WHERE model_id = ? AND NOT EXISTS"
-            " (SELECT 1 FROM chunks WHERE chunks.embedding_input_hash ="
-            " embeddings.embedding_input_hash AND chunks.indexed = 1)",
+            " (SELECT 1 FROM chunks AS c"
+            " JOIN document_versions AS v ON v.id = c.document_version_id"
+            " JOIN documents AS d ON d.current_version_id = v.id"
+            " WHERE c.embedding_input_hash = embeddings.embedding_input_hash"
+            " AND d.status = 'active')",
             (str(model_id),),
         )
         return cursor.rowcount

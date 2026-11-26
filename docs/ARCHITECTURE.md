@@ -158,7 +158,8 @@ opening, migration, index-state bootstrap), `sqlite/uow.py` (unit of work),
   headings weighted twice as much as body text and filters candidates before its limit.
 - **Retention and rebuild.** `rag index gc` keeps the configured number of complete
   versions per document (three by default), retaining older version metadata while
-  removing their text and chunks. It removes embeddings with no indexed chunk reference.
+  removing their text and chunks. It removes embeddings with no reference from an active
+  document's current version; retained historical chunks do not pin their old vectors.
   `rag index rebuild --lexical` replaces analyzed text and FTS rows in one writer
   transaction. `rag index switch-model` stages a candidate model's vectors in the
   content-addressed cache, verifies every visible chunk, and changes active model and
