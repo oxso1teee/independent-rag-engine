@@ -85,6 +85,9 @@ change. Changing the grace period in the model by one day makes it fail.
   the same outcome rule; the isolated worker must give the outcome of in-process parsing.
 - **Isolation.** `tests/integration/test_parser_isolation.py` runs parsers that hang, crash,
   exhaust memory, recurse, print to the protocol channel, read the environment or raise.
+  A native HTML-library allocation failure may surface as a generic exception and be reported
+  as `corrupt`; no reliable reproducer that distinguishes this from malformed input has been
+  established, so the classifier is unchanged.
 
 ## NFR-04
 
