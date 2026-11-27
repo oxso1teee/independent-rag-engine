@@ -96,6 +96,8 @@ src/rag_engine/
   parsing/         normaliser, cleaners, parsers (md, html, txt, pdf, docx), isolated worker
   chunking/        token counters, splitting, packing, the fixed, recursive and
                    structure-aware chunkers
+  retrieval/       query processing, fusion, diversity and the search service
+  evaluation/      metrics, bootstrap intervals, dataset schema and the retrieval runner
   storage/         SQLite store (WAL, single writer, unit of work) and SQL migrations
   lexical/         RU/EN Snowball analyzer shared by publication and FTS queries
   system/          real clock and identifier entropy
@@ -106,7 +108,9 @@ src/rag_engine/
   container.py     composition root and entry point
 tests/             unit, contract, architecture, integration, e2e, chaos, integrity and perf tests
 docs/              architecture and development notes
-eval/scripts/      reproducible reports (chunk-size grid)
+eval/scripts/      reproducible reports (chunk grid, embedding bake-off, retrieval evaluation, benchmarks)
+eval/corpus/       the mini corpus of the retrieval evaluation
+eval/datasets/     versioned question sets
 ```
 
 ## Documentation
@@ -116,6 +120,7 @@ eval/scripts/      reproducible reports (chunk-size grid)
 - [Development guide](docs/DEVELOPMENT.md)
 - [Testing](docs/TESTING.md)
 - [Phase 4 embedding measurements](docs/EMBEDDING_BAKEOFF.md)
+- [Retrieval evaluation](docs/RETRIEVAL_EVALUATION.md)
 - [Changelog](CHANGELOG.md)
 - [Architecture decision records](docs/adr/README.md)
 
