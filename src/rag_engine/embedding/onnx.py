@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import importlib
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from typing import Protocol, cast
@@ -41,6 +41,34 @@ def model_directory_digest(directory: Path) -> str:
     return digest.hexdigest()
 
 
+def exact_token_counter(model_dir: Path) -> Callable[[str], int]:
+    """Count tokens as the model sees them: special tokens included, nothing truncated.
+
+    The generic ``HfTokenCounter`` leaves special tokens out; an input that fits by that count
+    can still exceed the model window once ``<s>`` and ``</s>`` are added, and the inference
+    library would then cut it silently.
+    """
+    try:
+        tokenizers = importlib.import_module("tokenizers")
+    except ImportError as exc:
+        raise RagError(
+            ErrorCode.E_CONFIG_INVALID, "the onnx extra is required for this provider"
+        ) from exc
+    try:
+        tokenizer = tokenizers.Tokenizer.from_file(str(model_dir / "tokenizer.json"))
+    except Exception as exc:  # the library raises a bare Exception for unreadable files
+        raise RagError(
+            ErrorCode.E_CONFIG_INVALID, "the ONNX model has no readable tokenizer.json"
+        ) from exc
+    tokenizer.no_truncation()
+    tokenizer.no_padding()
+
+    def count(text: str) -> int:
+        return len(tokenizer.encode(text).ids)
+
+    return count
+
+
 class OnnxEmbedder:
     """Load only explicitly provisioned local files; never download a model on use."""
 
@@ -51,6 +79,7 @@ class OnnxEmbedder:
         *,
         threads: int = 1,
         backend: _Backend | None = None,
+        token_counter: Callable[[str], int] | None = None,
     ) -> None:
         if model.provider != "onnx" or not model.normalized or threads < 1:
             raise RagError(ErrorCode.E_CONFIG_INVALID, "invalid ONNX embedding configuration")
@@ -58,6 +87,7 @@ class OnnxEmbedder:
             raise RagError(ErrorCode.E_EMBED_MODEL_MISMATCH, "ONNX model files changed")
         self._model = model
         if backend is None:
+            token_counter = token_counter or exact_token_counter(model_dir)
             try:
                 fastembed = importlib.import_module("fastembed")
             except ImportError as exc:
@@ -106,6 +136,7 @@ class OnnxEmbedder:
                     context={"error_type": type(exc).__name__},
                 ) from exc
         self._backend = backend
+        self._token_counter = token_counter
         if model_directory_digest(model_dir) != model.revision:
             raise RagError(ErrorCode.E_EMBED_MODEL_MISMATCH, "ONNX model files changed during load")
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="rag-onnx")
@@ -146,6 +177,15 @@ class OnnxEmbedder:
         return np.asarray(vectors / norms[:, None], dtype=np.float32)
 
     def _infer(self, texts: list[str]) -> Vectors:
+        if self._token_counter is not None:
+            for text in texts:
+                tokens = self._token_counter(text)
+                if tokens > self._model.max_input_tokens:
+                    raise RagError(
+                        ErrorCode.E_RESOURCE_GATE,
+                        "embedding input exceeds the model token limit",
+                        context={"tokens": tokens, "limit": self._model.max_input_tokens},
+                    )
         rows = list(self._backend.embed(texts, batch_size=len(texts), parallel=None))
         return np.asarray(rows, dtype=np.float32)
 
