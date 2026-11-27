@@ -1,6 +1,7 @@
 # 0014. Reranking stays off by default
 
-Status: Accepted (2026-11-27). Provisional: it is revisited when the measurement below can be made.
+Status: Accepted (2026-11-27), confirmed by a measurement on 2026-11-28 (below). It is revisited
+when reviewed labels and a harder evaluation set exist.
 
 ## Context
 
@@ -21,13 +22,38 @@ Russian and English, so the model must be multilingual and its licence must allo
   `BAAI/bge-reranker-v2-m3-int8` (Apache-2.0, 0.57 GB). The other multilingual one is licensed
   CC-BY-NC and is excluded.
 
+## Measurement (2026-11-28)
+
+With the owner's approval the pinned `BAAI/bge-reranker-v2-m3-int8` snapshot (revision `6f5ff65`,
+570,727,094 bytes, fingerprint `01a3f06c…`) was provisioned and measured with
+`eval/scripts/rerank_bakeoff.py`: the real ingest and search of the mini corpus, 36 answerable
+questions, a pool of 30, four threads, on a machine shared with a desktop session. The labels are
+unreviewed, so the result is exploratory.
+
+| | dense | hybrid |
+|---|---:|---:|
+| nDCG@10 without / with the reranker | 1.000 / 0.979 | 1.000 / 0.969 |
+| paired difference nDCG@10 (95 % interval) | −0.021 [−0.051, 0.000] | −0.031 [−0.072, 0.000] |
+| paired difference hit@1 | −0.056 [−0.139, 0.000] | −0.083 [−0.194, 0.000] |
+| rerank stage p50 / p95 | 3.2 s / 4.1 s | 3.1 s / 4.1 s |
+| whole search p95 without / with | 21 ms / 4.2 s | 24 ms / 4.1 s |
+
+- **No gain, a small loss.** Without the reranker the set is already saturated (1.000), so there
+  was no room to improve; the reranker moved the gold passage down on 2 to 3 of 36 questions.
+  No interval excludes zero.
+- **Latency is two to three times the limit.** The rerank stage takes about 3 s at p50 and 4.1 s at
+  p95 for the questions of this tiny corpus, against a limit of 1.5 s; longer chunks would be slower.
+- **Memory.** The process peaked at 2.5 GiB (embedding model, reranker and the evaluation), against
+  1.5-3 GiB usually available; loading the reranker alone took 4 s and 1.3 GiB.
+- **Quality of the model itself is fine:** on the opt-in test with the real weights it puts the
+  relevant passage first in English and in Russian and refuses a pair over the window.
+
 ## What was not measured
 
-No cross-encoder weights are provisioned on the development machine and none was downloaded, so
-there is no measured gain, latency or memory figure for any reranker. Downloading the 0.57 GB model
-needs the owner's approval. Even with the weights, the current evaluation set could not show a
-gain: dense and hybrid already return the gold document first for every question (the set is
-saturated, see ADR 0013), so there is nothing left for a reranker to improve.
+The measurement above could not show a gain even in principle: dense and hybrid already return
+the gold document first for every question (the set is saturated, see ADR 0013). Whether the
+reranker helps on a harder, reviewed set (near-duplicates, contradicting versions, longer
+passages) is still open. Its latency of about 3-4 s per query for a pool of 30 is not.
 
 ## Decision
 
@@ -44,5 +70,6 @@ saturated, see ADR 0013), so there is nothing left for a reranker to improve.
 
 - Operators who enable it get the safety of the fallback: a failing, slow or busy reranker keeps
   the fused order and is reported as `rerank_skipped:<reason>`.
-- Evaluating the reranker is blocked on two things the owner provides: approval to download the
-  model and reviewed, harder evaluation questions.
+- A smaller pool (10 to 15), a faster model or a quantised English-only one would be the way to
+  meet the latency limit; each needs its own measurement under the same rule.
+- Evaluating whether the reranker helps at all is blocked on reviewed, harder evaluation questions.

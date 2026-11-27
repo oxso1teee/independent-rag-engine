@@ -109,6 +109,14 @@ one (the model's own refusal, recognised by the exact refusal sentence of the sy
 better separation needs more signals (a reranker score, lexical coverage), a harder and reviewed
 set with at least 30 questions per class, or both.
 
+## Reranker bake-off (exploratory)
+
+`eval/scripts/rerank_bakeoff.py` compares retrieval with and without the cross-encoder on the same
+pool and questions. Result with `BAAI/bge-reranker-v2-m3-int8` (details and the decision in
+[ADR 0014](adr/0014-reranker-off-by-default.md)): no gain on a set that is already saturated, a
+small nDCG@10 loss (−0.02 dense, −0.03 hybrid, intervals touching zero), a rerank stage of 3.1-3.2 s
+at p50 and 4.1 s at p95 for a pool of 30, and a process peak of 2.5 GiB.
+
 ## What this does and does not show
 
 - **The set is saturated for dense and hybrid.** Both retrieve the gold document first for every

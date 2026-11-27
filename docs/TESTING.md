@@ -82,14 +82,14 @@ it is an acceptance result; MVP-0 is reached functionally and awaits that review
 |---|---|
 | No silent truncation or dropping of context on 1000 random cases (NFR-07) | `tests/unit/test_context_properties.py`: 1000 random corpora, budgets and policies; the budget is never exceeded, every retrieved chunk is shown, merged or dropped with a reason exactly once, evidence equals the document slice at its locator, every cut is declared, the only failure is `E_CONTEXT_BUDGET` with a hint |
 | `tokens_used <= budget` | the same property, and `tests/unit/test_context_builder.py` with hand-computed budgets |
-| Reranker enabled only with a proven gain, otherwise an ADR "off" | [ADR 0014](adr/0014-reranker-off-by-default.md): off by default; no multilingual cross-encoder was measured (the download awaits approval) and the evaluation set is saturated |
+| Reranker enabled only with a proven gain, otherwise an ADR "off" | [ADR 0014](adr/0014-reranker-off-by-default.md): measured with the real `bge-reranker-v2-m3-int8`: no gain on a saturated set, a small loss, p95 4.1 s against a 1.5 s limit, so it stays off. Real-weights tests: `RAG_TEST_RERANK_DIR=<dir> uv run pytest tests/external` |
 | Reranker failure never fails a query | `tests/unit/test_rerank_stage.py`, `tests/unit/test_search_service.py`, `tests/e2e/test_search_cli.py` |
 | Citation provenance survives context building | evidence keeps document, version, source key, heading path, pages and character span, and the retrieved chunks it stands for (`tests/unit/test_context_builder.py`) |
 | System prompt size regression | `tests/unit/test_system_prompt.py`: pinned hash, measured 217 tokens, limit 260 |
 | Gate: false refusals at most 10 % and correct refusals at least 90 % on dev | **not met** with the dense cosine on the exploratory set: 4.5 % false, 83.3 % correct (see [`RETRIEVAL_EVALUATION.md`](RETRIEVAL_EVALUATION.md)); invalidation of the calibration on a model change is tested (`tests/unit/test_sufficiency.py`, `tests/integration/test_integrity_corruption.py`) |
 | `rag search --rerank`, `rag context QUERY` | `tests/e2e/test_search_cli.py` |
 
-Not met or not measurable yet: the gate target and the reranker gain, both for the reasons above.
+Not met: the gate target. The reranker was measured and does not meet the conditions for being enabled; the decision is recorded.
 
 ## Failure injection (`tests/chaos`)
 
