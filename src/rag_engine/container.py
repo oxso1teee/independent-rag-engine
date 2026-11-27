@@ -54,6 +54,7 @@ from rag_engine.parsing.registry import default_parsers
 from rag_engine.ports import Clock, EmbeddingProvider, ParseLimits, SourceAdapter, Store
 from rag_engine.retrieval.query import QueryProcessor
 from rag_engine.retrieval.service import FusionSettings, IndexSnapshot, RetrievalService
+from rag_engine.storage.content import SqliteChunkContentReader
 from rag_engine.storage.filters import SqliteChunkCatalog, SqliteChunkFilter
 from rag_engine.storage.lexical import SqliteLexicalIndex
 from rag_engine.storage.sqlite import open_store, open_store_read_only
@@ -303,6 +304,7 @@ class DefaultContainer:
                 lexical=SqliteLexicalIndex(path),
                 filters=SqliteChunkFilter(path),
                 catalog=SqliteChunkCatalog(path),
+                content=SqliteChunkContentReader(path),
                 queries=QueryProcessor(
                     build_counter(settings.chunking.counter, settings.chunking.tokenizer_json),
                     max_tokens=retrieval.query_max_tokens,

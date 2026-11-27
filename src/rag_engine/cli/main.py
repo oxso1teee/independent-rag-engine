@@ -28,6 +28,7 @@ from rag_engine.cli.search import describe_hits, load_details, outcome_to_dict, 
 from rag_engine.domain import (
     ErrorCode,
     RagError,
+    RerankMode,
     RetrievalMode,
     RetrievalQuery,
     SourceKey,
@@ -561,6 +562,10 @@ def build_app(container: Container) -> typer.Typer:
         exclude_doc_id: Annotated[
             list[str] | None, typer.Option("--exclude-doc-id", help="Skip this document id.")
         ] = None,
+        rerank: Annotated[
+            bool | None,
+            typer.Option("--rerank/--no-rerank", help="Force reranking on or off (default: auto)."),
+        ] = None,
         full: Annotated[bool, typer.Option("--full", help="Print whole chunk texts.")] = False,
         debug: Annotated[
             bool, typer.Option("--debug", help="Include per-stage counts, ranks and timings.")
@@ -600,6 +605,13 @@ def build_app(container: Container) -> typer.Typer:
                     top_k=depth,
                     candidate_k=max(candidate_k or searcher.defaults.candidate_k, depth),
                     filters=filters,
+                    rerank=(
+                        RerankMode.AUTO
+                        if rerank is None
+                        else RerankMode.ON
+                        if rerank
+                        else RerankMode.OFF
+                    ),
                     debug=debug,
                 )
                 outcome = asyncio.run(searcher.retrieval.search(request))

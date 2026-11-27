@@ -187,3 +187,13 @@ def test_searching_before_anything_is_indexed_is_a_clear_error(
     )
     assert code != 0
     assert json.loads(capsys.readouterr().out)["error"]["code"] == "E_SOURCE_NOT_FOUND"
+
+
+def test_forcing_reranking_without_a_reranker_is_a_noted_fallback_not_an_error(
+    workspace: tuple[list[str], DefaultContainer], capsys: pytest.CaptureFixture[str]
+) -> None:
+    code, forced = search(workspace, capsys, "--mode", "hybrid", "ZX4471", "--rerank")
+    assert code == 0 and paths(forced)[0] == "beta/serials.md"
+    assert "rerank_skipped:not_configured" in forced["fallbacks"]  # type: ignore[operator]
+    code, off = search(workspace, capsys, "--mode", "hybrid", "ZX4471", "--no-rerank")
+    assert code == 0 and off["fallbacks"] == [] and off["hits"] == forced["hits"]
