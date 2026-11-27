@@ -85,11 +85,37 @@ it is an acceptance result; MVP-0 is reached functionally and awaits that review
 | Reranker enabled only with a proven gain, otherwise an ADR "off" | [ADR 0014](adr/0014-reranker-off-by-default.md): measured with the real `bge-reranker-v2-m3-int8`: no gain on a saturated set, a small loss, p95 4.1 s against a 1.5 s limit, so it stays off. Real-weights tests: `RAG_TEST_RERANK_DIR=<dir> uv run pytest tests/external` |
 | Reranker failure never fails a query | `tests/unit/test_rerank_stage.py`, `tests/unit/test_search_service.py`, `tests/e2e/test_search_cli.py` |
 | Citation provenance survives context building | evidence keeps document, version, source key, heading path, pages and character span, and the retrieved chunks it stands for (`tests/unit/test_context_builder.py`) |
-| System prompt size regression | `tests/unit/test_system_prompt.py`: pinned hash, measured 217 tokens, limit 260 |
+| System prompt size regression | `tests/unit/test_system_prompt.py`: pinned hash, measured 209 tokens, limit 260 |
 | Gate: false refusals at most 10 % and correct refusals at least 90 % on dev | **not met** with the dense cosine on the exploratory set: 4.5 % false, 83.3 % correct (see [`RETRIEVAL_EVALUATION.md`](RETRIEVAL_EVALUATION.md)); invalidation of the calibration on a model change is tested (`tests/unit/test_sufficiency.py`, `tests/integration/test_integrity_corruption.py`) |
 | `rag search --rerank`, `rag context QUERY` | `tests/e2e/test_search_cli.py` |
 
 Not met: the gate target. The reranker was measured and does not meet the conditions for being enabled; the decision is recorded.
+
+## Phase 7 acceptance: criteria and evidence
+
+| Criterion | Evidence |
+|---|---|
+| `LLMProvider` port and `ScriptedLLM` scenarios (P7.1) | `tests/contract/test_llm_provider_contract.py` runs against `ScriptedLLM` and `ResilientLLM(ScriptedLLM)` |
+| `OllamaChat` native, `num_ctx`, `num_predict`, think, `prompt_eval_count`, `done_reason` (P7.2) | `tests/contract/test_chat_adapters.py` (mocked HTTP: request shape, usage, finish reason, thinking dropped, errors, cancellation); real model: `RAG_TEST_OLLAMA_CHAT_MODEL=<model> uv run pytest tests/external/test_ollama_chat.py` (behind the memory gate) |
+| `OpenAICompatChat` with a mandatory `context_window` (P7.3) | the same file; the window is a required argument and setting; the key never appears in errors |
+| Prompt `answer.v1` with `E#` markers and the sentinel, snapshot and size (P7.4) | `tests/unit/test_templates.py` (snapshot of the rendered prompt, marker defusing), `tests/unit/test_system_prompt.py` (pinned hash, 209 tokens, limit 260) |
+| Truncated prompt caught on 100 % of the scenarios (P7.5) | `tests/unit/test_generator.py`: `prompt_eval_count` equal to or one below the window for windows 1024 to 8192; `tests/contract/test_chat_adapters.py` for the stream |
+| No `answered` result shorter than the threshold (P7.6) | `tests/unit/test_generator.py`: one character, empty, whitespace, punctuation, a lone marker, and the same cut by the length limit all end in `E_DEGENERATE_ANSWER` after one retry; the threshold is configurable |
+| Timeout, retry, circuit breaker, semaphore (P7.7) | `tests/unit/test_resilience.py`, `tests/integration/test_generation_stack.py` |
+| Stream equals non-stream (P7.8) | `tests/unit/test_generator.py` (event order, equal text and citations, refusal without text, retraction, `verified_only`), `tests/contract/test_llm_provider_contract.py`, `tests/e2e/test_generation_flow.py` |
+| Real small-model smoke without out-of-memory, or a documented refusal by the gate (P7.9) | `eval/scripts/llm_smoke.py`; on 2026-11-27 the gate refused `qwen3.5:4b` (see below) |
+| No invented sources | `tests/unit/test_generator.py`, `tests/e2e/test_generation_flow.py`: a marker that names no evidence fails after one retry and never reaches the caller |
+
+P7.9, 2026-11-27: `qwen3.5:4b` (Q4_K_M, 3.1 GiB on disk, with a vision projector) needs its size plus
+1 GiB of headroom, 4.1 GiB, and at least 0.5 GiB of free swap. The machine had 3.4 to 3.7 GiB
+available and 0.03 GiB of free swap, with a desktop session running, so `llm_smoke.py` refused with
+exit code 3 and the model was never loaded. This is the intended behaviour of the gate (an earlier
+attempt to run the 4B embedding model here was killed for lack of memory), not a failure of
+the adapter; the adapter is tested against mocked servers, and the real-model tests run once enough
+memory is free. The 9B model was not tried.
+
+Not claimed: faithfulness. The citation check is a lexical screen; faithfulness, hallucination
+rate and citation accuracy are measured in Phase 10.
 
 ## Failure injection (`tests/chaos`)
 
