@@ -1,0 +1,272 @@
+"""Reproducible, judged-pool NoMIRACL embedding comparison.
+
+Download only the English and Russian NoMIRACL dev.relevant corpus, topics, and qrels at the
+pinned revision documented in EMBEDDING_BAKEOFF.md. This evaluates ranking among each query's
+human-judged passages; it is not a full-corpus MIRACL retrieval score.
+"""
+
+from __future__ import annotations
+
+import argparse
+import gzip
+import hashlib
+import json
+import math
+import statistics
+import threading
+import time
+from pathlib import Path
+from typing import Any
+
+import httpx
+import numpy as np
+from bakeoff_embedders import percentile, sample_runner_rss
+
+ROOT = Path(__file__).resolve().parents[2]
+REVISION = "ecd08778d0426a5ca28ac99763b0c9ddc2c78e68"
+HASHES = {
+    "english": (
+        "f333c75491c8dac69f946b021511a67666318efb799dff3a6d927a841f8148eb",
+        "25d9e6d17656674fd7aa3b67ee912c71545e664a842b147bfc17e9ff391db3da",
+        "a0af836c300e85088c4d73449492e2378280f967cac032853c9e11f3bc8a8d81",
+    ),
+    "russian": (
+        "8beb1a33ff56a914ac9e88362e1d580ae972ecf79872e1bf7d6d5672e130f88d",
+        "91a7c3b6d21f79a12b5330f0a62811962f9370a0bf539cba8b3fecaa095f0616",
+        "f877b43c7f53b76aab25e406e5a607ef1c5adba4ffaa11e1b252a4326735a19b",
+    ),
+}
+QUERY_INSTRUCTION = "Instruct: Given a web search question, retrieve relevant passages.\nQuery: "
+
+
+def load_sample(base: Path) -> dict[str, dict[str, Any]]:
+    sample: dict[str, dict[str, Any]] = {}
+    for lang in ("english", "russian"):
+        folder = base / lang
+        files = (
+            folder / "corpus.jsonl.gz",
+            folder / "topics/dev.relevant.tsv",
+            folder / "qrels/dev.relevant.tsv",
+        )
+        for path, expected in zip(files, HASHES[lang], strict=True):
+            if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+                raise ValueError(f"NoMIRACL file differs from pinned revision: {path}")
+        topics = dict(line.split("\t", 1) for line in files[1].read_text().splitlines())
+        judged: dict[str, dict[str, int]] = {}
+        for line in files[2].read_text().splitlines():
+            query_id, _, doc_id, relevance = line.split("\t")
+            judged.setdefault(query_id, {})[doc_id] = int(relevance)
+        query_ids = sorted(
+            (query_id for query_id in topics if set(judged[query_id].values()) == {0, 1}),
+            key=int,
+        )
+        selected = [query_ids[(i * len(query_ids)) // 40] for i in range(40)]
+        needed = {doc_id for query_id in selected for doc_id in judged[query_id]}
+        documents: dict[str, str] = {}
+        with gzip.open(files[0], "rt") as stream:
+            for line in stream:
+                item = json.loads(line)
+                if item["docid"] in needed:
+                    documents[item["docid"]] = f"{item['title']}\n{item['text']}"
+        if needed != documents.keys():
+            raise ValueError(f"NoMIRACL judged documents are missing for {lang}")
+        for query_id in selected:
+            labels = set(judged[query_id].values())
+            if labels != {0, 1}:
+                raise ValueError(
+                    f"NoMIRACL query lacks positive and negative judgments: {query_id}"
+                )
+        sample[lang] = {
+            "queries": {query_id: topics[query_id] for query_id in selected},
+            "judged": {query_id: judged[query_id] for query_id in selected},
+            "documents": documents,
+        }
+    return sample
+
+
+class OllamaModel:
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.client = httpx.Client(base_url="http://127.0.0.1:11434", trust_env=False)
+        tags = self.client.get("/api/tags", timeout=30).json()["models"]
+        match = next((item for item in tags if item["name"] == name), None)
+        if match is None:
+            raise ValueError(f"Ollama model is not installed: {name}")
+        self.revision = match["digest"]
+        self.bytes = match["size"]
+
+    def embed(self, texts: list[str]) -> np.ndarray:
+        response = self.client.post(
+            "/api/embed",
+            json={"model": self.name, "input": texts, "keep_alive": "30m"},
+            timeout=600,
+        )
+        response.raise_for_status()
+        return np.asarray(response.json()["embeddings"], dtype=np.float32)
+
+    def close(self) -> None:
+        self.client.close()
+
+
+class E5Model:
+    def __init__(self, path: Path) -> None:
+        from fastembed import TextEmbedding
+        from fastembed.common.model_description import ModelSource, PoolingType
+
+        self.name = "intfloat/multilingual-e5-small"
+        self.revision = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
+        self.bytes = sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
+        TextEmbedding.add_custom_model(
+            model=self.name,
+            pooling=PoolingType.MEAN,
+            normalization=True,
+            sources=ModelSource(hf=self.name),
+            dim=384,
+            license="mit",
+        )
+        self.backend = TextEmbedding(
+            model_name=self.name,
+            specific_model_path=str(path.resolve()),
+            local_files_only=True,
+            threads=4,
+            providers=["CPUExecutionProvider"],
+        )
+
+    def embed(self, texts: list[str]) -> np.ndarray:
+        return np.asarray(list(self.backend.embed(texts, batch_size=len(texts))), dtype=np.float32)
+
+    def close(self) -> None:
+        pass
+
+
+def measure(
+    model: OllamaModel | E5Model, sample: dict[str, dict[str, Any]], cache: Path
+) -> dict[str, Any]:
+    existing: dict[str, np.ndarray] = {}
+    if cache.exists():
+        for line in cache.read_text().splitlines():
+            item = json.loads(line)
+            existing[item["key"]] = np.asarray(item["vector"], dtype=np.float32)
+    timings: dict[str, list[float]] = {"documents": [], "queries": []}
+    peak_runner_kib = [0]
+    stop = threading.Event()
+    monitor = threading.Thread(target=sample_runner_rss, args=(stop, peak_runner_kib), daemon=True)
+    monitor.start()
+    started = time.perf_counter()
+    try:
+        for lang, data in sample.items():
+            for kind, items in (("documents", data["documents"]), ("queries", data["queries"])):
+                rows = sorted(items.items(), key=lambda item: item[0])
+                for offset in range(0, len(rows), 8 if kind == "documents" else 1):
+                    batch = rows[offset : offset + (8 if kind == "documents" else 1)]
+                    missing = [
+                        (key, text) for key, text in batch if f"{lang}:{kind}:{key}" not in existing
+                    ]
+                    if not missing:
+                        continue
+                    prefix = (
+                        ("passage: " if kind == "documents" else "query: ")
+                        if isinstance(model, E5Model)
+                        else ("" if kind == "documents" else QUERY_INSTRUCTION)
+                    )
+                    before = time.perf_counter()
+                    vectors = model.embed([prefix + text for _, text in missing])
+                    elapsed = time.perf_counter() - before
+                    if vectors.shape[0] != len(missing) or not np.isfinite(vectors).all():
+                        raise ValueError("provider returned invalid vectors")
+                    norms = np.linalg.norm(vectors, axis=1)
+                    if (norms <= 0).any() or not np.isfinite(norms).all():
+                        raise ValueError("provider returned zero vectors")
+                    vectors /= norms[:, None]
+                    with cache.open("a") as stream:
+                        for (key, _), vector in zip(missing, vectors, strict=True):
+                            identity = f"{lang}:{kind}:{key}"
+                            existing[identity] = vector
+                            stream.write(
+                                json.dumps({"key": identity, "vector": vector.tolist()}) + "\n"
+                            )
+                    timings[kind].append(elapsed / len(missing))
+                    if len(existing) % 80 < len(missing):
+                        print(f"{model.name}: {len(existing)} vectors cached", flush=True)
+    finally:
+        stop.set()
+        monitor.join(timeout=1)
+    duration = time.perf_counter() - started
+    metrics: dict[str, Any] = {}
+    for lang, data in sample.items():
+        per_query: list[dict[str, float]] = []
+        for query_id, labels in data["judged"].items():
+            query = existing[f"{lang}:queries:{query_id}"]
+            ranked = sorted(
+                labels,
+                key=lambda doc_id: (
+                    -float(np.dot(query, existing[f"{lang}:documents:{doc_id}"])),
+                    doc_id,
+                ),
+            )
+            relevant = sum(labels.values())
+            ranks = [rank for rank, doc_id in enumerate(ranked, 1) if labels[doc_id] > 0]
+            ideal = sum(1 / math.log2(rank + 1) for rank in range(1, min(relevant, 10) + 1))
+            actual = sum(1 / math.log2(rank + 1) for rank in ranks if rank <= 10)
+            per_query.append(
+                {
+                    "recall_at_1": sum(rank <= 1 for rank in ranks) / relevant,
+                    "recall_at_5": sum(rank <= 5 for rank in ranks) / relevant,
+                    "recall_at_10": sum(rank <= 10 for rank in ranks) / relevant,
+                    "mrr_at_10": 1 / min(ranks) if min(ranks) <= 10 else 0,
+                    "ndcg_at_10": actual / ideal,
+                }
+            )
+        metrics[lang] = {
+            "queries": len(data["queries"]),
+            "candidate_documents": len(data["documents"]),
+            "mean_judged_per_query": statistics.mean(map(len, data["judged"].values())),
+            "mean": {key: statistics.mean(row[key] for row in per_query) for key in per_query[0]},
+            "per_query": dict(zip(data["queries"], per_query, strict=True)),
+        }
+    return {
+        "dataset": "NoMIRACL dev.relevant judged-pool, 40 evenly spaced queries per language",
+        "dataset_revision": REVISION,
+        "model": model.name,
+        "model_revision": model.revision,
+        "model_bytes": model.bytes,
+        "dimension": len(next(iter(existing.values()))),
+        "wall_seconds": duration,
+        "documents_per_second": sum(len(data["documents"]) for data in sample.values()) / duration,
+        "latency_ms": {
+            kind: {"p50": percentile(values, 0.5) * 1000, "p95": percentile(values, 0.95) * 1000}
+            for kind, values in timings.items()
+        },
+        "peak_process_rss_kib": int(
+            __import__("resource").getrusage(__import__("resource").RUSAGE_SELF).ru_maxrss
+        ),
+        "peak_ollama_runner_rss_kib": max(peak_runner_kib),
+        "metrics": metrics,
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("model", choices=("qwen3-embedding:0.6b", "qwen3-embedding:4b", "e5-small"))
+    args = parser.parse_args()
+    sample = load_sample(ROOT / "data/eval/nomiracl")
+    name = args.model.replace(":", "-")
+    cache = ROOT / "data/eval/nomiracl" / f"vectors-{name}.jsonl"
+    model = (
+        E5Model(ROOT / "data/models/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3")
+        if args.model == "e5-small"
+        else OllamaModel(args.model)
+    )
+    try:
+        result = measure(model, sample, cache)
+    finally:
+        model.close()
+    output = ROOT / "data/eval/nomiracl" / f"results-{name}.json"
+    output.write_text(json.dumps(result, ensure_ascii=False, indent=2))
+    print(json.dumps({key: value for key, value in result.items() if key != "metrics"}, indent=2))
+    for lang, value in result["metrics"].items():
+        print(lang, value["mean"])
+
+
+if __name__ == "__main__":
+    main()

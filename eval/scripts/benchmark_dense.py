@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gc
 import json
+import multiprocessing
 import os
 import resource
 import statistics
@@ -22,6 +23,31 @@ def current_rss_mib() -> float:
     raise RuntimeError("VmRSS unavailable")
 
 
+def search_in_child(
+    index: FlatVectorIndex, queries: np.ndarray, pipe: multiprocessing.connection.Connection
+) -> None:
+    """Measure the search worker after fork, with only its resident index and queries."""
+    try:
+        gc.collect()
+        search_rss = current_rss_mib()
+        times = []
+        for query in queries:
+            started = time.perf_counter()
+            if len(index.search(query, 10)) != 10:
+                raise RuntimeError("index returned fewer than ten hits")
+            times.append((time.perf_counter() - started) * 1000)
+        pipe.send(
+            {
+                "p50_ms": statistics.median(times),
+                "p95_ms": sorted(times)[int(0.95 * len(times)) - 1],
+                "search_rss_mib": search_rss,
+                "search_peak_rss_mib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
+            }
+        )
+    finally:
+        pipe.close()
+
+
 def measure(count: int) -> dict[str, float | int]:
     rng = np.random.default_rng(104)
     vectors = rng.standard_normal((count, 1024), dtype=np.float32)
@@ -38,21 +64,24 @@ def measure(count: int) -> dict[str, float | int]:
     queries = vectors[:40].copy()
     del vectors, ids
     gc.collect()
-    search_rss = current_rss_mib()
-    times = []
-    for query in queries:
-        started = time.perf_counter()
-        if len(index.search(query, 10)) != 10:
-            raise RuntimeError("index returned fewer than ten hits")
-        times.append((time.perf_counter() - started) * 1000)
+    build_peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    receiver, sender = multiprocessing.get_context("fork").Pipe(duplex=False)
+    worker = multiprocessing.get_context("fork").Process(
+        target=search_in_child, args=(index, queries, sender)
+    )
+    worker.start()
+    sender.close()
+    search = receiver.recv()
+    receiver.close()
+    worker.join()
+    if worker.exitcode != 0:
+        raise RuntimeError("search worker failed")
     return {
         "vectors": count,
         "dimension": 1024,
         "query_count": len(queries),
-        "p50_ms": statistics.median(times),
-        "p95_ms": sorted(times)[int(0.95 * len(times)) - 1],
-        "search_rss_mib": search_rss,
-        "construction_peak_rss_mib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
+        "construction_peak_rss_mib": build_peak,
+        **search,
     }
 
 
