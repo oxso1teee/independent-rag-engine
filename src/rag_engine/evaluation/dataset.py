@@ -38,6 +38,11 @@ _REQUIRED = {
 }  # fmt: skip
 
 
+def looks_like_program(name: str) -> bool:
+    """Whether a reviewer name reads like a tool or a model rather than a person."""
+    return _BOT.search(name) is not None
+
+
 @dataclass(frozen=True, slots=True)
 class GoldRef:
     doc: str
@@ -309,7 +314,7 @@ def _check_type(item: Question, everything: str, errors: list[str]) -> None:
 
 def _check_review(item: Question, errors: list[str]) -> None:
     review = item.review
-    if review.reviewer and _BOT.search(review.reviewer):
+    if review.reviewer and looks_like_program(review.reviewer):
         errors.append(f"{item.id}: the reviewer {review.reviewer!r} looks like a program")
     if review.status not in COUNTED:
         return

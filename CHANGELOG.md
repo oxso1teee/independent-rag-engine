@@ -45,6 +45,11 @@ project until a release is cut.
   SQLite reader returns text, position and provenance of any chunk.
 
 ### Phase 5: retrieval (implemented; labels await review)
+- Review tooling for evaluation datasets: `eval/scripts/review_sheet.py export` writes a CSV with the
+  question, gold quote with its surrounding text, reference answer and an empty decision column;
+  `apply` records `accept`, `edit` or `reject` decisions under a named person and writes a new file.
+  A reviewer whose name looks like a program is refused, an empty decision stays unreviewed and an
+  unclear one is an error. How to review is in `docs/DATASET_REVIEW.md`.
 - `eval/scripts/benchmark_search.py`: end-to-end search latency over a real published index.
   Hybrid p95 is 30.2 ms at 10⁴ chunks and 281.6 ms at 10⁵ (query embedding excluded), peak 85 and
   280 MiB; Phase 5 acceptance criteria and their evidence are tabulated in `docs/TESTING.md`.
