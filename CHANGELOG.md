@@ -6,6 +6,15 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 6: reranking and context (in progress)
+- `SufficiencyGate` with `calibrate`: the best dense cosine (A) or reranker logit (B) must reach a
+  threshold, either is enough; lexical coverage of the top passage (C) decides only when neither is
+  available. Thresholds are fitted on dev to keep false refusals within 10 % while refusing as many
+  unanswerable questions as possible, and are stored in `index_state.calibration` together with the
+  embedding model id. A missing calibration, one made for another model, or no signal lets the
+  question through and says why. `rag doctor --integrity` now prints warnings, including a stale
+  calibration. First exploratory result: with E5-small the dense cosine does not separate
+  answerable from unanswerable questions well enough (83 % correct refusals at 4.5 % false ones on
+  dev, target 90 %); see `docs/RETRIEVAL_EVALUATION.md`.
 - System prompt `rag-system/1` (`context/prompt.py`): evidence-only answers, `[E<n>]` citations, one
   exact refusal sentence, answer in the question's language. Its SHA-256 is pinned and a test caps its
   measured size (217 tokens with the conservative counter, limit 260), so any change to the prompt

@@ -256,3 +256,20 @@ def test_lexical_search_reports_a_damaged_fts_table_as_an_integrity_error(
     with pytest.raises(RagError) as info:
         SqliteLexicalIndex(damaged).search("paragraph", 5)
     assert info.value.code is ErrorCode.E_INTEGRITY
+
+
+def test_doctor_warns_when_the_calibration_belongs_to_another_model(
+    valid_database: Path, tmp_path: Path
+) -> None:
+    import json as jsonlib
+
+    healthy = check_integrity(valid_database)
+    assert healthy.ok and healthy.warnings == ()
+    stale = copy_of(valid_database, tmp_path)
+    with closing(sqlite3.connect(stale)) as connection:
+        stored = jsonlib.dumps({"sufficiency": {"model_id": "another/model", "dense": 0.5}})
+        connection.execute("UPDATE index_state SET calibration_json = ?", (stored,))
+        connection.commit()
+    report = check_integrity(stale)
+    assert report.ok  # a stale calibration is a warning, not corruption
+    assert any("recalibrate" in item for item in report.warnings)

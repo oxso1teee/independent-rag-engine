@@ -143,6 +143,7 @@ def build_app(container: Container) -> typer.Typer:
             "published_chunks": report.published_chunks,
             "embeddings": report.embeddings,
             "index_generation": report.index_generation,
+            "warnings": list(report.warnings),
         }
         if json_output:
             _emit(result)
@@ -150,6 +151,8 @@ def build_app(container: Container) -> typer.Typer:
             typer.echo("Integrity OK" if report.ok else "Integrity failed")
             for error in report.errors:
                 typer.echo(f"  {error}")
+            for warning in report.warnings:
+                typer.echo(f"  warning: {warning}")
         if not report.ok:
             raise typer.Exit(
                 int(exit_code_for(RagError(ErrorCode.E_INTEGRITY, "integrity failed")))
