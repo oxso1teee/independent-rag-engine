@@ -49,10 +49,10 @@ verify that inspection does not alter the database. The model-based ingestion te
 after every operation in 80 sequences of 22 steps (1760 steps total); the indexed e2e test also
 checks doctor after 1000 deterministic lexical, rebuild, GC and search operations.
 
-The one-paragraph NFR-05 scenario publishes at least 100 indexed chunks with stable section
-headings, edits one paragraph, and counts actual provider inputs. It requires 1–3 new embeddings
-and a sound store. These section boundaries prevent unrelated chunk boundaries from shifting.
-Long unsectioned paragraphs can still shift later boundaries and exceed this budget.
+The one-paragraph NFR-05 scenario publishes exactly 100 indexed chunks in each of two documents:
+one with section headings and one without. It edits one middle paragraph and counts actual
+provider inputs. Both cases require 1–3 new embeddings and a sound store. The recursive chunker
+anchors packing at paragraph groups so a local edit does not shift unrelated later boundaries.
 
 `checks.py` holds the invariants as `check_*` functions (no orphans, version ownership,
 unversioned documents are not searchable, sync state and documents agree, one active job per
