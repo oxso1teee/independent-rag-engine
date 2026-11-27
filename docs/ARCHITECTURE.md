@@ -289,6 +289,31 @@ query text
 - `rag_engine.evaluation` (above `ingestion` and `retrieval` in the layering) holds the metrics,
   seeded bootstrap intervals, the dataset schema and the runner that scores rankings.
 
+## Context (`rag_engine.context`)
+
+`ContextBuilder.build(hits, question_tokens, system_tokens, limits, policy)` returns a `Context`:
+numbered `Evidence` plus a `ContextReport`. It reads chunk content through the
+`ChunkContentReader` port and counts tokens with the same `TokenCounter` as the rest of the
+pipeline.
+
+- **Budget.** `evidence_budget = window - system - question - max_new - margin`, every term
+  measured, `margin = max(256, 10 % of the window)`; each passage also pays a per-item overhead for
+  its marker and locator line. A prompt that leaves no room, or a budget that cannot hold the
+  required evidence, is `E_CONTEXT_BUDGET` with a hint (smaller `top_k`, larger window, other model).
+- **Selection**, best hit first: a missing or blank chunk is dropped (`missing`); an exact repeat
+  of a text is dropped (`duplicate`); an overlapping neighbour of the same version is folded into
+  the exact union of the two slices (`merged`) or dropped when it adds nothing (`overlap`); a
+  document may hold at most `max_chunks_per_document` places (`doc_cap`); what does not fit the
+  remaining budget is dropped (`budget`), except the top hit, which is cut at a sentence end and
+  marked `truncated`. With small-to-big a leaf is replaced by its section when the section fits;
+  the evidence then lists the retrieved leaves it stands for.
+- **Accounting.** Every retrieved chunk is shown, merged into a shown one, or dropped with a
+  reason; nothing is lost silently (NFR-07). The report carries tokens used against the budget and
+  a hash of the evidence and the budget, so a context can be compared and logged.
+- **Provenance.** Evidence text is an exact slice of the normalised document text; the locator
+  gives source, key, title, heading path, pages and character span, which is what citation
+  validation in the generation phase checks against.
+
 ## Command line
 
 `rag source add|list|rebase` (`add` takes repeatable `--cleaner` line patterns),
