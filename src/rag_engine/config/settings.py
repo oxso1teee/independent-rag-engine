@@ -81,6 +81,27 @@ class EmbeddingSettings(_Section):
         return self
 
 
+class RetrievalSettings(_Section):
+    """Search defaults; ``dense`` stays the default until an evaluation clears hybrid."""
+
+    mode: Literal["dense", "lexical", "hybrid"] = "dense"
+    top_k: int = Field(default=8, ge=1, le=100)
+    candidate_k: int = Field(default=40, ge=1, le=500)
+    max_per_document: int | None = Field(default=None, ge=1)
+    query_max_tokens: int = Field(default=256, ge=1, le=8192)
+    fusion: Literal["rrf", "weighted"] = "rrf"
+    rrf_k: int = Field(default=60, ge=1, le=1000)
+    dense_weight: float = Field(default=1.0, ge=0.0, le=100.0)
+    lexical_weight: float = Field(default=0.5, ge=0.0, le=100.0)
+    alpha: float = Field(default=0.5, ge=0.0, le=1.0)
+
+    @model_validator(mode="after")
+    def _top_k_fits_candidates(self) -> RetrievalSettings:
+        if self.top_k > self.candidate_k:
+            raise ValueError("retrieval.top_k must not exceed retrieval.candidate_k")
+        return self
+
+
 class LlmSettings(_Section):
     enabled: bool = False
     provider: ProviderName | None = None
@@ -169,6 +190,7 @@ class Settings(BaseSettings):
     parsing: ParsingSettings = Field(default_factory=ParsingSettings)
     chunking: ChunkingSettings = Field(default_factory=ChunkingSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
+    retrieval: RetrievalSettings = Field(default_factory=RetrievalSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
 

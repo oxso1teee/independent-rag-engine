@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from rag_engine.config import (
     PROFILE_LIMITS,
@@ -255,3 +256,27 @@ def test_parse_limits_validate_and_default_to_the_settings_defaults() -> None:
     for bad in ({"max_blocks": 0}, {"timeout_s": 0}, {"max_nesting": -1}):
         with pytest.raises(RagError):
             ParseLimits(**bad)
+
+
+def test_retrieval_defaults_are_dense_with_the_specified_depths() -> None:
+    retrieval = Settings().retrieval
+    assert (retrieval.mode, retrieval.top_k, retrieval.candidate_k) == ("dense", 8, 40)
+    assert retrieval.fusion == "rrf" and retrieval.rrf_k == 60
+    assert (retrieval.dense_weight, retrieval.lexical_weight) == (1.0, 0.5)
+    assert retrieval.max_per_document is None
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"top_k": 50, "candidate_k": 40},
+        {"top_k": 0},
+        {"candidate_k": 501},
+        {"mode": "semantic"},
+        {"alpha": 1.5},
+        {"unknown": 1},
+    ],
+)
+def test_retrieval_settings_reject_invalid_values(bad: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        Settings(retrieval=bad)

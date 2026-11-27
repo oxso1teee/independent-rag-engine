@@ -9,8 +9,8 @@ generation, and reproducible evaluation.
 > persistent job queue, driven by the `rag` command, and document processing: parsers for
 > Markdown, HTML, text, PDF and DOCX and three chunking strategies, previewed with
 > `rag chunks`. With a pinned Ollama or local ONNX embedding model, `rag ingest` now
-> publishes chunks, embeddings and an FTS5 index atomically. Retrieval and generation are
-> later phases.
+> publishes chunks, embeddings and an FTS5 index atomically, and `rag search` retrieves from it
+> (dense, lexical or hybrid, with metadata filters). Reranking and generation are later phases.
 
 ## Design goals
 
@@ -64,6 +64,8 @@ uv run rag chunks ~/Documents/notes/guide.md
 uv run rag index gc                 # purge old versions and unused embeddings
 uv run rag index rebuild --lexical  # rebuild FTS5 in one transaction
 uv run rag doctor --integrity        # inspect SQLite, published FTS and vectors read-only
+uv run rag search "how are chunks stored" --mode hybrid --top-k 5
+uv run rag search "ZX4471" --mode lexical --source notes --path-glob '**/*.md' --json
 # after changing the configured embedding model:
 uv run rag index switch-model      # stage every visible vector, then activate atomically
 uv run python eval/scripts/chunk_grid.py   # chunk shapes at 192/256/384 tokens; ranks nothing

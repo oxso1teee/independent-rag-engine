@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -16,9 +16,14 @@ from typing import Any
 import pytest
 
 from rag_engine.cli import main
-from rag_engine.cli.context import Processing, Services
+from rag_engine.cli.context import Processing, SearchServices, Services
 from rag_engine.config import load_settings
-from rag_engine.container import build_processing, build_services, filesystem_adapter
+from rag_engine.container import (
+    DefaultContainer,
+    build_processing,
+    build_services,
+    filesystem_adapter,
+)
 from rag_engine.storage.sqlite import open_store, open_store_read_only
 from rag_engine.testing import FakeClock
 from tests.factories import make_ids
@@ -43,6 +48,11 @@ class ContainerForTests:
 
     def processing(self, config: Path | None) -> Processing:
         return build_processing(load_settings(config), self.clock, self.ids)
+
+    def search(
+        self, config: Path | None, db: Path | None
+    ) -> AbstractContextManager[SearchServices]:
+        return DefaultContainer().search(config, db or self.default_db)
 
 
 @dataclass
