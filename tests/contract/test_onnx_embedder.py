@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 from rag_engine.domain import EmbeddingModel, EmbeddingModelId, ErrorCode, RagError
-from rag_engine.embedding.onnx import OnnxEmbedder, model_directory_digest
+from rag_engine.embedding.onnx import OnnxEmbedder, exact_token_counter, model_directory_digest
 from rag_engine.ports import EmbeddingProvider
 from tests.factories import T0
 
@@ -211,3 +211,46 @@ def test_timed_out_inference_cannot_start_a_second_cpu_job(tmp_path: Path) -> No
     finally:
         release.set()
         provider.close()
+
+
+def write_tiny_tokenizer(directory: Path, *, truncate_to: int | None = None) -> None:
+    from tokenizers import Tokenizer, models, pre_tokenizers, processors
+
+    tokenizer = Tokenizer(
+        models.WordLevel({"<unk>": 0, "<s>": 1, "</s>": 2, "a": 3, "b": 4}, unk_token="<unk>")
+    )
+    tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()
+    tokenizer.post_processor = processors.TemplateProcessing(
+        single="<s> $A </s>", special_tokens=[("<s>", 1), ("</s>", 2)]
+    )
+    if truncate_to is not None:
+        tokenizer.enable_truncation(truncate_to)
+    tokenizer.save(str(directory / "tokenizer.json"))
+
+
+def test_exact_counter_includes_special_tokens_and_never_truncates(tmp_path: Path) -> None:
+    write_tiny_tokenizer(tmp_path, truncate_to=3)  # the file itself would cut at three tokens
+    count = exact_token_counter(tmp_path)
+    assert count("a b") == 4  # <s> a b </s>
+    assert count("a b a b a b") == 8
+
+
+@pytest.mark.parametrize("content", [None, "{}", "not json"], ids=["absent", "empty", "garbage"])
+def test_exact_counter_needs_a_readable_tokenizer(tmp_path: Path, content: str | None) -> None:
+    if content is not None:
+        (tmp_path / "tokenizer.json").write_text(content)
+    with pytest.raises(RagError) as info:
+        exact_token_counter(tmp_path)
+    assert info.value.code is ErrorCode.E_CONFIG_INVALID
+
+
+def test_exact_counter_reports_a_missing_tokenizers_package(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse(name: str) -> object:
+        raise ImportError(name)
+
+    monkeypatch.setattr("rag_engine.embedding.onnx.importlib.import_module", refuse)
+    with pytest.raises(RagError) as info:
+        exact_token_counter(tmp_path)
+    assert info.value.code is ErrorCode.E_CONFIG_INVALID
