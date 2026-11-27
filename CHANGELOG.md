@@ -6,6 +6,15 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 4: embeddings and storage (in progress)
+- Decision D-03 closed ([ADR 0012](docs/adr/0012-embedding-default-evaluation.md)): the default
+  embedding model is `intfloat/multilingual-e5-small` through ONNX, chosen by an explicit rule
+  (resource gate, paired quality interval, tie-breaks). Evidence in `docs/EMBEDDING_BAKEOFF.md`: NoMIRACL judged-pool ranking in
+  English and Russian with paired bootstrap intervals, uncached latency, throughput and memory of
+  E5-small and Qwen3 0.6B, exact dense search at 10k and 100k vectors, and the memory of loading a
+  real 100k-vector index (peak 276 MiB). Qwen3 4B quality could not be measured on the 7.8 GiB
+  development machine and is recorded as such. Scripts: `eval/scripts/bakeoff_nomiracl.py`,
+  `bakeoff_report.py`, `benchmark_dense.py`, `benchmark_refresh.py`.
+- Phase 4 acceptance criteria and their evidence are tabulated in `docs/TESTING.md`.
 - Acceptance tests for Phase 4 failure paths: sixteen injected corruptions that `doctor
   --integrity` must report (and never repair), every fencing guard of the atomic publisher,
   damaged stored vectors and model metadata at index load, indexing-handler refusals, Ollama

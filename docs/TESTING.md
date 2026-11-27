@@ -18,12 +18,47 @@ fixed, derandomised profile.
 The pull-request CI runs `pytest -m "not perf"`. `make test-all` does the same with coverage.
 `make perf` runs the budgets separately.
 
+Phase 4's real-model probe and detailed exact dense-search measurements are opt-in local
+commands in `eval/scripts/bakeoff_embedders.py` and `eval/scripts/benchmark_dense.py`. The
+model probe is not a CI quality gate; it needs installed model weights and its small synthetic
+dataset cannot establish a default. Measurements and limits are in
+[`EMBEDDING_BAKEOFF.md`](EMBEDDING_BAKEOFF.md).
+
 Tests marked `external` need locally provisioned model files and are skipped when they are
 absent, so the standard CI needs neither weights nor a network. Run the real multilingual-e5-small
 inference checks (identity digest, 384-d unit vectors, ranking in each language, determinism and
 batch invariance, prefixes, the 512-token window counted with special tokens, refusal of a
 concurrent call) with `RAG_TEST_E5_DIR=<model snapshot directory> uv run pytest tests/external`.
 Sockets stay disabled, so a successful run also shows that nothing is fetched.
+
+## Phase 4 acceptance: criteria and evidence
+
+| Criterion | Evidence |
+|---|---|
+| NFR-01 memory: search over 10⁴ chunks ≤ 300 MiB, over 10⁵ (1024-d fp16) ≤ 600 MiB | `eval/scripts/benchmark_refresh.py` loads a real schema-v3 database through `FlatVectorIndex.refresh` in a fresh process: 10⁴ chunks peak 80.7 MiB, 10⁵ chunks peak 275.9 MiB (see [`EMBEDDING_BAKEOFF.md`](EMBEDDING_BAKEOFF.md)) |
+| NFR-03 dense search p95 ≤ 100 ms at 10⁴ and ≤ 400 ms at 10⁵ (4 vCPU) | `eval/scripts/benchmark_dense.py` (two runs: 10⁴ p95 25.4 and 53.8 ms; 10⁵ p95 216.1 and 255.4 ms) and the CI-excluded budget test `tests/perf/test_flat_vector_index.py` |
+| NFR-05 one edited paragraph in a 100-chunk document re-embeds ≤ 3 chunks | `tests/e2e/test_indexed_ingest_cli.py::test_one_paragraph_edit_reembeds_at_most_three_of_hundred_chunks`, with and without section headings; counts the inputs the provider actually receives |
+| NFR-06 `kill -9` at any point leaves a database that opens, passes `doctor --integrity`, and a rerun completes | `tests/chaos/test_kill_points.py` (every ingestion stage), `tests/chaos/test_index_publication_kill.py` (inside publication), `tests/chaos/model_switch_child.py` via the e2e test (inside the model switch) |
+| Atomic publication | `tests/integration/test_index_publication.py`, `tests/integration/test_publication_guards.py` (every fencing guard refuses and leaves no version) |
+| `doctor --integrity` finds corruption and never writes | `tests/integration/test_integrity_corruption.py` (16 injected corruptions, each reported by name, file hash unchanged; damaged vectors and model metadata are also refused when the flat index loads), `tests/e2e/test_indexed_ingest_cli.py` |
+| `doctor --integrity` clean after 1000 random operations | the e2e test applies 1000 lexical, rebuild, GC and search operations drawn from a seeded `random.Random(4)` and checks the database after them; `tests/integrity/test_ingestion_model.py` is the model-based Hypothesis test that checks the invariants after every step. The 1000-operation sequence is seeded pseudo-random, not Hypothesis |
+| Model switching, GC, FTS consistency | the e2e test (`index switch-model`, interrupted switch, retention GC, `index rebuild --lexical`), `tests/contract/test_sqlite_lexical_index.py`, `tests/integration/test_migrations.py::test_v3_fts_uses_stable_chunk_rowids` |
+| Embedding service (batches, cache, retry, limits, norms) and providers | `tests/unit/test_embedding_service.py`, `tests/contract/test_embedding_provider_contract.py`, `tests/contract/test_ollama_embedder.py`, `tests/contract/test_onnx_embedder.py`, real weights in `tests/external/` |
+| End-to-end ingestion | `tests/e2e/test_indexed_ingest_cli.py::test_configured_ingest_publishes_current_version` |
+| D-03 decision recorded | [ADR 0012](adr/0012-embedding-default-evaluation.md) |
+
+Total statement-and-branch coverage is 94 % (93 % before the failure-path tests of this phase,
+96–97 % at the end of Phase 3). The remaining gap is code that only runs with real weights
+(`embedding/onnx.py`, covered by the opt-in `external` tests), the isolated parser worker (its
+process is not measured by coverage) and CLI error branches.
+
+**Known limit: native HTML allocation failures.** When the memory cap of the parser worker is
+exhausted inside the native HTML library, the library raises `SelectolaxError("Can't parse
+HTML.")`. That is indistinguishable from malformed input, so the worker reports `corrupt`
+instead of `memory`. Measured with a 400 MB data limit: the data segment was full (400 of 400 MB)
+in one case and at 345 MB in another, and the worker starts with a baseline of its own, so no
+threshold separates the two cases reliably. The classifier is unchanged; isolation still contains
+the failure.
 
 ## Failure injection (`tests/chaos`)
 
@@ -50,10 +85,10 @@ verify that inspection does not alter the database. The model-based ingestion te
 after every operation in 80 sequences of 22 steps (1760 steps total); the indexed e2e test also
 checks doctor after 1000 deterministic lexical, rebuild, GC and search operations.
 
-The one-paragraph NFR-05 scenario publishes at least 100 indexed chunks with stable section
-headings, edits one paragraph, and counts actual provider inputs. It requires 1–3 new embeddings
-and a sound store. These section boundaries prevent unrelated chunk boundaries from shifting.
-Long unsectioned paragraphs can still shift later boundaries and exceed this budget.
+The one-paragraph NFR-05 scenario publishes exactly 100 indexed chunks in each of two documents:
+one with section headings and one without. It edits one middle paragraph and counts actual
+provider inputs. Both cases require 1–3 new embeddings and a sound store. The recursive chunker
+anchors packing at paragraph groups so a local edit does not shift unrelated later boundaries.
 
 `checks.py` holds the invariants as `check_*` functions (no orphans, version ownership,
 unversioned documents are not searchable, sync state and documents agree, one active job per
@@ -86,6 +121,9 @@ change. Changing the grace period in the model by one day makes it fail.
   the same outcome rule; the isolated worker must give the outcome of in-process parsing.
 - **Isolation.** `tests/integration/test_parser_isolation.py` runs parsers that hang, crash,
   exhaust memory, recurse, print to the protocol channel, read the environment or raise.
+  A native HTML-library allocation failure may surface as a generic exception and be reported
+  as `corrupt`; no reliable reproducer that distinguishes this from malformed input has been
+  established, so the classifier is unchanged.
 
 ## NFR-04
 
