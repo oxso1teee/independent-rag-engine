@@ -6,6 +6,17 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 6: reranking and context (in progress)
+- `ContextBuilder` turns ranked hits into numbered evidence (`E1..En`) inside a measured token
+  budget (`window - system - question - max_new - margin`, margin `max(256, 10 %)`): exact
+  duplicates are dropped, overlapping chunks of one version are folded into their exact union, a
+  document may take at most three places, optional small-to-big replaces a leaf by its section, and
+  the order is by score or by document. A top hit that cannot fit is cut at a sentence end and
+  flagged `truncated`; if the required evidence cannot fit the build fails with `E_CONTEXT_BUDGET`
+  and a hint. Every retrieved chunk ends up shown, merged into a named neighbour, or dropped with a
+  reason (`duplicate`, `budget`, `doc_cap`, `overlap`, `missing`) in the `ContextReport`, together
+  with the token use and a context hash. Evidence keeps the provenance a citation needs (document,
+  version, source key, heading path, pages, character span, the hits it stands for). A property
+  test runs 1000 random corpora, budgets and policies and checks that nothing is lost silently.
 - `Reranker` contract tests and `FakeReranker`; `RerankStage` runs a reranker under a time and pool
   budget and can never fail a search: an error, a timeout, a model still busy with a timed-out call
   or output that is not a reordering of the input keeps the fused order and reports

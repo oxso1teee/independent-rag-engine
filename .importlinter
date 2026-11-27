@@ -5,13 +5,13 @@ include_external_packages = True
 # Dependency direction: every layer may import only the layers below it.
 # Layers in one row (separated by "|") are independent of each other.
 [importlinter:contract:layers]
-name = Layered architecture: container > cli > evaluation > ingestion | retrieval > adapters > ports > domain
+name = Layered architecture: container > cli > evaluation > ingestion | retrieval | context > adapters > ports > domain
 type = layers
 layers =
     rag_engine.container
     rag_engine.cli
     rag_engine.evaluation
-    rag_engine.ingestion | rag_engine.retrieval
+    rag_engine.ingestion | rag_engine.retrieval | rag_engine.context
     rag_engine.storage | rag_engine.system | rag_engine.testing | rag_engine.observability | rag_engine.config | rag_engine.parsing | rag_engine.chunking | rag_engine.embedding
     rag_engine.ports
     rag_engine.domain
@@ -145,6 +145,23 @@ forbidden_modules =
     rag_engine.storage
     rag_engine.system
     rag_engine.embedding
+    sqlite3
+    pydantic
+    pydantic_settings
+    typer
+    click
+allow_indirect_imports = True
+
+[importlinter:contract:context-uses-ports]
+name = Context assembly depends on ports and the domain only
+type = forbidden
+source_modules =
+    rag_engine.context
+forbidden_modules =
+    rag_engine.storage
+    rag_engine.system
+    rag_engine.embedding
+    rag_engine.retrieval
     sqlite3
     pydantic
     pydantic_settings
