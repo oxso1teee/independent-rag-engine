@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import hashlib
+import importlib
 import json
 import math
 import resource
@@ -112,8 +113,11 @@ class OllamaModel:
 
 class E5Model:
     def __init__(self, path: Path) -> None:
-        from fastembed import TextEmbedding
-        from fastembed.common.model_description import ModelSource, PoolingType
+        # imported by name: the optional `onnx` extra is absent from the type-checking environment
+        fastembed = importlib.import_module("fastembed")
+        description = importlib.import_module("fastembed.common.model_description")
+        TextEmbedding = fastembed.TextEmbedding
+        ModelSource, PoolingType = description.ModelSource, description.PoolingType
 
         self.name = "intfloat/multilingual-e5-small"
         self.revision = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
