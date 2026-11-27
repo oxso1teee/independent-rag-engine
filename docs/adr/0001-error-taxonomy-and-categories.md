@@ -46,6 +46,7 @@ explicit and stable.
 | `E_MIGRATION_REQUIRED` | storage | no | |
 | `E_INTEGRITY` | integrity | no | also raised for violated domain invariants |
 | `E_FILTER_INVALID` | user | no | |
+| `E_QUERY_INVALID` | user | no | added in Phase 5: blank, unusable or over-long query text |
 
 4. Codes are never renamed or reused; a snapshot test fails on any change of code,
    category or default retryability.
