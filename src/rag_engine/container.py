@@ -17,7 +17,13 @@ from pathlib import Path
 
 from rag_engine.chunking.registry import ChunkerRegistry, build_counter
 from rag_engine.cli import main as cli_main
-from rag_engine.cli.context import Container, Processing, Services
+from rag_engine.cli.context import (
+    Container,
+    Processing,
+    SearchDefaults,
+    SearchServices,
+    Services,
+)
 from rag_engine.config import IngestSettings, ParsingSettings, Settings, load_settings
 from rag_engine.config.settings import EmbeddingSettings
 from rag_engine.domain import (
@@ -28,6 +34,7 @@ from rag_engine.domain import (
     IdFactory,
     JobKind,
     RagError,
+    RetrievalMode,
     Source,
 )
 from rag_engine.embedding.ollama import OllamaEmbedder
@@ -45,7 +52,12 @@ from rag_engine.parsing.cleaners import compile_cleaners
 from rag_engine.parsing.isolation import ParserWorker
 from rag_engine.parsing.registry import default_parsers
 from rag_engine.ports import Clock, EmbeddingProvider, ParseLimits, SourceAdapter, Store
+from rag_engine.retrieval.query import QueryProcessor
+from rag_engine.retrieval.service import FusionSettings, IndexSnapshot, RetrievalService
+from rag_engine.storage.filters import SqliteChunkCatalog, SqliteChunkFilter
+from rag_engine.storage.lexical import SqliteLexicalIndex
 from rag_engine.storage.sqlite import open_store, open_store_read_only
+from rag_engine.storage.vector_flat import FlatVectorIndex
 from rag_engine.system import SystemClock, system_id_factory
 
 
@@ -247,6 +259,72 @@ class DefaultContainer:
                     keep_versions=services.keep_versions,
                 )
             yield services
+        finally:
+            if built is not None:
+                asyncio.run(built.aclose())
+            store.close()
+
+    @contextmanager
+    def search(self, config: Path | None, db: Path | None) -> Iterator[SearchServices]:
+        settings = load_settings(config)
+        configure_logging(settings.logging.level, json_output=settings.logging.json_output)
+        path = db if db is not None else settings.storage.db_path
+        store = open_store_read_only(path)
+        built = None
+        try:
+            retrieval = settings.retrieval
+            embedder = None
+            vectors: FlatVectorIndex | None = None
+            prefix = ""
+            if settings.embedding.enabled:
+                built = build_embedding(settings.embedding, SystemClock())
+                embedder = built.provider
+                prefix = built.model.query_prefix
+                vectors = FlatVectorIndex(
+                    built.model.id,
+                    built.model.dimension,
+                    max_memory_mb=settings.effective_limits().max_loaded_vectors_mb,
+                )
+
+            def snapshot() -> IndexSnapshot:
+                metadata = store.reader().get_index_metadata()
+                if metadata is None:
+                    return IndexSnapshot(0, None)
+                model_id = metadata.active_embedding_model_id
+                if vectors is not None and model_id == vectors.model_id:
+                    vectors.refresh(path)  # a no-op while the published generation is unchanged
+                    metadata = store.reader().get_index_metadata() or metadata
+                return IndexSnapshot(metadata.index_generation, model_id)
+
+            service = RetrievalService(
+                embedder=embedder,
+                query_prefix=prefix,
+                vectors=vectors,
+                lexical=SqliteLexicalIndex(path),
+                filters=SqliteChunkFilter(path),
+                catalog=SqliteChunkCatalog(path),
+                queries=QueryProcessor(
+                    build_counter(settings.chunking.counter, settings.chunking.tokenizer_json),
+                    max_tokens=retrieval.query_max_tokens,
+                ),
+                snapshot=snapshot,
+                fusion=FusionSettings(
+                    method=retrieval.fusion,
+                    rrf_k=retrieval.rrf_k,
+                    dense_weight=retrieval.dense_weight,
+                    lexical_weight=retrieval.lexical_weight,
+                    alpha=retrieval.alpha,
+                ),
+                max_per_document=retrieval.max_per_document,
+            )
+            yield SearchServices(
+                retrieval=service,
+                store=store,
+                ids=system_id_factory(),
+                defaults=SearchDefaults(
+                    RetrievalMode(retrieval.mode), retrieval.top_k, retrieval.candidate_k
+                ),
+            )
         finally:
             if built is not None:
                 asyncio.run(built.aclose())

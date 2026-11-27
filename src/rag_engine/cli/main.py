@@ -10,6 +10,7 @@ With ``--json`` a command prints exactly one JSON document to stdout, errors inc
 
 from __future__ import annotations
 
+import asyncio
 import json
 import unicodedata
 from collections.abc import Callable, Sequence
@@ -23,7 +24,15 @@ from rag_engine import __version__
 from rag_engine.cli.context import Container, Processing, Services
 from rag_engine.cli.exit_codes import ExitCode, exit_code_for
 from rag_engine.cli.render import chunks_to_dict, describe_chunks
-from rag_engine.domain import ErrorCode, RagError, SourceKey, SourcePolicy
+from rag_engine.cli.search import describe_hits, load_details, outcome_to_dict, parse_filters
+from rag_engine.domain import (
+    ErrorCode,
+    RagError,
+    RetrievalMode,
+    RetrievalQuery,
+    SourceKey,
+    SourcePolicy,
+)
 from rag_engine.ingestion.identity import RebasePlan
 from rag_engine.ingestion.jobs import JobOutcome
 from rag_engine.ingestion.processing import read_limited
@@ -500,6 +509,112 @@ def build_app(container: Container) -> typer.Typer:
             _emit(chunks_to_dict(done, processing.policy, name))
         else:
             typer.echo("\n".join(describe_chunks(done, name, full=full)))
+
+    # ---------------------------------------------------------------------- search
+
+    @app.command("search")
+    def search(
+        ctx: typer.Context,
+        query: Annotated[str, typer.Argument(help="What to look for.")],
+        mode: Annotated[
+            str | None,
+            typer.Option("--mode", "-m", help="dense, lexical or hybrid (default: config)."),
+        ] = None,
+        top_k: Annotated[
+            int | None, typer.Option("--top-k", "-k", min=1, max=100, help="Results to return.")
+        ] = None,
+        candidate_k: Annotated[
+            int | None,
+            typer.Option("--candidate-k", min=1, max=500, help="Candidates per channel."),
+        ] = None,
+        source: Annotated[
+            list[str] | None, typer.Option("--source", "-s", help="Only this source (repeatable).")
+        ] = None,
+        path_prefix: Annotated[
+            str | None, typer.Option("--path-prefix", help="Only documents under this path.")
+        ] = None,
+        path_glob: Annotated[
+            str | None, typer.Option("--path-glob", help="Only documents matching this glob.")
+        ] = None,
+        tag: Annotated[
+            list[str] | None, typer.Option("--tag", help="Documents with any of these tags.")
+        ] = None,
+        tag_all: Annotated[
+            list[str] | None, typer.Option("--tag-all", help="Documents with all of these tags.")
+        ] = None,
+        language: Annotated[
+            str | None, typer.Option("--language", help="Chunk language: ru, en, mixed or und.")
+        ] = None,
+        kind: Annotated[
+            list[str] | None,
+            typer.Option("--kind", help="paragraph, list, table, code, quote or mixed."),
+        ] = None,
+        modified_after: Annotated[
+            str | None, typer.Option("--modified-after", help="ISO 8601 date or time.")
+        ] = None,
+        modified_before: Annotated[
+            str | None, typer.Option("--modified-before", help="ISO 8601 date or time.")
+        ] = None,
+        doc_id: Annotated[
+            list[str] | None, typer.Option("--doc-id", help="Only this document id (repeatable).")
+        ] = None,
+        exclude_doc_id: Annotated[
+            list[str] | None, typer.Option("--exclude-doc-id", help="Skip this document id.")
+        ] = None,
+        full: Annotated[bool, typer.Option("--full", help="Print whole chunk texts.")] = False,
+        debug: Annotated[
+            bool, typer.Option("--debug", help="Include per-stage counts, ranks and timings.")
+        ] = False,
+        json_output: JsonOption = False,
+    ) -> None:
+        """Search the published index; nothing is written."""
+        state = _state(ctx)
+        try:
+            filters = parse_filters(
+                sources=source or (),
+                path_prefix=path_prefix,
+                path_glob=path_glob,
+                tags_any=tag or (),
+                tags_all=tag_all or (),
+                language=language,
+                kinds=kind or (),
+                modified_after=modified_after,
+                modified_before=modified_before,
+                doc_ids=doc_id or (),
+                exclude_doc_ids=exclude_doc_id or (),
+            )
+            try:
+                chosen = None if mode is None else RetrievalMode(mode)
+            except ValueError:
+                raise RagError(
+                    ErrorCode.E_QUERY_INVALID, "--mode must be dense, lexical or hybrid"
+                ) from None
+            if not query.strip():
+                raise RagError(ErrorCode.E_QUERY_INVALID, "the query has nothing to search for")
+            with state.container.search(state.config, state.db) as searcher:
+                depth = top_k or searcher.defaults.top_k
+                request = RetrievalQuery(
+                    request_id=searcher.ids.request_id(),
+                    text=query,
+                    mode=chosen or searcher.defaults.mode,
+                    top_k=depth,
+                    candidate_k=max(candidate_k or searcher.defaults.candidate_k, depth),
+                    filters=filters,
+                    debug=debug,
+                )
+                outcome = asyncio.run(searcher.retrieval.search(request))
+                details = load_details(searcher.store, outcome.result)
+        except StoreNotInitialised:
+            raise _fail(
+                RagError(ErrorCode.E_SOURCE_NOT_FOUND, "no database yet; add a source first"),
+                as_json=json_output,
+            ) from None
+        except RagError as error:
+            raise _fail(error, as_json=json_output) from error
+        if json_output:
+            _emit(outcome_to_dict(outcome, details, debug=debug))
+        else:
+            typer.echo("\n".join(describe_hits(outcome, details, full=full)))
 
     # ---------------------------------------------------------------------- status
 

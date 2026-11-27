@@ -42,6 +42,19 @@ enabled = false
 # multilingual-e5-small needs: dimension = 384, max_input_tokens = 512,
 #   query_prefix = "query: ", document_prefix = "passage: "
 
+# Search defaults. `dense` stays the default until an evaluation shows hybrid is not worse.
+[retrieval]
+# mode = "dense"           # dense, lexical or hybrid
+# top_k = 8                # results returned (1-100)
+# candidate_k = 40         # candidates per channel (top_k <= candidate_k <= 500)
+# max_per_document = 3     # cap on chunks from one document; unset means no cap
+# query_max_tokens = 256   # a longer query is refused, never truncated
+# fusion = "rrf"           # rrf or weighted
+# rrf_k = 60
+# dense_weight = 1.0
+# lexical_weight = 0.5
+# alpha = 0.5              # weight of the dense score when fusion = "weighted"
+
 # Limits applied to every document; exceeding one is an error, never a silent truncation.
 [parsing]
 # max_text_chars = 20000000
