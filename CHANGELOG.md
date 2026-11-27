@@ -5,6 +5,11 @@ project until a release is cut.
 
 ## [Unreleased]
 
+### Phase 5: retrieval (in progress)
+- `rag_engine.evaluation`: Recall@k, Precision@k, hit rate (coverage), reciprocal rank and graded
+  nDCG@k for one ranking, and seeded percentile bootstrap intervals, plain and paired over queries.
+  Values are checked against hand-computed rankings; the same seed reproduces an interval exactly.
+
 ### Phase 4: embeddings and storage (in progress)
 - Decision D-03 closed ([ADR 0012](docs/adr/0012-embedding-default-evaluation.md)): the default
   embedding model is `intfloat/multilingual-e5-small` through ONNX, chosen by an explicit rule
