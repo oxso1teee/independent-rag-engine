@@ -6,6 +6,9 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 5: retrieval (in progress)
+- `eval/scripts/benchmark_search.py`: end-to-end search latency over a real published index.
+  Hybrid p95 is 30.2 ms at 10⁴ chunks and 281.6 ms at 10⁵ (query embedding excluded), peak 85 and
+  280 MiB; Phase 5 acceptance criteria and their evidence are tabulated in `docs/TESTING.md`.
 - Evaluation: dataset schema v2 with a strict parser and validator (verbatim anchors, absence terms,
   question-type rules, split policy over shared gold documents, reviewer checks, metric
   eligibility), `retrieval_mini_v1` (18 original documents, 44 English and Russian questions, all

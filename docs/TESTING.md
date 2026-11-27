@@ -60,6 +60,22 @@ in one case and at 345 MB in another, and the worker starts with a baseline of i
 threshold separates the two cases reliably. The classifier is unchanged; isolation still contains
 the failure.
 
+## Phase 5 acceptance: criteria and evidence
+
+| Criterion | Evidence |
+|---|---|
+| Retrieval evaluation is reproducible (manifest) | `eval/scripts/retrieval_eval.py` records dataset and corpus SHA-256, embedding model identity, index generation, seed, depths and Python version; the seed derives from the dataset hash and resampling is seeded (`tests/unit/test_retrieval_metrics.py`, `tests/unit/test_eval_runner.py`) |
+| Choice of dense or hybrid justified by a paired interval (RETRIEVAL_DESIGN §5) | [`RETRIEVAL_EVALUATION.md`](RETRIEVAL_EVALUATION.md) and [ADR 0013](adr/0013-default-retrieval-mode.md): the available set is saturated and unreviewed, so the default stays `dense`; this criterion is met as a documented decision, not as a measured preference |
+| Search p95 at 10⁴ chunks at most 100 ms | `eval/scripts/benchmark_search.py 10000`: hybrid p95 30.2 ms, dense 22.9 ms, lexical 9.0 ms (query embedding excluded) |
+| Filters without raw SQL | `tests/integration/test_chunk_filters.py`: bound parameters only, hostile values (quote, `%`, `_`, NUL, `DROP TABLE`) are data, value lists are capped, a malformed glob is `E_FILTER_INVALID` |
+| Deterministic ranking | `tests/unit/test_fusion.py` (ties by chunk id), `tests/unit/test_search_service.py` and `tests/e2e/test_search_cli.py` (the same query returns the same hits) |
+| Duplicate suppression | `tests/unit/test_diversity.py`, `tests/unit/test_search_service.py` |
+| Query processing and the model prefix | `tests/unit/test_query_processor.py`, `tests/unit/test_search_service.py` |
+| `rag search` end to end | `tests/e2e/test_search_cli.py` over a real index built by `rag ingest` |
+
+Not met: the labels of the question set are unreviewed (owner action), so no quality figure from
+it is an acceptance result; MVP-0 is reached functionally and awaits that review.
+
 ## Failure injection (`tests/chaos`)
 
 A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test

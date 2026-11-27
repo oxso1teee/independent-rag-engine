@@ -71,6 +71,23 @@ Paired differences of nDCG@10: hybrid − dense +0.000 [+0.000, +0.000]; hybrid 
 Per-stage latency, p50 / p95 in ms: dense channel including query embedding 12.7 / 15.0, lexical
 channel 0.9 / 1.2, fusion 0.1 / 0.2, diversity 0.8 / 1.1.
 
+## Search latency over a real index
+
+`eval/scripts/benchmark_search.py N` publishes `N` chunks (30 words each from a 4000-term Zipf
+vocabulary, 1024-dimensional fp16 embeddings, FTS rows) through the production writer, then times
+`RetrievalService.search` in a fresh process: 60 three-word queries per mode, five discarded as
+warm-up, the query embedding replaced by a precomputed vector (as in NFR-03). One run per size on
+a machine shared with a desktop session; top 8 of 40 candidates per channel.
+
+| Chunks | Load | dense p50 / p95 | lexical p50 / p95 | hybrid p50 / p95 | Peak RSS |
+|---:|---:|---:|---:|---:|---:|
+| 10,000 | 0.46 s | 21.2 / 22.9 ms | 4.5 / 9.0 ms | 25.6 / 30.2 ms | 85 MiB |
+| 100,000 | 6.1 s | 201.2 / 279.6 ms | 23.7 / 67.3 ms | 233.8 / 281.6 ms | 280 MiB |
+
+NFR-03 (p95 at most 100 ms at 10⁴ and 400 ms at 10⁵, without the query embedding) and NFR-01
+(search memory at most 300 MiB at 10⁴ and 600 MiB at 10⁵) hold. The dense channel dominates the
+cost at both sizes; fusion and diversity add under a millisecond.
+
 ## What this does and does not show
 
 - **The set is saturated for dense and hybrid.** Both retrieve the gold document first for every
