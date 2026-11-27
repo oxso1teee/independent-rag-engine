@@ -18,7 +18,7 @@ from rag_engine.domain import (
     SourcePolicy,
     SourceRevision,
 )
-from rag_engine.ingestion.sources.globbing import GlobSet
+from rag_engine.domain.globs import GlobSet
 from rag_engine.ports import ScanIssue, ScanReport, SourceEntry, SourceIdentity
 
 

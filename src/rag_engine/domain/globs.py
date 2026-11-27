@@ -1,4 +1,4 @@
-"""Glob patterns over source keys (``/``-separated, NFC, case-sensitive).
+"""Glob patterns over source keys and document paths (``/``-separated, NFC, case-sensitive).
 
 Supported: ``*`` (within a segment), ``?``, ``[...]`` / ``[!...]`` classes, ``**`` (any
 number of segments, including none when written as ``**/``). A pattern without ``/``
@@ -12,7 +12,7 @@ import re
 import unicodedata
 from collections.abc import Sequence
 
-from rag_engine.domain import ErrorCode, RagError
+from rag_engine.domain.errors import ErrorCode, RagError
 
 
 def _invalid(pattern: str, reason: str) -> RagError:
