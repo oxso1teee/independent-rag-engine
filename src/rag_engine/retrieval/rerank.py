@@ -54,6 +54,12 @@ class RerankStage:
     def close(self) -> None:
         self._executor.shutdown(wait=False, cancel_futures=True)
 
+    def release(self) -> None:
+        """Free the reranker's model if it can be freed (the stage then no longer reranks)."""
+        release = getattr(self._reranker, "release", None)
+        if callable(release):
+            release()
+
 
 def _is_reordering(pool: Sequence[Candidate], ranked: Sequence[RerankedCandidate]) -> bool:
     wanted = {item.chunk_ref.chunk_id for item in pool}

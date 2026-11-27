@@ -19,6 +19,7 @@ from pathlib import Path
 from rag_engine.chunking.registry import ChunkerRegistry, build_counter
 from rag_engine.cli import main as cli_main
 from rag_engine.cli.context import (
+    AskServices,
     Container,
     Processing,
     SearchDefaults,
@@ -43,6 +44,7 @@ from rag_engine.embedding.cross_encoder import OnnxCrossEncoder
 from rag_engine.embedding.ollama import OllamaEmbedder
 from rag_engine.embedding.onnx import OnnxEmbedder
 from rag_engine.embedding.service import EmbeddingService
+from rag_engine.generation.generator import AnswerGenerator, GenerationPolicy
 from rag_engine.generation.resilience import ResiliencePolicy, ResilientLLM
 from rag_engine.ingestion.identity import AdapterFactory, SourceRegistry
 from rag_engine.ingestion.indexing import DocumentIndexingHandler
@@ -56,6 +58,7 @@ from rag_engine.observability import configure_logging
 from rag_engine.parsing.cleaners import compile_cleaners
 from rag_engine.parsing.isolation import ParserWorker
 from rag_engine.parsing.registry import default_parsers
+from rag_engine.pipeline import PipelineLimits, RagPipeline, StageShares
 from rag_engine.ports import (
     Clock,
     EmbeddingProvider,
@@ -68,12 +71,13 @@ from rag_engine.ports import (
 from rag_engine.retrieval.query import QueryProcessor
 from rag_engine.retrieval.rerank import RerankStage
 from rag_engine.retrieval.service import FusionSettings, IndexSnapshot, RetrievalService
+from rag_engine.retrieval.sufficiency import SufficiencyGate, thresholds_from_metadata
 from rag_engine.storage.content import SqliteChunkContentReader
 from rag_engine.storage.filters import SqliteChunkCatalog, SqliteChunkFilter
 from rag_engine.storage.lexical import SqliteLexicalIndex
 from rag_engine.storage.sqlite import open_store, open_store_read_only
 from rag_engine.storage.vector_flat import FlatVectorIndex
-from rag_engine.system import SystemClock, system_id_factory
+from rag_engine.system import SystemClock, system_id_factory, trim_heap
 
 
 def filesystem_adapter(source: Source) -> SourceAdapter:
@@ -412,6 +416,24 @@ class DefaultContainer:
                 ),
                 max_per_document=retrieval.max_per_document,
             )
+
+            def gate() -> SufficiencyGate:
+                metadata = store.reader().get_index_metadata()
+                if metadata is None:
+                    return SufficiencyGate(None, None)
+                model_id = metadata.active_embedding_model_id
+                return SufficiencyGate(
+                    thresholds_from_metadata(metadata.calibration),
+                    None if model_id is None else str(model_id),
+                )
+
+            def release_models() -> None:
+                if stage is not None:
+                    stage.release()
+                if built is not None and isinstance(built.provider, OnnxEmbedder):
+                    built.provider.release()
+                trim_heap()  # freed pages go back to the system, not to the allocator
+
             yield SearchServices(
                 retrieval=service,
                 store=store,
@@ -430,6 +452,8 @@ class DefaultContainer:
                 ),
                 llm_window=settings.llm.context_window,
                 llm_max_new=settings.llm.max_new_tokens,
+                gate=gate,
+                release_models=release_models,
             )
         finally:
             if stage is not None:
@@ -437,6 +461,47 @@ class DefaultContainer:
             if built is not None:
                 asyncio.run(built.aclose())
             store.close()
+
+    @contextmanager
+    def ask(self, config: Path | None, db: Path | None) -> Iterator[AskServices]:
+        settings = load_settings(config)
+        if not settings.llm.enabled:
+            raise RagError(ErrorCode.E_CONFIG_INVALID, "no language model is configured: set [llm]")
+        answer = settings.answer
+        with self.search(config, db) as searcher:
+            chat = build_chat(
+                settings.llm,
+                searcher.counter,
+                concurrency=settings.effective_limits().llm_concurrency,
+            )
+            try:
+                generator = AnswerGenerator(
+                    chat.provider,
+                    policy=GenerationPolicy(
+                        max_new_tokens=settings.llm.max_new_tokens,
+                        strict_overlap=answer.strict_overlap,
+                        min_answer_chars=answer.min_answer_chars,
+                        unverified_on_invalid=True,
+                    ),
+                )
+                pipeline = RagPipeline(
+                    retrieval=searcher.retrieval,
+                    builder=searcher.context,
+                    context_policy=searcher.context_policy,
+                    counter=searcher.counter,
+                    gate=searcher.gate,
+                    generator=generator,
+                    clock=SystemClock(),
+                    limits=PipelineLimits(
+                        total_timeout_s=answer.total_timeout_s,
+                        shares=StageShares(answer.retrieval_share, answer.context_share),
+                        concurrency=settings.effective_limits().llm_concurrency,
+                    ),
+                    release_models=searcher.release_models if answer.release_models else None,
+                )
+                yield AskServices(pipeline, searcher.ids, searcher.defaults)
+            finally:
+                asyncio.run(chat.aclose())
 
     def processing(self, config: Path | None) -> Processing:
         settings = load_settings(config)

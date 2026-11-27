@@ -2,6 +2,7 @@
 
 from rag_engine.domain.answer import (
     AnswerStatus,
+    AskStatus,
     Citation,
     CitationCheck,
     CitationProblem,
@@ -89,6 +90,7 @@ from rag_engine.domain.models import (
 
 __all__ = [
     "AnswerStatus",
+    "AskStatus",
     "Block",
     "BlockKind",
     "Chunk",

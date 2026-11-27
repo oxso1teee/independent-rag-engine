@@ -163,6 +163,26 @@ class LlmSettings(_Section):
         return self
 
 
+class AnswerSettings(_Section):
+    """The whole query pipeline: time budget, citation strictness, memory hand-over."""
+
+    total_timeout_s: float = Field(default=300.0, gt=0, le=3600)
+    retrieval_share: float = Field(default=0.25, gt=0, lt=1)
+    context_share: float = Field(default=0.05, gt=0, lt=1)
+    strict_overlap: bool = False
+    """Treat a cited sentence that shares too little vocabulary with its evidence as unverified."""
+    min_answer_chars: int = Field(default=20, ge=2, le=1000)
+    """An answer shorter than this (citation markers excluded) is never returned as an answer."""
+    release_models: bool = True
+    """Drop the in-process embedder and reranker before a local model is called (one-shot use)."""
+
+    @model_validator(mode="after")
+    def _shares_leave_room_for_generation(self) -> AnswerSettings:
+        if self.retrieval_share + self.context_share >= 1.0:
+            raise ValueError("answer.retrieval_share + answer.context_share must be below 1")
+        return self
+
+
 class IngestSettings(_Section):
     """Retry and lease behaviour of the ingestion job queue."""
 
@@ -234,6 +254,7 @@ class Settings(BaseSettings):
     rerank: RerankSettings = Field(default_factory=RerankSettings)
     context: ContextSettings = Field(default_factory=ContextSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
+    answer: AnswerSettings = Field(default_factory=AnswerSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
 
     @model_validator(mode="after")

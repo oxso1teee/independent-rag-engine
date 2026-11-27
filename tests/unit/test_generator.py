@@ -278,8 +278,19 @@ def test_no_answer_shorter_than_the_threshold_is_ever_returned(reply: Reply) -> 
     assert info.value.code is ErrorCode.E_DEGENERATE_ANSWER
 
 
-def test_the_threshold_counts_letters_not_markers_and_is_configurable() -> None:
-    assert answer(generator(Reply("No [E1]."))[0]).status is AnswerStatus.ANSWERED  # 2 letters
+def test_the_default_threshold_is_the_specified_twenty_characters_without_markers() -> None:
+    short = "Nightly at 02:30 [E1]."  # 15 characters once the marker is removed
+    gen, _ = generator(Reply(short), Reply(short))
+    with pytest.raises(RagError) as info:
+        answer(gen)
+    assert info.value.code is ErrorCode.E_DEGENERATE_ANSWER
+    long = "Backups run every night [E1]."  # 24 characters
+    assert answer(generator(Reply(long))[0]).status is AnswerStatus.ANSWERED
+
+
+def test_the_threshold_is_configurable_and_a_short_answer_passes_when_allowed() -> None:
+    gen, _ = generator(Reply("No [E1]."), policy=GenerationPolicy(min_answer_chars=2))
+    assert answer(gen).status is AnswerStatus.ANSWERED
     gen, _ = generator(
         Reply("No [E1]."), Reply("No [E1]."), policy=GenerationPolicy(min_answer_chars=5)
     )
@@ -296,3 +307,48 @@ def test_stream_and_non_stream_agree_for_any_scripted_text(text: str) -> None:
     assert isinstance(done, DoneEvent)
     assert done.answer.text == plain.text == streamed.strip()
     assert done.answer.citations == plain.citations and done.answer.status == plain.status
+
+
+# ------------------------------------------------------------------ unverified outcome
+
+
+def lenient() -> GenerationPolicy:
+    return GenerationPolicy(unverified_on_invalid=True)
+
+
+def test_invalid_citations_can_end_as_unverified_with_the_text_kept_apart() -> None:
+    bad = "Backups run nightly [E5]."
+    gen, _ = generator(Reply(bad), Reply(bad), policy=lenient())
+    result = answer(gen)
+    assert result.status is AnswerStatus.UNVERIFIED
+    assert result.text == "" and not result.citations and result.raw_text == bad
+    assert result.check is not None and "E5" in result.check.unknown and result.attempts == 2
+
+
+def test_a_degenerate_reply_is_still_an_error_when_unverified_is_allowed() -> None:
+    gen, _ = generator(Reply(""), Reply(""), policy=lenient())
+    with pytest.raises(RagError) as info:
+        answer(gen)
+    assert info.value.code is ErrorCode.E_DEGENERATE_ANSWER
+
+
+def test_a_live_stream_retracts_and_then_reports_unverified() -> None:
+    gen, _ = generator(Reply("Backups run nightly [E5]."), policy=lenient())
+    events = asyncio.run(collect(gen))
+    assert any(isinstance(e, RetractEvent) for e in events)
+    done = events[-1]
+    assert isinstance(done, DoneEvent) and done.answer.status is AnswerStatus.UNVERIFIED
+    assert [type(e) for e in events[-3:]] == [RetractEvent, CitationsEvent, DoneEvent]
+
+
+def test_a_verified_stream_reports_unverified_without_sending_any_text() -> None:
+    gen, _ = generator(Reply("Backups run nightly [E5]."), policy=lenient())
+    events = asyncio.run(collect(gen, verified_only=True))
+    assert not any(isinstance(e, DeltaEvent | RetractEvent) for e in events)
+    done = events[-1]
+    assert isinstance(done, DoneEvent) and done.answer.status is AnswerStatus.UNVERIFIED
+
+
+def test_the_generator_reports_the_limits_of_its_model() -> None:
+    gen, _ = generator(window=4096, max_new=128)
+    assert gen.limits() == ModelLimits(4096, 128)

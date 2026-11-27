@@ -107,3 +107,16 @@ def test_the_pool_is_cut_to_the_budget_before_the_model_sees_it() -> None:
     outcome = stage.run("a", pool("a one", "a two", "a three"))
     assert len(outcome.ranked) == 2
     stage.close()
+
+
+def test_releasing_the_stage_releases_a_reranker_that_can_be_released() -> None:
+    class Releasable(FakeReranker):
+        released = False
+
+        def release(self) -> None:
+            self.released = True
+
+    ranker = Releasable()
+    RerankStage(ranker, RerankBudget(pool_size=5, timeout_s=1.0)).release()
+    assert ranker.released
+    RerankStage(FakeReranker(), RerankBudget(pool_size=5, timeout_s=1.0)).release()  # no-op

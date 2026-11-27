@@ -150,3 +150,14 @@ def test_a_missing_extra_is_a_configuration_error_and_never_a_download(
     with pytest.raises(RagError) as info:
         OnnxCrossEncoder("m", directory, revision, pair_counter=lambda q, t: 1)
     assert info.value.code is ErrorCode.E_CONFIG_INVALID
+
+
+def test_a_released_reranker_refuses_further_use_and_drops_the_backend(tmp_path: Path) -> None:
+    ranker = encoder(tmp_path)
+    assert ranker.rerank("backups", pool("backups run"), RerankBudget())
+    ranker.release()
+    assert ranker._backend is None
+    with pytest.raises(RagError) as info:
+        ranker.rerank("backups", pool("backups run"), RerankBudget())
+    assert info.value.code is ErrorCode.E_RESOURCE_GATE
+    assert ranker.rerank("backups", [], RerankBudget()) == []

@@ -100,7 +100,7 @@ Not met: the gate target. The reranker was measured and does not meet the condit
 | `OpenAICompatChat` with a mandatory `context_window` (P7.3) | the same file; the window is a required argument and setting; the key never appears in errors |
 | Prompt `answer.v1` with `E#` markers and the sentinel, snapshot and size (P7.4) | `tests/unit/test_templates.py` (snapshot of the rendered prompt, marker defusing), `tests/unit/test_system_prompt.py` (pinned hash, 209 tokens, limit 260) |
 | Truncated prompt caught on 100 % of the scenarios (P7.5) | `tests/unit/test_generator.py`: `prompt_eval_count` equal to or one below the window for windows 1024 to 8192; `tests/contract/test_chat_adapters.py` for the stream |
-| No `answered` result shorter than the threshold (P7.6) | `tests/unit/test_generator.py`: one character, empty, whitespace, punctuation, a lone marker, and the same cut by the length limit all end in `E_DEGENERATE_ANSWER` after one retry; the threshold is configurable |
+| No `answered` result shorter than the threshold (P7.6) | `tests/unit/test_generator.py`: one character, empty, whitespace, punctuation, a lone marker, and the same cut by the length limit all end in `E_DEGENERATE_ANSWER` after one retry; the default threshold is the specified 20 characters (markers excluded) and is configurable (`[answer] min_answer_chars`) |
 | Timeout, retry, circuit breaker, semaphore (P7.7) | `tests/unit/test_resilience.py`, `tests/integration/test_generation_stack.py` |
 | Stream equals non-stream (P7.8) | `tests/unit/test_generator.py` (event order, equal text and citations, refusal without text, retraction, `verified_only`), `tests/contract/test_llm_provider_contract.py`, `tests/e2e/test_generation_flow.py` |
 | Real small-model smoke without out-of-memory, or a documented refusal by the gate (P7.9) | `eval/scripts/llm_smoke.py`; on 2026-11-27 the gate refused `qwen3.5:4b` (see below) |
@@ -116,6 +116,32 @@ memory is free. The 9B model was not tried.
 
 Not claimed: faithfulness. The citation check is a lexical screen; faithfulness, hallucination
 rate and citation accuracy are measured in Phase 10.
+
+## Phase 8 acceptance: criteria and evidence
+
+| Criterion | Evidence |
+|---|---|
+| Every branch of the status table is covered | `tests/e2e/test_pipeline.py` (answered, gate refusal, no hits, model refusal, fabricated citation, repaired citation, degenerate reply, provider failure, context budget, timeout, `test_every_status_is_reachable_and_only_answered_carries_text`); `tests/unit/test_pipeline_answer.py` for the invariants |
+| A gate refusal calls no model | `test_a_gate_refusal_answers_without_calling_the_model` (spy: zero calls), the stream variant, and `test_a_question_nothing_matches_never_calls_the_model` through `rag ask` (no request reaches the chat server) |
+| Fabricated citations do not pass | a marker outside the evidence is `unverified` after one retry (pipeline, stream and `rag ask`), the text is never the answer; markers inside documents are defused (`tests/unit/test_templates.py`) |
+| NFR-07: no silent truncation or dropping | the context report is in `diagnostics.context` and in the `pipeline.context` log event (`test_a_cut_or_dropped_context_is_reported_in_diagnostics_and_in_the_log`); the 1000-case property test of Phase 6 still covers the builder |
+| NFR-08: no one-character or empty `answered` | `test_a_one_character_or_empty_reply_is_never_answered` (five replies), the same set in `tests/unit/test_generator.py` including replies cut by the length limit, and the `PipelineAnswer` invariant |
+| Verified streaming | `test_a_verified_stream_*`: no text before validation; `--live` marks drafts provisional and retracts them; the final event is the only authoritative one |
+| Total time budget | `tests/unit/test_pipeline_budget.py` (shares, never more than what is left), `test_a_model_that_outlasts_the_total_budget_is_a_timeout_naming_the_stage` |
+| Cancellation and concurrency | `test_a_request_cancelled_mid_generation_releases_everything`, `test_requests_are_served_one_at_a_time_by_default`, `test_a_higher_concurrency_limit_lets_requests_overlap_and_one_cancel_spares_the_other` |
+| Release of models | `release()` on the embedder, the cross-encoder and the stage is tested (`tests/contract`, `tests/unit/test_rerank_stage.py`); the effect on memory was **measured**, not assumed: 383 MiB of 1160 MiB from `release()`, 760 MiB with `malloc_trim` (E5-small, one run, `eval/scripts/release_memory.py`); the reranker was not measured |
+| `rag ask` with sources and refusal | `tests/e2e/test_ask_cli.py`: text, `--json`, `--sources`, refusal (exit 10), unverified (exit 11), provider error (exit 6), stream, `--live`, missing `[llm]`, bad arguments |
+| Generation evaluation, oracle and e2e modes | `eval/scripts/generation_eval.py` over the mini dataset (unreviewed labels, so exploratory) with a **stub** model: e2e 44 of 44 answered with valid citations, oracle 36 of 36; correct refusals 0 of 8 because the stub never refuses and the gate has no calibration. This shows the wiring works. It is not a measurement of any model |
+
+**MVP-1 is functionally implemented, not accepted on quality.** The pipeline answers, cites,
+refuses and reports statuses on a scripted model in CI. The following are open and are not closed
+by the stub run:
+
+1. SufficiencyGate: 83.3 % correct refusals against the 90 % target (Phase 10).
+2. Real LLM inference and its performance: no measurement exists; the memory gate refused the 4B
+   model on this machine (see Phase 7).
+3. Faithfulness and hallucination rate: not measured; the citation overlap check is a lexical screen.
+4. The evaluation dataset has not been reviewed by the owner; every metric over it is exploratory.
 
 ## Failure injection (`tests/chaos`)
 

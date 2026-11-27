@@ -16,7 +16,7 @@ from typing import Any
 import pytest
 
 from rag_engine.cli import main
-from rag_engine.cli.context import Processing, SearchServices, Services
+from rag_engine.cli.context import AskServices, Processing, SearchServices, Services
 from rag_engine.config import load_settings
 from rag_engine.container import (
     DefaultContainer,
@@ -53,6 +53,9 @@ class ContainerForTests:
         self, config: Path | None, db: Path | None
     ) -> AbstractContextManager[SearchServices]:
         return DefaultContainer().search(config, db or self.default_db)
+
+    def ask(self, config: Path | None, db: Path | None) -> AbstractContextManager[AskServices]:
+        return DefaultContainer().ask(config, db or self.default_db)
 
 
 @dataclass
