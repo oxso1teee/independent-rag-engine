@@ -286,6 +286,10 @@ query text
   `lexical_empty`. A query embedded by another model than the index's is `E_EMBED_MODEL_MISMATCH`.
 - The default mode is `dense` ([ADR 0013](adr/0013-default-retrieval-mode.md)); measured latency
   and the evaluation method are in [`RETRIEVAL_EVALUATION.md`](RETRIEVAL_EVALUATION.md).
+- Optional reranking (`RerankStage`, `OnnxCrossEncoder`) reorders a pool larger than `top_k` and
+  can never fail a search: any problem keeps the fused order and reports `rerank_skipped:<reason>`
+  ([ADR 0014](adr/0014-reranker-off-by-default.md)). `SufficiencyGate` compares the best dense
+  cosine or reranker logit with thresholds calibrated per embedding model.
 - `rag_engine.evaluation` (above `ingestion` and `retrieval` in the layering) holds the metrics,
   seeded bootstrap intervals, the dataset schema and the runner that scores rankings.
 

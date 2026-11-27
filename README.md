@@ -10,7 +10,9 @@ generation, and reproducible evaluation.
 > Markdown, HTML, text, PDF and DOCX and three chunking strategies, previewed with
 > `rag chunks`. With a pinned Ollama or local ONNX embedding model, `rag ingest` now
 > publishes chunks, embeddings and an FTS5 index atomically, and `rag search` retrieves from it
-> (dense, lexical or hybrid, with metadata filters). Reranking and generation are later phases.
+> (dense, lexical or hybrid, with metadata filters), `rag context` shows the evidence and token
+> budget a question would get, and an optional cross-encoder reranker is available (off by default).
+> Answer generation is a later phase.
 
 ## Design goals
 
