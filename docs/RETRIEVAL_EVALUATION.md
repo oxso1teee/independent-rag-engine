@@ -88,6 +88,27 @@ NFR-03 (p95 at most 100 ms at 10⁴ and 400 ms at 10⁵, without the query embed
 (search memory at most 300 MiB at 10⁴ and 600 MiB at 10⁵) hold. The dense channel dominates the
 cost at both sizes; fusion and diversity add under a millisecond.
 
+## Sufficiency gate calibration (exploratory)
+
+`eval/scripts/gate_calibration.py` takes the best dense cosine among the retrieved hits as the
+signal, chooses on dev the threshold that refuses the most unanswerable questions while refusing
+at most 10 % of answerable ones, and applies that threshold unchanged to test. With the unreviewed
+drafts and E5-small:
+
+| Split | Answerable | Unanswerable | False refusals | Correct refusals |
+|---|---:|---:|---:|---:|
+| dev (fit, threshold 0.818) | 22 | 6 | 4.5 % | 83.3 % |
+| test (held out) | 14 | 2 | 21.4 % | 100 % |
+
+The target of at most 10 % false and at least 90 % correct refusals is **not met** by this signal
+on this set. E5-small cosines are compressed into a narrow band (answerable questions score
+0.80–0.92, unanswerable ones 0.78–0.85), and the two ranges overlap, so no threshold separates
+them cleanly. The test row rests on two unanswerable questions and says nothing by itself.
+The gate therefore stays an optional first line of defence; the generation phase adds a second
+one (the model's own refusal, recognised by the exact refusal sentence of the system prompt). A
+better separation needs more signals (a reranker score, lexical coverage), a harder and reviewed
+set with at least 30 questions per class, or both.
+
 ## What this does and does not show
 
 - **The set is saturated for dense and hybrid.** Both retrieve the gold document first for every

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import sqlite3
 import zlib
@@ -21,10 +22,22 @@ class IntegrityReport:
     published_chunks: int
     embeddings: int
     index_generation: int
+    warnings: tuple[str, ...] = ()
 
     @property
     def ok(self) -> bool:
         return not self.errors
+
+
+def _calibration_warnings(state: sqlite3.Row, active: str | None) -> list[str]:
+    """A calibration made for another embedding model no longer describes this index."""
+    try:
+        stored = json.loads(state["calibration_json"] or "{}").get("sufficiency")
+    except (ValueError, AttributeError):
+        return ["the stored calibration cannot be read"]
+    if isinstance(stored, dict) and active is not None and stored.get("model_id") != active:
+        return ["the sufficiency calibration was made for another embedding model; recalibrate"]
+    return []
 
 
 def check_integrity(database: Path) -> IntegrityReport:
@@ -42,7 +55,8 @@ def check_integrity(database: Path) -> IntegrityReport:
             errors.append(f"foreign key violation: {row[0]} row {row[1]}")
 
         state = conn.execute(
-            "SELECT index_generation, active_embedding_model_id FROM index_state WHERE id = 1"
+            "SELECT index_generation, active_embedding_model_id, calibration_json"
+            " FROM index_state WHERE id = 1"
         ).fetchone()
         if state is None:
             errors.append("index_state is missing")
@@ -176,7 +190,9 @@ def check_integrity(database: Path) -> IntegrityReport:
                 errors.append(f"invalid vector norm: {key}")
             if model is not None and model["normalized"] and abs(norm - 1.0) >= 1e-3:
                 errors.append(f"unnormalized vector: {key}")
-        return IntegrityReport(tuple(errors), published, count, generation)
+        return IntegrityReport(
+            tuple(errors), published, count, generation, tuple(_calibration_warnings(state, active))
+        )
     except sqlite3.Error as exc:
         errors.append(f"SQLite integrity query failed: {exc}")
         return IntegrityReport(tuple(errors), 0, 0, 0)
