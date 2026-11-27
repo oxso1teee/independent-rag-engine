@@ -156,7 +156,7 @@ def test_e5_registers_offline_fastembed_model_with_required_settings(
         raise AssertionError(module_name)
 
     monkeypatch.setattr("rag_engine.embedding.onnx.importlib.import_module", module)
-    provider = OnnxEmbedder(model, directory)
+    provider = OnnxEmbedder(model, directory, token_counter=len)
     assert registered[0]["model"] == name
     assert registered[0]["pooling"] == "mean"
     assert registered[0]["dim"] == 384
@@ -164,8 +164,26 @@ def test_e5_registers_offline_fastembed_model_with_required_settings(
     assert asyncio.run(provider.embed_documents(["passage: example"])).shape == (1, 384)
     provider.close()
     with pytest.raises(RagError) as info:
-        OnnxEmbedder(replace(model, max_input_tokens=513), directory)
+        OnnxEmbedder(replace(model, max_input_tokens=513), directory, token_counter=len)
     assert info.value.code is ErrorCode.E_CONFIG_INVALID
+
+
+def test_input_over_the_token_limit_is_refused_instead_of_truncated(tmp_path: Path) -> None:
+    model, directory = local_model(tmp_path)
+    backend = Backend()
+    # one token per character, so the 64-token limit of the test model is easy to hit
+    provider = OnnxEmbedder(model, directory, backend=backend, token_counter=len)
+    assert asyncio.run(provider.embed_documents(["x" * 64])).shape == (1, 4)
+    with pytest.raises(RagError) as info:
+        asyncio.run(provider.embed_documents(["short", "x" * 65]))
+    assert info.value.code is ErrorCode.E_RESOURCE_GATE
+    assert not info.value.retryable
+    assert info.value.context == {"tokens": 65, "limit": 64}
+    assert backend.calls == [["x" * 64]]  # the refused batch never reached the model
+    with pytest.raises(RagError) as query_info:
+        asyncio.run(provider.embed_query("x" * 65))
+    assert query_info.value.code is ErrorCode.E_RESOURCE_GATE
+    provider.close()
 
 
 def test_timed_out_inference_cannot_start_a_second_cpu_job(tmp_path: Path) -> None:

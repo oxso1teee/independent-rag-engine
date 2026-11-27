@@ -18,6 +18,13 @@ fixed, derandomised profile.
 The pull-request CI runs `pytest -m "not perf"`. `make test-all` does the same with coverage.
 `make perf` runs the budgets separately.
 
+Tests marked `external` need locally provisioned model files and are skipped when they are
+absent, so the standard CI needs neither weights nor a network. Run the real multilingual-e5-small
+inference checks (identity digest, 384-d unit vectors, ranking in each language, determinism and
+batch invariance, prefixes, the 512-token window counted with special tokens, refusal of a
+concurrent call) with `RAG_TEST_E5_DIR=<model snapshot directory> uv run pytest tests/external`.
+Sockets stay disabled, so a successful run also shows that nothing is fetched.
+
 ## Failure injection (`tests/chaos`)
 
 A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test

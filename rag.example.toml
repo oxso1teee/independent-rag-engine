@@ -36,6 +36,11 @@ enabled = false
 # max_input_tokens = 8192
 # base_url = "http://127.0.0.1:11434"
 # model_dir = "/path/to/local/onnx/model"
+# ONNX (extra `onnx`): `revision` is the fingerprint of every file in model_dir, not an upstream id:
+#   uv run python -c "from pathlib import Path; from rag_engine.embedding.onnx import \
+#   model_directory_digest as d; print(d(Path('/path/to/local/onnx/model')))"
+# multilingual-e5-small needs: dimension = 384, max_input_tokens = 512,
+#   query_prefix = "query: ", document_prefix = "passage: "
 
 # Limits applied to every document; exceeding one is an error, never a silent truncation.
 [parsing]
