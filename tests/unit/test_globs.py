@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from rag_engine.domain import ErrorCode, RagError
-from rag_engine.ingestion.sources.globbing import GlobSet, compile_glob
+from rag_engine.domain.globs import GlobSet, compile_glob
 
 
 @pytest.mark.parametrize(

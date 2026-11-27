@@ -10,6 +10,13 @@ project until a release is cut.
   weight 0.5 as starting values) and min-max weighted-score fusion of the dense and lexical
   channels. Every component (raw scores, per-channel ranks) is kept; ties are broken by chunk id,
   so the order depends only on the inputs. A chunk absent from a channel adds nothing for it.
+- Metadata filters (`RetrievalFilters`) resolve to the set of searchable chunks through
+  parameterised SQL (`storage/filters.py`, port `ChunkFilter`): sources, case-sensitive path
+  prefix, path glob (the source-policy grammar, now `domain/globs.py`), tags any/all, chunk
+  language and kind, modification window, document include/exclude. There is no raw SQL: values
+  are bound parameters, lists are capped at 1000 values, a malformed glob is `E_FILTER_INVALID`.
+  Only indexed, non-duplicate chunks of active documents' current versions can match. A
+  `ChunkCatalog` port gives chunk identity and text hash for diversity and result building.
 - `rag_engine.evaluation`: Recall@k, Precision@k, hit rate (coverage), reciprocal rank and graded
   nDCG@k for one ranking, and seeded percentile bootstrap intervals, plain and paired over queries.
   Values are checked against hand-computed rankings; the same seed reproduces an interval exactly.
