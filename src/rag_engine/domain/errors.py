@@ -107,6 +107,7 @@ class ErrorCode(StrEnum):
     E_DEGENERATE_ANSWER = "E_DEGENERATE_ANSWER"
     E_CITATION_INVALID = "E_CITATION_INVALID"
     E_FILTER_INVALID = "E_FILTER_INVALID"
+    E_QUERY_INVALID = "E_QUERY_INVALID"
     E_RESOURCE_GATE = "E_RESOURCE_GATE"
     E_STORE_LOCKED = "E_STORE_LOCKED"
     E_MIGRATION_REQUIRED = "E_MIGRATION_REQUIRED"
@@ -141,6 +142,7 @@ _ERROR_SPECS: Mapping[ErrorCode, ErrorSpec] = MappingProxyType(
         ErrorCode.E_DEGENERATE_ANSWER: ErrorSpec(_C.PROVIDER, False),
         ErrorCode.E_CITATION_INVALID: ErrorSpec(_C.PROVIDER, False),
         ErrorCode.E_FILTER_INVALID: ErrorSpec(_C.USER, False),
+        ErrorCode.E_QUERY_INVALID: ErrorSpec(_C.USER, False),
         ErrorCode.E_RESOURCE_GATE: ErrorSpec(_C.RESOURCE, False),
         ErrorCode.E_STORE_LOCKED: ErrorSpec(_C.STORAGE, True),
         ErrorCode.E_MIGRATION_REQUIRED: ErrorSpec(_C.STORAGE, False),

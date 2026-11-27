@@ -27,6 +27,7 @@ EXPECTED: dict[str, tuple[str, bool]] = {
     "E_DEGENERATE_ANSWER": ("provider", False),
     "E_CITATION_INVALID": ("provider", False),
     "E_FILTER_INVALID": ("user", False),
+    "E_QUERY_INVALID": ("user", False),
     "E_RESOURCE_GATE": ("resource", False),
     "E_STORE_LOCKED": ("storage", True),
     "E_MIGRATION_REQUIRED": ("storage", False),

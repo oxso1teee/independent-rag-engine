@@ -6,6 +6,10 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 5: retrieval (in progress)
+- `QueryProcessor`: NFC, control characters to spaces, invisible format characters dropped,
+  whitespace collapsed, a character cap before tokenising and a token limit (a query over it is
+  refused, never truncated), and script-based language detection with an optional hint. New error
+  code `E_QUERY_INVALID` (category `user`, exit code 2) for blank, unusable or over-long queries.
 - `rag_engine.retrieval.fusion`: reciprocal rank fusion (`k = 60`, dense weight 1.0, lexical
   weight 0.5 as starting values) and min-max weighted-score fusion of the dense and lexical
   channels. Every component (raw scores, per-channel ranks) is kept; ties are broken by chunk id,
