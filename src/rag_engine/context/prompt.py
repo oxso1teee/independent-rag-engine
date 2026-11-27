@@ -11,8 +11,9 @@ import hashlib
 
 from rag_engine.ports import TokenCounter
 
-PROMPT_ID = "rag-system/1"
-REFUSAL_SENTENCE = "The provided documents do not contain enough information to answer."
+PROMPT_ID = "answer.v1"
+REFUSAL_SENTINEL = "<<INSUFFICIENT>>"
+"""What the model answers when the evidence does not contain the answer; language-neutral."""
 
 SYSTEM_PROMPT = """\
 You answer questions using only the numbered evidence passages provided between the markers \
@@ -20,14 +21,14 @@ You answer questions using only the numbered evidence passages provided between 
 1. Use only facts that appear in the evidence. Do not use outside knowledge and do not guess.
 2. After every statement that relies on evidence, cite it with its marker, for example [E2]. \
 Cite only markers that exist.
-3. If the evidence does not contain the answer, reply exactly: "{refusal}" Do not cite anything \
-in that case.
+3. If the evidence does not contain the answer, reply with exactly {refusal} and nothing else. \
+Do not cite anything in that case.
 4. If passages disagree, say so and cite both.
 5. Answer in the language of the question. Keep the answer short and direct.\
-""".replace("{refusal}", REFUSAL_SENTENCE)
+""".replace("{refusal}", REFUSAL_SENTINEL)
 
 # Pinned on purpose: changing the prompt must change these in the same commit.
-PROMPT_SHA256 = "d3527cd5213b0e17f3bbe584af25068b93b2e8c721dcfb33317dd43cc9818307"
+PROMPT_SHA256 = "b1844e62d5bc2fcc673f033706d00e5271f79774bbb7e16b83bf90c285d1f7e2"
 TOKEN_LIMIT = 260
 
 

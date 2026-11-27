@@ -1,5 +1,12 @@
 """Pure domain layer: identifiers, models, invariants and the error taxonomy."""
 
+from rag_engine.domain.answer import (
+    AnswerStatus,
+    Citation,
+    CitationCheck,
+    CitationProblem,
+    SentenceCheck,
+)
 from rag_engine.domain.context import (
     Context,
     ContextBudget,
@@ -81,6 +88,7 @@ from rag_engine.domain.models import (
 )
 
 __all__ = [
+    "AnswerStatus",
     "Block",
     "BlockKind",
     "Chunk",
@@ -88,6 +96,9 @@ __all__ = [
     "ChunkKind",
     "ChunkPolicy",
     "ChunkRef",
+    "Citation",
+    "CitationCheck",
+    "CitationProblem",
     "ContentHash",
     "Context",
     "ContextBudget",
@@ -130,6 +141,7 @@ __all__ = [
     "RetrievalQuery",
     "RetrievalResult",
     "ScoredChunk",
+    "SentenceCheck",
     "Sha256Hex",
     "Source",
     "SourceId",
