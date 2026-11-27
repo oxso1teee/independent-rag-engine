@@ -55,6 +55,25 @@ enabled = false
 # lexical_weight = 0.5
 # alpha = 0.5              # weight of the dense score when fusion = "weighted"
 
+# Optional cross-encoder reranking. Off by default (ADR 0014); the files are provisioned by hand.
+[rerank]
+# enabled = false
+# model = "BAAI/bge-reranker-v2-m3-int8"
+# model_dir = "/path/to/local/reranker"
+# revision = "<fingerprint of model_dir, as for the embedding model>"
+# pool_size = 30          # candidates reranked; the result is cut to top_k afterwards
+# timeout_s = 10.0        # a slower call falls back to the fused order
+# batch_size = 8
+# max_pair_tokens = 512   # a longer query + passage pair is refused, never cut
+
+# How retrieved chunks become the evidence of an answer (`rag context`).
+[context]
+# max_chunks_per_document = 3
+# order = "by_score"      # or "by_document_order"
+# small_to_big = false    # replace a retrieved chunk by its section when it fits
+# min_evidence_items = 1
+# item_overhead_tokens = 8
+
 # Limits applied to every document; exceeding one is an error, never a silent truncation.
 [parsing]
 # max_text_chars = 20000000

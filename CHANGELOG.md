@@ -6,6 +6,12 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 6: reranking and context (in progress)
+- `OnnxCrossEncoder` (offline, files pinned by fingerprint, pairs over the window refused) and the
+  `[rerank]` and `[context]` settings; `rag context QUERY` shows the evidence a question would get,
+  the measured token budget (`window - system - question - max_new - margin`) and everything that
+  was dropped, merged or cut, with `E_CONTEXT_BUDGET` (exit 7) and a hint when nothing fits.
+  ADR 0014 keeps reranking off by default: no multilingual cross-encoder has been measured (the
+  0.57 GB download awaits approval) and the current evaluation set is saturated.
 - `SufficiencyGate` with `calibrate`: the best dense cosine (A) or reranker logit (B) must reach a
   threshold, either is enough; lexical coverage of the top passage (C) decides only when neither is
   available. Thresholds are fitted on dev to keep false refusals within 10 % while refusing as many

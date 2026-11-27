@@ -24,7 +24,15 @@ from rag_engine import __version__
 from rag_engine.cli.context import Container, Processing, Services
 from rag_engine.cli.exit_codes import ExitCode, exit_code_for
 from rag_engine.cli.render import chunks_to_dict, describe_chunks
-from rag_engine.cli.search import describe_hits, load_details, outcome_to_dict, parse_filters
+from rag_engine.cli.search import (
+    context_to_dict,
+    describe_context,
+    describe_hits,
+    load_details,
+    outcome_to_dict,
+    parse_filters,
+)
+from rag_engine.context.prompt import system_prompt_tokens
 from rag_engine.domain import (
     ErrorCode,
     RagError,
@@ -38,7 +46,7 @@ from rag_engine.ingestion.identity import RebasePlan
 from rag_engine.ingestion.jobs import JobOutcome
 from rag_engine.ingestion.processing import read_limited
 from rag_engine.ingestion.service import IngestReport, StoreStatus, collect_status
-from rag_engine.ports import ParseLimits
+from rag_engine.ports import ModelLimits, ParseLimits
 from rag_engine.storage.integrity import check_integrity
 from rag_engine.storage.sqlite import StoreNotInitialised
 
@@ -630,6 +638,136 @@ def build_app(container: Container) -> typer.Typer:
             _emit(outcome_to_dict(outcome, details, debug=debug))
         else:
             typer.echo("\n".join(describe_hits(outcome, details, full=full)))
+
+    @app.command("context")
+    def context_command(
+        ctx: typer.Context,
+        query: Annotated[str, typer.Argument(help="What to look for.")],
+        mode: Annotated[
+            str | None, typer.Option("--mode", "-m", help="dense, lexical or hybrid.")
+        ] = None,
+        top_k: Annotated[int | None, typer.Option("--top-k", "-k", min=1, max=100)] = None,
+        source: Annotated[list[str] | None, typer.Option("--source", "-s")] = None,
+        path_prefix: Annotated[str | None, typer.Option("--path-prefix")] = None,
+        path_glob: Annotated[str | None, typer.Option("--path-glob")] = None,
+        rerank: Annotated[bool | None, typer.Option("--rerank/--no-rerank")] = None,
+        window: Annotated[
+            int | None,
+            typer.Option(
+                "--window", min=1, help="Model context window (default: llm.context_window)."
+            ),
+        ] = None,
+        max_new: Annotated[
+            int | None,
+            typer.Option("--max-new", min=1, help="Tokens reserved for the answer."),
+        ] = None,
+        small_to_big: Annotated[
+            bool | None, typer.Option("--small-to-big/--no-small-to-big")
+        ] = None,
+        order: Annotated[
+            str | None, typer.Option("--order", help="by_score or by_document_order.")
+        ] = None,
+        full: Annotated[bool, typer.Option("--full", help="Print whole passages.")] = False,
+        json_output: JsonOption = False,
+    ) -> None:
+        """Show the context a question would get: evidence, token budget and what was left out."""
+        state = _state(ctx)
+        try:
+            if not query.strip():
+                raise RagError(ErrorCode.E_QUERY_INVALID, "the query has nothing to search for")
+            if order not in {None, "by_score", "by_document_order"}:
+                raise RagError(
+                    ErrorCode.E_QUERY_INVALID, "--order must be by_score or by_document_order"
+                )
+            filters = parse_filters(
+                sources=source or (),
+                path_prefix=path_prefix,
+                path_glob=path_glob,
+                tags_any=(),
+                tags_all=(),
+                language=None,
+                kinds=(),
+                modified_after=None,
+                modified_before=None,
+                doc_ids=(),
+                exclude_doc_ids=(),
+            )
+            try:
+                chosen = None if mode is None else RetrievalMode(mode)
+            except ValueError:
+                raise RagError(
+                    ErrorCode.E_QUERY_INVALID, "--mode must be dense, lexical or hybrid"
+                ) from None
+            with state.container.search(state.config, state.db) as searcher:
+                size = window if window is not None else searcher.llm_window
+                if size is None:
+                    raise RagError(
+                        ErrorCode.E_CONFIG_INVALID,
+                        "the context window is unknown: pass --window or set llm.context_window",
+                    )
+                reserved = max_new if max_new is not None else searcher.llm_max_new
+                if reserved >= size:
+                    raise RagError(ErrorCode.E_CONFIG_INVALID, "--max-new must be below the window")
+                depth = top_k or searcher.defaults.top_k
+                request = RetrievalQuery(
+                    request_id=searcher.ids.request_id(),
+                    text=query,
+                    mode=chosen or searcher.defaults.mode,
+                    top_k=depth,
+                    candidate_k=max(searcher.defaults.candidate_k, depth),
+                    filters=filters,
+                    rerank=(
+                        RerankMode.AUTO
+                        if rerank is None
+                        else RerankMode.ON
+                        if rerank
+                        else RerankMode.OFF
+                    ),
+                )
+                outcome = asyncio.run(searcher.retrieval.search(request))
+                policy = replace(
+                    searcher.context_policy,
+                    small_to_big=(
+                        searcher.context_policy.small_to_big
+                        if small_to_big is None
+                        else small_to_big
+                    ),
+                    order=order or searcher.context_policy.order,  # type: ignore[arg-type]
+                )
+                system_tokens = system_prompt_tokens(searcher.counter)
+                question_tokens = searcher.counter.count(query)
+                built = searcher.context.build(
+                    outcome.result.hits,
+                    question_tokens=question_tokens,
+                    system_tokens=system_tokens,
+                    limits=ModelLimits(size, reserved),
+                    policy=policy,
+                )
+        except StoreNotInitialised:
+            raise _fail(
+                RagError(ErrorCode.E_SOURCE_NOT_FOUND, "no database yet; add a source first"),
+                as_json=json_output,
+            ) from None
+        except RagError as error:
+            raise _fail(error, as_json=json_output) from error
+        if json_output:
+            _emit(
+                context_to_dict(
+                    outcome, built, system_tokens=system_tokens, question_tokens=question_tokens
+                )
+            )
+        else:
+            typer.echo(
+                "\n".join(
+                    describe_context(
+                        outcome,
+                        built,
+                        system_tokens=system_tokens,
+                        question_tokens=question_tokens,
+                        full=full,
+                    )
+                )
+            )
 
     # ---------------------------------------------------------------------- status
 

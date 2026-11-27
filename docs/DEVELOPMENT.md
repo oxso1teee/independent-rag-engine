@@ -38,6 +38,7 @@ uv run rag chunks --source wiki page.md   # a document of a source, with its cle
 uv run rag chunks page.md --strategy recursive --full --json
 uv run rag search "query text" --mode hybrid --top-k 5 --source wiki --tag draft --json
 uv run rag search "query text" --language ru --kind table --modified-after 2026-01-01 --debug
+uv run rag context "query text" --window 4096 --max-new 512   # evidence, token budget, what was left out
 ```
 
 The database path comes from `[storage] db_path` in `rag.toml` (default `data/rag.db`),

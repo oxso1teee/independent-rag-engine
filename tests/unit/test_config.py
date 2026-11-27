@@ -280,3 +280,35 @@ def test_retrieval_defaults_are_dense_with_the_specified_depths() -> None:
 def test_retrieval_settings_reject_invalid_values(bad: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         Settings(retrieval=bad)
+
+
+def test_rerank_is_off_by_default_and_context_defaults_follow_the_specification() -> None:
+    settings = Settings()
+    assert settings.rerank.enabled is False and settings.rerank.pool_size == 30
+    context = settings.context
+    assert (context.max_chunks_per_document, context.order, context.small_to_big) == (
+        3,
+        "by_score",
+        False,
+    )
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"enabled": True},
+        {"enabled": True, "model": "m", "model_dir": "/x", "revision": "not-a-digest"},
+        {"pool_size": 0},
+        {"timeout_s": 0},
+    ],
+)
+def test_rerank_settings_reject_an_unpinned_or_invalid_model(bad: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        Settings(rerank=bad)
+
+
+def test_an_enabled_reranker_with_a_pinned_digest_is_accepted() -> None:
+    settings = Settings(
+        rerank={"enabled": True, "model": "m", "model_dir": "/models/m", "revision": "a" * 64}
+    )
+    assert settings.rerank.enabled and settings.rerank.revision == "a" * 64

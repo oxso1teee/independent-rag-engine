@@ -197,3 +197,74 @@ def test_forcing_reranking_without_a_reranker_is_a_noted_fallback_not_an_error(
     assert "rerank_skipped:not_configured" in forced["fallbacks"]  # type: ignore[operator]
     code, off = search(workspace, capsys, "--mode", "hybrid", "ZX4471", "--no-rerank")
     assert code == 0 and off["fallbacks"] == [] and off["hits"] == forced["hits"]
+
+
+def run_context(
+    workspace: tuple[list[str], DefaultContainer],
+    capsys: pytest.CaptureFixture[str],
+    *args: str,
+) -> tuple[int, dict[str, object]]:
+    prefix, container = workspace
+    capsys.readouterr()
+    code = main([*prefix, "context", *args, "--json"], container=container)
+    return code, json.loads(capsys.readouterr().out)
+
+
+def test_context_reports_the_measured_budget_and_the_evidence(
+    workspace: tuple[list[str], DefaultContainer], capsys: pytest.CaptureFixture[str]
+) -> None:
+    from rag_engine.chunking.tokens import HeuristicTokenCounter
+    from rag_engine.context.prompt import system_prompt_tokens
+
+    code, data = run_context(
+        workspace, capsys, "--mode", "hybrid", "ZX4471", "--window", "4096", "--max-new", "256"
+    )
+    assert code == 0
+    budget: dict[str, int] = data["budget"]  # type: ignore[assignment]
+    counter = HeuristicTokenCounter()
+    assert budget["system"] == system_prompt_tokens(counter)
+    assert budget["question"] == counter.count("ZX4471")
+    assert budget["margin"] == 410  # 10 % of 4096 is above the 256 floor
+    expected = 4096 - budget["system"] - budget["question"] - 256 - 410
+    assert budget["evidence_budget"] == expected
+    assert budget["tokens_used"] <= budget["evidence_budget"]
+    first = data["evidence"][0]  # type: ignore[index]
+    assert first["id"] == "E1" and first["path"] == "beta/serials.md"
+    assert first["heading_path"] == ["Calibration"] and "ZX4471" in first["text"]
+    report = data["report"]
+    shown = {c for item in data["evidence"] for c in item["matched"]}  # type: ignore[attr-defined]
+    dropped = {item["chunk_id"] for item in report["dropped"]}  # type: ignore[index]
+    assert not shown & dropped and len(data["context_hash"]) == 64  # type: ignore[arg-type]
+
+
+def test_a_window_that_leaves_no_room_is_a_resource_error_with_a_hint(
+    workspace: tuple[list[str], DefaultContainer], capsys: pytest.CaptureFixture[str]
+) -> None:
+    code, data = run_context(workspace, capsys, "ZX4471", "--window", "300", "--max-new", "100")
+    assert code == 7
+    assert data["error"]["code"] == "E_CONTEXT_BUDGET"  # type: ignore[index]
+    assert "hint" in data["error"]["context"]  # type: ignore[index]
+
+
+def test_context_needs_a_window_from_the_command_or_the_configuration(
+    workspace: tuple[list[str], DefaultContainer], capsys: pytest.CaptureFixture[str]
+) -> None:
+    code, data = run_context(workspace, capsys, "ZX4471")
+    assert code == 3 and data["error"]["code"] == "E_CONFIG_INVALID"  # type: ignore[index]
+    code, data = run_context(workspace, capsys, "ZX4471", "--window", "500", "--max-new", "600")
+    assert code == 3
+    code, data = run_context(workspace, capsys, "ZX4471", "--window", "4096", "--order", "random")
+    assert code == 2 and data["error"]["code"] == "E_QUERY_INVALID"  # type: ignore[index]
+
+
+def test_context_text_output_shows_the_budget_line_and_numbered_evidence(
+    workspace: tuple[list[str], DefaultContainer], capsys: pytest.CaptureFixture[str]
+) -> None:
+    prefix, container = workspace
+    capsys.readouterr()
+    code = main(
+        [*prefix, "context", "ZX4471", "--mode", "hybrid", "--window", "4096"], container=container
+    )
+    out = capsys.readouterr().out
+    assert code == 0 and out.startswith("budget: window 4096")
+    assert "E1 " in out and "notes/beta/serials.md" in out
