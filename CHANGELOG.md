@@ -5,7 +5,12 @@ project until a release is cut.
 
 ## [Unreleased]
 
-### Phase 6: reranking and context (implemented; two criteria unmet)
+### Phase 6: reranking and context (implemented; the gate target is unmet)
+- Reranker measured with the real `BAAI/bge-reranker-v2-m3-int8` (ADR 0014): on the saturated
+  exploratory set it gives no gain (nDCG@10 −0.02 dense, −0.03 hybrid, intervals touching zero), the
+  rerank stage takes 3.1 s at p50 and 4.1 s at p95 for a pool of 30 (limit 1.5 s) and the process
+  peaks at 2.5 GiB, so it stays off by default. `eval/scripts/rerank_bakeoff.py` repeats the
+  measurement; opt-in tests with the real weights run with `RAG_TEST_RERANK_DIR`.
 - `OnnxCrossEncoder` (offline, files pinned by fingerprint, pairs over the window refused) and the
   `[rerank]` and `[context]` settings; `rag context QUERY` shows the evidence a question would get,
   the measured token budget (`window - system - question - max_new - margin`) and everything that
