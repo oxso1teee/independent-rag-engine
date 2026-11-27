@@ -245,3 +245,54 @@ def test_verified_only_sends_the_validated_text_once_as_final() -> None:
     deltas = [e for e in events if isinstance(e, DeltaEvent)]
     assert len(deltas) == 1 and not deltas[0].provisional and deltas[0].text == GOOD
     assert isinstance(events[-1], DoneEvent) and events[-1].answer.text == GOOD
+
+
+# ------------------------------------------------------------ acceptance scenarios (P7.5, P7.6)
+
+
+@pytest.mark.parametrize("window", [1024, 2048, 4096, 8192])
+@pytest.mark.parametrize("gap", [0, 1])
+def test_a_prompt_cut_to_the_window_is_always_caught(window: int, gap: int) -> None:
+    gen, _ = generator(Reply(GOOD, prompt_tokens=window - gap), window=window, max_new=256)
+    with pytest.raises(RagError) as info:
+        answer(gen)
+    assert info.value.code is ErrorCode.E_CONTEXT_TRUNCATED
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        Reply("x"),
+        Reply(""),
+        Reply(" \n"),
+        Reply("?"),
+        Reply("[E1]"),
+        Reply("-", finish_reason=FinishReason.LENGTH),
+        Reply("", finish_reason=FinishReason.LENGTH),
+    ],
+)
+def test_no_answer_shorter_than_the_threshold_is_ever_returned(reply: Reply) -> None:
+    gen, _ = generator(reply, reply)
+    with pytest.raises(RagError) as info:
+        answer(gen)
+    assert info.value.code is ErrorCode.E_DEGENERATE_ANSWER
+
+
+def test_the_threshold_counts_letters_not_markers_and_is_configurable() -> None:
+    assert answer(generator(Reply("No [E1]."))[0]).status is AnswerStatus.ANSWERED  # 2 letters
+    gen, _ = generator(
+        Reply("No [E1]."), Reply("No [E1]."), policy=GenerationPolicy(min_answer_chars=5)
+    )
+    with pytest.raises(RagError):
+        answer(gen)
+
+
+@pytest.mark.parametrize("text", [GOOD, "Backups [E1]\n\nrun every night [E1]", " lead " + GOOD])
+def test_stream_and_non_stream_agree_for_any_scripted_text(text: str) -> None:
+    plain = answer(generator(Reply(text))[0])
+    events = asyncio.run(collect(generator(Reply(text))[0]))
+    streamed = "".join(e.text for e in events if isinstance(e, DeltaEvent))
+    done = events[-1]
+    assert isinstance(done, DoneEvent)
+    assert done.answer.text == plain.text == streamed.strip()
+    assert done.answer.citations == plain.citations and done.answer.status == plain.status

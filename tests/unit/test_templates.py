@@ -51,3 +51,18 @@ def test_the_per_passage_header_fits_the_overhead_the_context_builder_reserves()
     rendered = render_answer("Q?", make_context(BACKUPS))
     header = rendered.prompt.split("\n")[1]
     assert counter.count(header) <= 8  # ContextPolicy.item_overhead_tokens default
+
+
+SNAPSHOT = (
+    "Evidence:\n"
+    "[E1] d1.md\n"
+    "Backups run every night at 02:30 UTC and are kept for 14 days.\n\n"
+    "[E2] d2.md\n"
+    "Printers are on the third floor next to the kitchen.\n\n"
+    "Question: When do backups run?"
+)
+
+
+def test_the_rendered_prompt_matches_its_snapshot() -> None:
+    rendered = render_answer("When do backups run?", make_context(BACKUPS, PRINTERS))
+    assert rendered.prompt == SNAPSHOT  # a layout change is a deliberate, reviewed decision

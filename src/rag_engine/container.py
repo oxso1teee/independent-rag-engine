@@ -9,8 +9,9 @@ through constructors.
 from __future__ import annotations
 
 import asyncio
+import os
 import random
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -25,7 +26,7 @@ from rag_engine.cli.context import (
     Services,
 )
 from rag_engine.config import IngestSettings, ParsingSettings, Settings, load_settings
-from rag_engine.config.settings import EmbeddingSettings
+from rag_engine.config.settings import EmbeddingSettings, LlmSettings
 from rag_engine.context.builder import ContextBuilder, ContextPolicy
 from rag_engine.domain import (
     ChunkPolicy,
@@ -42,6 +43,7 @@ from rag_engine.embedding.cross_encoder import OnnxCrossEncoder
 from rag_engine.embedding.ollama import OllamaEmbedder
 from rag_engine.embedding.onnx import OnnxEmbedder
 from rag_engine.embedding.service import EmbeddingService
+from rag_engine.generation.resilience import ResiliencePolicy, ResilientLLM
 from rag_engine.ingestion.identity import AdapterFactory, SourceRegistry
 from rag_engine.ingestion.indexing import DocumentIndexingHandler
 from rag_engine.ingestion.jobs import JobQueue, RetryPolicy, Worker
@@ -49,6 +51,7 @@ from rag_engine.ingestion.maintenance import IndexMaintenance
 from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.service import IngestService
 from rag_engine.ingestion.sources import FilesystemSource
+from rag_engine.llm import OllamaChat, OpenAICompatChat
 from rag_engine.observability import configure_logging
 from rag_engine.parsing.cleaners import compile_cleaners
 from rag_engine.parsing.isolation import ParserWorker
@@ -60,6 +63,7 @@ from rag_engine.ports import (
     RerankBudget,
     SourceAdapter,
     Store,
+    TokenCounter,
 )
 from rag_engine.retrieval.query import QueryProcessor
 from rag_engine.retrieval.rerank import RerankStage
@@ -127,6 +131,72 @@ def build_embedding(settings: EmbeddingSettings, clock: Clock) -> BuiltEmbedding
     else:
         raise RagError(ErrorCode.E_CONFIG_INVALID, "unsupported embedding provider")
     return BuiltEmbedding(model, provider)
+
+
+@dataclass(slots=True)
+class BuiltChat:
+    """The configured chat model behind the resilience wrapper, and what must be closed."""
+
+    provider: ResilientLLM
+    inner: OllamaChat | OpenAICompatChat
+
+    async def aclose(self) -> None:
+        await self.inner.aclose()
+
+
+def build_chat(
+    settings: LlmSettings,
+    counter: TokenCounter,
+    *,
+    concurrency: int = 1,
+    environ: Mapping[str, str] | None = None,
+) -> BuiltChat:
+    """Construct the chat provider; the API key is read from the environment, never from config."""
+    if (
+        not settings.enabled
+        or settings.provider is None
+        or settings.model is None
+        or settings.context_window is None
+    ):
+        raise RagError(ErrorCode.E_CONFIG_INVALID, "llm is not configured")
+    inner: OllamaChat | OpenAICompatChat
+    if settings.provider == "ollama":
+        inner = OllamaChat(
+            settings.model,
+            context_window=settings.context_window,
+            max_new_tokens=settings.max_new_tokens,
+            counter=counter,
+            base_url=settings.base_url or "http://127.0.0.1:11434",
+            timeout_s=settings.request_timeout_s,
+            keep_alive=settings.keep_alive,
+            think=settings.think,
+        )
+    elif settings.provider == "openai_compat":
+        key = None
+        if settings.api_key_env is not None:
+            key = (os.environ if environ is None else environ).get(settings.api_key_env)
+            if not key:
+                raise RagError(
+                    ErrorCode.E_CONFIG_INVALID,
+                    f"the environment variable {settings.api_key_env} is not set",
+                )
+        inner = OpenAICompatChat(
+            settings.model,
+            base_url=settings.base_url or "",
+            context_window=settings.context_window,
+            max_new_tokens=settings.max_new_tokens,
+            counter=counter,
+            api_key=key,
+            timeout_s=settings.request_timeout_s,
+        )
+    else:
+        raise RagError(ErrorCode.E_CONFIG_INVALID, "unsupported llm provider")
+    policy = ResiliencePolicy(
+        timeout_s=settings.request_timeout_s,
+        max_retries=settings.max_retries,
+        concurrency=concurrency,
+    )
+    return BuiltChat(ResilientLLM(inner, policy), inner)
 
 
 def retry_policy(settings: IngestSettings) -> RetryPolicy:

@@ -10,8 +10,9 @@ adapters are injected at a single composition root.
 container                                                 composition root: configuration, adapters, entry point
 cli                                                       command line (thin)
 evaluation                                                metrics, datasets and runners that measure the pipeline
-ingestion | retrieval                                      use cases: the ingestion pipeline and search
-storage | system | testing | observability | config | parsing | chunking
+generation                                                answer generation: prompt, model call, citation checks
+ingestion | retrieval | context                           use cases: the ingestion pipeline, search and context assembly
+storage | system | testing | observability | config | parsing | chunking | embedding | llm
                                                           adapters and cross-cutting services
 ports                                                     Protocol contracts
 domain                                                    identifiers, models, invariants, errors
@@ -317,6 +318,81 @@ pipeline.
 - **Provenance.** Evidence text is an exact slice of the normalised document text; the locator
   gives source, key, title, heading path, pages and character span, which is what citation
   validation in the generation phase checks against.
+
+## Generation (`rag_engine.generation`, `rag_engine.llm`)
+
+`AnswerGenerator.answer(request_id, question, context)` turns a `Context` into a
+`GeneratedAnswer` that is either **answered** (text plus resolved citations) or **refused**. The
+prompt is `answer.v1`: a pinned system prompt, the numbered evidence (`[E1] source key`, then the
+passage) and the question; marker-like text inside a document is rewritten to `(E1)` so a document
+cannot pose as evidence, and the question is flattened to one line. The model refuses by replying
+with exactly the sentinel `<<INSUFFICIENT>>`, which is language-neutral and never mixed with prose.
+
+- **Before the call.** The prompt and the answer allowance are measured with the provider's own
+  counter; if they do not fit its window the call is not made (`E_CONTEXT_BUDGET`). An empty
+  context is refused without calling the model.
+- **After the call.** A prompt the provider reports as exactly as long as its window was cut
+  silently and is `E_CONTEXT_TRUNCATED`; a gap of more than 15 % between the counted and the
+  reported prompt tokens is a `token_count_drift` warning; a reply cut by the length limit carries
+  `answer_truncated`.
+- **Degenerate replies.** Fewer than two letters or digits (markers excluded), a lone marker, a
+  loop of repeated words, or the sentinel mixed with prose is degenerate. It gets one retry at
+  temperature 0.3, then `E_DEGENERATE_ANSWER`.
+- **Citations.** Level 1: every `[E<n>]` must name evidence of this context and an answer must
+  cite something; otherwise one retry, then `E_CITATION_INVALID`. A source that was not provided
+  can therefore never reach the caller. Level 2: each cited sentence must share at least half of
+  its content terms with the evidence it cites. This is a **lexical overlap screen, not a check
+  that the answer is true or entailed by the evidence**: a paraphrase that reverses the meaning
+  passes and a correct paraphrase in different words can fail. Sentences that cannot be judged
+  (too few terms, or written in another script than the evidence, as when a Russian answer cites
+  an English passage) are reported as unjudged, never as failures. A low overlap is reported by
+  default and fails the answer only with `strict_overlap`. Entailment-level faithfulness is
+  measured in the evaluation phase, not asserted here.
+- **Streaming.** `stream()` yields `EvidenceEvent`, `DeltaEvent`*, `CitationsEvent`, `DoneEvent`.
+  Citations can only be checked on the finished text, so live deltas are **provisional**
+  (`DeltaEvent.provisional`): if validation fails, or the provider fails after text was sent, a
+  `RetractEvent` is emitted and then the error is raised, and a client must discard the draft.
+  `DoneEvent.answer` is the only validated text. With `verified_only=True` the reply is collected
+  and validated first and sent once as a non-provisional delta, so unvalidated text never reaches
+  the client, at the price of the first-token latency. A refusal never streams text, because the
+  start of the reply is held back while it could still be the sentinel. A stream reports no usage,
+  so its token counts are estimated (`usage_estimated`); the Ollama adapter itself fails a stream
+  whose closing event shows a cut prompt.
+
+`ResilientLLM` wraps any provider: a per-call timeout (`E_PROVIDER_TIMEOUT`, not retried), bounded
+retries with backoff only for errors that are `retryable` and are "unreachable/5xx" or "slow
+down", a circuit breaker (three consecutive failures open it for 60 s, then one trial call), and
+serialised calls (`limits.llm_concurrency`, 1 by default). A cancelled call frees its slot and is
+neither success nor failure; a stream is retried only before its first delta.
+
+The adapters in `rag_engine.llm` are `OllamaChat` (native `/api/chat` with `num_ctx`, `num_predict`,
+`think: false`, `prompt_eval_count`, `done_reason`) and `OpenAICompatChat` (`/chat/completions`,
+mandatory `context_window`, key in the `Authorization` header only and removed from error
+excerpts). Ollama has no tokenizer endpoint, so `count_tokens` uses the same deliberately high
+heuristic counter as the context builder. An out-of-memory failure is `E_RESOURCE_GATE` and is never
+retried. `build_chat` in the composition root reads `[llm]`; the API key is read from the
+environment variable named by `api_key_env`, never from the file.
+
+### Resource budget of the query path
+
+The target machine has about 7.8 GiB, shared with a desktop, and often 1.5 to 3.7 GiB available.
+Measured or file-size figures for the components a query can load:
+
+| Component | Resident | Source |
+|---|---:|---|
+| E5-small, ONNX, in the CLI process | 1.23 GiB peak | `EMBEDDING_BAKEOFF.md` |
+| Cross-encoder (`bge-reranker-v2-m3-int8`), in the process, off by default | 2.5 GiB peak | ADR 0014 |
+| Chat model through Ollama (`qwen3.5:4b`) | 3.1 GiB file + cache and projector, **not measured** | `ollama list`; no real run was possible, see `TESTING.md` |
+
+Together they exceed what is usually free, so the rules are: Ollama's `keep_alive` defaults to `0`
+(the model is unloaded as soon as the answer is done, so the next query's embedder never competes
+with a resident model); configuration is **refused** when the reranker is enabled together with an
+Ollama model that stays loaded (`keep_alive` other than `0`); and a pipeline releases the
+in-process models before it calls a local generator (Phase 8). `keep_alive = "5m"` is therefore
+valid only without the reranker and on a machine that has the memory for an embedder beside the
+resident model, which the owner decides; it was the first default and was withdrawn because
+the sum (about 1.2 + 3.5 GiB without the reranker) already exceeds the memory usually available.
+The price of `0` is a cold model load (a few seconds) on every question.
 
 ## Command line
 

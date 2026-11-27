@@ -140,6 +140,14 @@ class LlmSettings(_Section):
     max_new_tokens: int = Field(default=512, ge=1, le=65_536)
     request_timeout_s: float = Field(default=180.0, gt=0, le=3600)
     api_key_env: EnvVarName | None = None
+    base_url: str | None = Field(default=None, min_length=1, max_length=2048)
+    """Server address; ``ollama`` defaults to the local daemon, ``openai_compat`` requires one."""
+    keep_alive: str = Field(default="0", pattern=r"^(0|-1|[0-9]+(s|m|h))$")
+    """How long Ollama keeps the model loaded after a request. ``0`` (the default) unloads it at
+    once: on the target machine a resident model plus the next request's embedder does not fit."""
+    think: bool = False
+    """Let a reasoning-capable Ollama model think; off, so the answer budget is not spent on it."""
+    max_retries: int = Field(default=2, ge=0, le=10)
 
     @model_validator(mode="after")
     def _require_window_when_enabled(self) -> LlmSettings:
@@ -148,6 +156,8 @@ class LlmSettings(_Section):
                 raise ValueError(
                     "llm.provider, llm.model and llm.context_window are required when enabled"
                 )
+            if self.provider == "openai_compat" and self.base_url is None:
+                raise ValueError("llm.base_url is required for the openai_compat provider")
             if self.max_new_tokens >= self.context_window:
                 raise ValueError("llm.max_new_tokens must be smaller than llm.context_window")
         return self
@@ -225,6 +235,22 @@ class Settings(BaseSettings):
     context: ContextSettings = Field(default_factory=ContextSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
+
+    @model_validator(mode="after")
+    def _llm_must_not_stay_resident_beside_the_reranker(self) -> Settings:
+        """The measured peaks (reranker 2.5 GiB, a 4B chat model about 3.5 GiB) cannot coexist on
+        the target machine, so a model kept loaded after the answer is refused with the reranker."""
+        if (
+            self.rerank.enabled
+            and self.llm.enabled
+            and self.llm.provider == "ollama"
+            and self.llm.keep_alive != "0"
+        ):
+            raise ValueError(
+                'llm.keep_alive must be "0" while rerank is enabled: a resident chat model and '
+                "the cross-encoder do not fit the resource budget together"
+            )
+        return self
 
     @classmethod
     def settings_customise_sources(

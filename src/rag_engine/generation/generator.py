@@ -46,6 +46,7 @@ from rag_engine.ports import (
 
 _log = get_logger("rag_engine.generation")
 _WRAPPING = " \t\r\n\"'`.*"
+_MARKER = re.compile(r"\[E([1-9][0-9]*)\]")
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,10 +56,15 @@ class GenerationPolicy:
     retry_temperature: float = 0.3
     max_attempts: int = 2
     strict_overlap: bool = False
+    min_answer_chars: int = 2
+    """An answer with fewer letters or digits (markers excluded) is degenerate."""
     drift_ratio: float = 0.15
 
     def __post_init__(self) -> None:
-        require(self.max_new_tokens > 0 and self.max_attempts >= 1, "invalid generation policy")
+        require(
+            self.max_new_tokens > 0 and self.max_attempts >= 1 and self.min_answer_chars >= 1,
+            "invalid generation policy",
+        )
         require(0.0 <= self.temperature <= self.retry_temperature, "invalid temperatures")
         require(0.0 < self.drift_ratio < 1.0, "invalid drift ratio")
 
@@ -124,10 +130,15 @@ def is_refusal(text: str) -> bool:
     return text.strip(_WRAPPING) == REFUSAL_SENTINEL.strip(_WRAPPING)
 
 
-def is_degenerate(text: str) -> bool:
-    """Empty, without a letter or digit, mixed with the refusal sentinel, or stuck in a loop."""
+def is_degenerate(text: str, min_chars: int = 2) -> bool:
+    """Too short to be an answer, mixed with the refusal sentinel, or stuck in a loop.
+
+    Length is counted in letters and digits with the ``[E<n>]`` markers removed, so a reply that is
+    only a citation, a single character or punctuation never counts as an answer.
+    """
     stripped = text.strip()
-    if not any(char.isalnum() for char in stripped):
+    visible = sum(char.isalnum() for char in _MARKER.sub("", stripped))
+    if visible < min_chars:
         return True
     if REFUSAL_SENTINEL in stripped and not is_refusal(stripped):
         return True
@@ -310,7 +321,7 @@ class AnswerGenerator:
                 AnswerStatus.REFUSED, "", (), None, usage, rendered.prompt_sha256,
                 rendered.template_id, attempts, latency,
             )  # fmt: skip
-        if is_degenerate(text):
+        if is_degenerate(text, self._policy.min_answer_chars):
             raise RagError(ErrorCode.E_DEGENERATE_ANSWER, "the model returned no usable answer")
         answer = text.strip()
         check = self._validator.validate(answer, context)
@@ -363,9 +374,6 @@ class AnswerGenerator:
 
 def _with_warnings(answer: GeneratedAnswer, extra: list[str]) -> GeneratedAnswer:
     return replace(answer, warnings=(*answer.warnings, *extra))
-
-
-_MARKER = re.compile(r"\[E([1-9][0-9]*)\]")
 
 
 def _resolve(text: str, check: CitationCheck, context: Context) -> tuple[Citation, ...]:

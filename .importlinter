@@ -13,7 +13,7 @@ layers =
     rag_engine.evaluation
     rag_engine.generation
     rag_engine.ingestion | rag_engine.retrieval | rag_engine.context
-    rag_engine.storage | rag_engine.system | rag_engine.testing | rag_engine.observability | rag_engine.config | rag_engine.parsing | rag_engine.chunking | rag_engine.embedding
+    rag_engine.storage | rag_engine.system | rag_engine.testing | rag_engine.observability | rag_engine.config | rag_engine.parsing | rag_engine.chunking | rag_engine.embedding | rag_engine.llm
     rag_engine.ports
     rag_engine.domain
 
@@ -92,6 +92,7 @@ source_modules =
     rag_engine.parsing
     rag_engine.chunking
     rag_engine.embedding
+    rag_engine.llm
 forbidden_modules =
     rag_engine.container
     rag_engine.cli
