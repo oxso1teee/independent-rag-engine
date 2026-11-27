@@ -15,17 +15,19 @@ from rag_engine.domain import (
     ErrorCode,
     Language,
     RagError,
+    RerankMode,
     RetrievalFilters,
     RetrievalMode,
     RetrievalQuery,
     ScoredChunk,
     TextHash,
 )
-from rag_engine.ports import ChunkInfo, Vectors
+from rag_engine.ports import ChunkContent, ChunkInfo, RerankBudget, Vectors
 from rag_engine.retrieval.query import QueryProcessor
+from rag_engine.retrieval.rerank import RerankStage
 from rag_engine.retrieval.service import IndexSnapshot, RetrievalService, SearchOutcome
 from rag_engine.storage.vector_flat import FlatVectorIndex
-from rag_engine.testing import HashingEmbedder
+from rag_engine.testing import FakeReranker, HashingEmbedder
 from tests.factories import make_ids
 
 pytestmark = pytest.mark.unit
@@ -93,6 +95,29 @@ class Lookups:
         self.resolved.append(filters)
         return self.allowed
 
+    def read(self, ids: Sequence[ChunkId]) -> dict[ChunkId, ChunkContent]:
+        wanted = set(ids)
+        return {
+            cid(o): ChunkContent(
+                ref=ChunkRef(cid(o), DOCS[CORPUS[o][0]], VERSION),
+                text=CORPUS[o][1],
+                token_count=20,
+                level=0,
+                parent_id=None,
+                ordinal=o,
+                char_start=0,
+                char_end=len(CORPUS[o][1]),
+                heading_path=(),
+                page_start=None,
+                page_end=None,
+                source_name="notes",
+                source_key=f"{CORPUS[o][0]}.md",
+                title=None,
+            )
+            for o in CORPUS
+            if cid(o) in wanted
+        }
+
     def describe(self, ids: Sequence[ChunkId]) -> dict[ChunkId, ChunkInfo]:
         return {
             cid(o): ChunkInfo(
@@ -104,7 +129,12 @@ class Lookups:
 
 
 def build(
-    *, lookups: Lookups | None = None, snapshot: IndexSnapshot | None = None, prefix: str = ""
+    *,
+    lookups: Lookups | None = None,
+    snapshot: IndexSnapshot | None = None,
+    prefix: str = "",
+    reranker: FakeReranker | None = None,
+    pool_size: int = 30,
 ) -> tuple[RetrievalService, Spy, WordIndex]:
     embedder = Spy()
     vectors = FlatVectorIndex(embedder.model_id, embedder.dimension)
@@ -122,6 +152,10 @@ def build(
         catalog=lookups,
         queries=QueryProcessor(HeuristicTokenCounter(), max_tokens=64),
         snapshot=lambda: state,
+        rerank=None
+        if reranker is None
+        else RerankStage(reranker, RerankBudget(pool_size=pool_size, timeout_s=5)),
+        content=lookups,
     )
     return service, embedder, lexical
 
@@ -257,3 +291,80 @@ def test_missing_channels_for_a_mode_are_a_configuration_error() -> None:
         with pytest.raises(RagError) as info:
             ask(bare, "text", mode)
         assert info.value.code is ErrorCode.E_CONFIG_INVALID
+
+
+def menu_first(query: str, text: str) -> float:
+    return 10.0 if "Weekly menu" in text else 0.0
+
+
+def test_reranking_can_promote_a_candidate_from_beyond_top_k() -> None:
+    service, _, _ = build(reranker=FakeReranker(menu_first))
+    plain = ask(
+        service,
+        "indexing pipeline stores chunks",
+        RetrievalMode.HYBRID,
+        top_k=1,
+        rerank=RerankMode.OFF,
+    )
+    assert names(plain) != [5]
+    reranked = ask(
+        service,
+        "indexing pipeline stores chunks",
+        RetrievalMode.HYBRID,
+        top_k=1,
+        rerank=RerankMode.ON,
+    )
+    assert names(reranked) == [5]  # outside the fused top 1, found in the larger rerank pool
+    hit = reranked.result.hits[0]
+    assert (
+        hit.scores.rerank == 10.0 and hit.scores.fused is not None and reranked.diagnostics.reranked
+    )
+    assert "rerank" in reranked.diagnostics.timings_ms and reranked.result.fallbacks == ()
+
+
+def test_a_failing_reranker_keeps_the_fused_order_and_says_why() -> None:
+    service, _, _ = build(reranker=FakeReranker(fail=RuntimeError("boom")))
+    query = "database backups writer"
+    plain = ask(service, query, RetrievalMode.HYBRID, top_k=3, rerank=RerankMode.OFF)
+    broken = ask(service, query, RetrievalMode.HYBRID, top_k=3, rerank=RerankMode.ON)
+    assert names(broken) == names(plain)
+    assert "rerank_skipped:error" in broken.result.fallbacks and not broken.diagnostics.reranked
+    assert all(hit.scores.rerank is None for hit in broken.result.hits)
+
+
+def test_the_rerank_mode_decides_whether_the_stage_runs() -> None:
+    reranker = FakeReranker(menu_first)
+    service, _, _ = build(reranker=reranker)
+    ask(service, "indexing", RetrievalMode.HYBRID, rerank=RerankMode.OFF)
+    assert reranker.calls == 0
+    ask(service, "indexing", RetrievalMode.HYBRID)  # AUTO with a configured stage reranks
+    assert reranker.calls == 1
+    bare, _, _ = build()
+    outcome = ask(bare, "indexing", RetrievalMode.HYBRID, rerank=RerankMode.ON)
+    assert "rerank_skipped:not_configured" in outcome.result.fallbacks
+    quiet = ask(bare, "indexing", RetrievalMode.HYBRID)  # AUTO without a stage is silent
+    assert quiet.result.fallbacks == ()
+
+
+def test_the_rerank_pool_is_bounded_by_the_budget() -> None:
+    reranker = FakeReranker()
+    service, _, _ = build(reranker=reranker, pool_size=2)
+    outcome = ask(service, "indexing pipeline", RetrievalMode.HYBRID, top_k=1, rerank=RerankMode.ON)
+    assert len(outcome.result.hits) == 1 and reranker.calls == 1
+
+
+def test_a_stage_without_a_text_reader_is_a_configuration_error() -> None:
+    lookups = Lookups()
+    with pytest.raises(RagError) as info:
+        RetrievalService(
+            embedder=None,
+            query_prefix="",
+            vectors=None,
+            lexical=None,
+            filters=lookups,
+            catalog=lookups,
+            queries=QueryProcessor(HeuristicTokenCounter(), max_tokens=8),
+            snapshot=lambda: IndexSnapshot(1, None),
+            rerank=RerankStage(FakeReranker(), RerankBudget()),
+        )
+    assert info.value.code is ErrorCode.E_CONFIG_INVALID

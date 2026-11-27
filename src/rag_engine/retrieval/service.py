@@ -19,6 +19,7 @@ from rag_engine.domain import (
     HitScores,
     Language,
     RagError,
+    RerankMode,
     RetrievalHit,
     RetrievalMode,
     RetrievalQuery,
@@ -26,8 +27,11 @@ from rag_engine.domain import (
     ScoredChunk,
 )
 from rag_engine.ports import (
+    Candidate,
     ChunkCatalog,
+    ChunkContentReader,
     ChunkFilter,
+    ChunkInfo,
     EmbeddingProvider,
     LexicalIndex,
     VectorIndex,
@@ -40,6 +44,7 @@ from rag_engine.retrieval.fusion import (
     single_channel,
 )
 from rag_engine.retrieval.query import QueryProcessor
+from rag_engine.retrieval.rerank import RerankStage
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +77,7 @@ class RetrievalDiagnostics:
     capped: int
     unknown: int
     document_share: float
+    reranked: bool = False
     channel_ranks: Mapping[ChunkId, tuple[int | None, int | None]] = field(default_factory=dict)
     timings_ms: Mapping[str, float] = field(default_factory=dict)
 
@@ -96,7 +102,11 @@ class RetrievalService:
         snapshot: Callable[[], IndexSnapshot],
         fusion: FusionSettings | None = None,
         max_per_document: int | None = None,
+        rerank: RerankStage | None = None,
+        content: ChunkContentReader | None = None,
     ) -> None:
+        if rerank is not None and content is None:
+            raise RagError(ErrorCode.E_CONFIG_INVALID, "reranking needs the chunk text reader")
         self._embedder = embedder
         self._prefix = query_prefix
         self._vectors = vectors
@@ -107,6 +117,8 @@ class RetrievalService:
         self._snapshot = snapshot
         self._fusion = fusion or FusionSettings()
         self._max_per_document = max_per_document
+        self._rerank = rerank
+        self._content = content
 
     def _require_channels(self, mode: RetrievalMode) -> None:
         if mode is not RetrievalMode.LEXICAL and (self._embedder is None or self._vectors is None):
@@ -127,6 +139,28 @@ class RetrievalService:
             dense_weight=settings.dense_weight,
             lexical_weight=settings.lexical_weight,
         )
+
+    def _rerank_pool(
+        self,
+        stage: RerankStage,
+        text: str,
+        kept: list[tuple[FusedCandidate, ChunkInfo]],
+    ) -> tuple[list[tuple[FusedCandidate, ChunkInfo]], dict[ChunkId, float], str | None]:
+        """Reorder ``kept`` by the reranker, or return it unchanged with the skip reason."""
+        assert self._content is not None  # noqa: S101 - guaranteed by the constructor
+        contents = self._content.read([item.chunk_id for item, _ in kept])
+        if any(item.chunk_id not in contents for item, _ in kept):
+            return kept, {}, "content_missing"
+        candidates = [
+            Candidate(info.ref, contents[item.chunk_id].text, item.fused) for item, info in kept
+        ]
+        outcome = stage.run(text, candidates)
+        if outcome.skipped is not None or not outcome.ranked:
+            return kept, {}, outcome.skipped
+        by_id = {item.chunk_id: (item, info) for item, info in kept}
+        scores = {r.candidate.chunk_ref.chunk_id: r.score for r in outcome.ranked}
+        ordered = [by_id[r.candidate.chunk_ref.chunk_id] for r in outcome.ranked]
+        return ordered, scores, None
 
     async def search(self, query: RetrievalQuery) -> SearchOutcome:
         mode = query.mode
@@ -149,6 +183,7 @@ class RetrievalService:
             lexical: int = 0,
             fused: int = 0,
             diversity: tuple[int, int, int, float] = (0, 0, 0, 0.0),
+            reranked: bool = False,
             ranks: Mapping[ChunkId, tuple[int | None, int | None]] | None = None,
         ) -> SearchOutcome:
             result = RetrievalResult(
@@ -169,6 +204,7 @@ class RetrievalService:
                     lexical,
                     fused,
                     *diversity,
+                    reranked,
                     channel_ranks=dict(ranks or {}),
                     timings_ms=dict(timings),
                 ),
@@ -217,24 +253,43 @@ class RetrievalService:
             fused = self._fuse(dense_hits, lexical_hits)
         timings["fuse"] = (clock() - started) * 1000
 
+        use_rerank = query.rerank is RerankMode.ON or (
+            query.rerank is RerankMode.AUTO and self._rerank is not None
+        )
+        stage = self._rerank if use_rerank else None
+        if use_rerank and stage is None:
+            fallbacks.append("rerank_skipped:not_configured")
+        pool_k = query.top_k if stage is None else max(query.top_k, stage.budget.pool_size)
+
         started = clock()
         catalog = self._catalog.describe([item.chunk_id for item in fused])
-        diverse = diversify(
-            fused, catalog, top_k=query.top_k, max_per_document=self._max_per_document
-        )
+        diverse = diversify(fused, catalog, top_k=pool_k, max_per_document=self._max_per_document)
         timings["diversity"] = (clock() - started) * 1000
+
+        kept = list(diverse.kept)
+        rerank_scores: dict[ChunkId, float] = {}
+        if stage is not None and self._content is not None:
+            started = clock()
+            kept, rerank_scores, reason = self._rerank_pool(stage, processed.text, kept)
+            timings["rerank"] = (clock() - started) * 1000
+            if reason is not None:
+                fallbacks.append(f"rerank_skipped:{reason}")
+        kept = kept[: query.top_k]
 
         hits = tuple(
             RetrievalHit(
                 chunk_ref=info.ref,
                 rank=rank,
                 scores=HitScores(
-                    dense=item.dense, lexical=item.lexical, fused=item.fused, rerank=None
+                    dense=item.dense,
+                    lexical=item.lexical,
+                    fused=item.fused,
+                    rerank=rerank_scores.get(item.chunk_id),
                 ),
             )
-            for rank, (item, info) in enumerate(diverse.kept, start=1)
+            for rank, (item, info) in enumerate(kept, start=1)
         )
-        ranks = {item.chunk_id: (item.dense_rank, item.lexical_rank) for item, _ in diverse.kept}
+        ranks = {item.chunk_id: (item.dense_rank, item.lexical_rank) for item, _ in kept}
         return finish(
             hits,
             matched=matched,
@@ -247,5 +302,6 @@ class RetrievalService:
                 diverse.unknown,
                 diverse.document_share,
             ),
+            reranked=bool(rerank_scores),
             ranks=ranks,
         )

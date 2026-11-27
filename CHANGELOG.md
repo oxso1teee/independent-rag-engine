@@ -5,6 +5,15 @@ project until a release is cut.
 
 ## [Unreleased]
 
+### Phase 6: reranking and context (in progress)
+- `Reranker` contract tests and `FakeReranker`; `RerankStage` runs a reranker under a time and pool
+  budget and can never fail a search: an error, a timeout, a model still busy with a timed-out call
+  or output that is not a reordering of the input keeps the fused order and reports
+  `rerank_skipped:<reason>`. The service reranks a pool larger than `top_k` (default 30) and returns
+  `top_k` with the raw reranker score in `HitScores.rerank`. `rag search --rerank/--no-rerank`;
+  without a configured reranker `--rerank` is a noted fallback. `ChunkContentReader` port with a
+  SQLite reader returns text, position and provenance of any chunk.
+
 ### Phase 5: retrieval (implemented; labels await review)
 - `eval/scripts/benchmark_search.py`: end-to-end search latency over a real published index.
   Hybrid p95 is 30.2 ms at 10⁴ chunks and 281.6 ms at 10⁵ (query embedding excluded), peak 85 and

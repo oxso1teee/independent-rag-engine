@@ -256,3 +256,22 @@ def test_the_catalog_describes_published_chunks(corpus: Corpus) -> None:
     assert first.ref.document_id == corpus.documents["projects/alpha.md"]
     assert first.text_hash == TextHash.of_text("a1")
     assert catalog.describe([]) == {}
+
+
+def test_the_content_reader_returns_text_position_and_provenance(corpus: Corpus) -> None:
+    from rag_engine.ports import ChunkContentReader
+    from rag_engine.storage.content import SqliteChunkContentReader
+
+    reader = SqliteChunkContentReader(corpus.database)
+    assert isinstance(reader, ChunkContentReader)
+    first, table = corpus.chunks["projects/alpha.md:a1"], corpus.chunks["projects/alpha.md:a2"]
+    unknown = ChunkId.derive(make_ids().document_version_id(), "unknown", 0)
+    found = reader.read([table, first, unknown])
+    assert set(found) == {first, table}
+    item = found[first]
+    assert item.text == "a1" and item.ref.document_id == corpus.documents["projects/alpha.md"]
+    assert (item.source_name, item.source_key) == ("notes", "projects/alpha.md")
+    assert item.level == 0 and item.parent_id is None and item.heading_path == ()
+    assert item.char_end - item.char_start == len("a1") and item.page_start is None
+    assert found[table].ordinal == 1
+    assert reader.read([]) == {}

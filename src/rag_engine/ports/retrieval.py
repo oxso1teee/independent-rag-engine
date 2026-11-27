@@ -34,3 +34,30 @@ class ChunkCatalog(Protocol):
     def describe(self, ids: Sequence[ChunkId]) -> Mapping[ChunkId, ChunkInfo]:
         """Identity of each requested chunk; unknown ids are absent from the result."""
         ...
+
+
+@dataclass(frozen=True, slots=True)
+class ChunkContent:
+    """A published chunk with everything needed to show it as evidence and to cite it."""
+
+    ref: ChunkRef
+    text: str
+    token_count: int
+    level: int
+    parent_id: ChunkId | None
+    ordinal: int
+    char_start: int
+    char_end: int
+    heading_path: tuple[str, ...]
+    page_start: int | None
+    page_end: int | None
+    source_name: str
+    source_key: str
+    title: str | None
+
+
+@runtime_checkable
+class ChunkContentReader(Protocol):
+    def read(self, ids: Sequence[ChunkId]) -> Mapping[ChunkId, ChunkContent]:
+        """Content of each requested chunk of any level; unknown ids are absent."""
+        ...

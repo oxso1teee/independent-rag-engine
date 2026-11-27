@@ -17,7 +17,13 @@ from rag_engine.ports.llm import (
 )
 from rag_engine.ports.parser import ParseHints, ParseLimits, Parser
 from rag_engine.ports.rerank import Candidate, RerankBudget, RerankedCandidate, Reranker
-from rag_engine.ports.retrieval import ChunkCatalog, ChunkFilter, ChunkInfo
+from rag_engine.ports.retrieval import (
+    ChunkCatalog,
+    ChunkContent,
+    ChunkContentReader,
+    ChunkFilter,
+    ChunkInfo,
+)
 from rag_engine.ports.source import (
     ScanIssue,
     ScanReport,
@@ -33,6 +39,8 @@ from rag_engine.ports.vector import VectorIndex
 __all__ = [
     "Candidate",
     "ChunkCatalog",
+    "ChunkContent",
+    "ChunkContentReader",
     "ChunkFilter",
     "ChunkInfo",
     "Chunker",
