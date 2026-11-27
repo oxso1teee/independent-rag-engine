@@ -6,6 +6,10 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 6: reranking and context (in progress)
+- System prompt `rag-system/1` (`context/prompt.py`): evidence-only answers, `[E<n>]` citations, one
+  exact refusal sentence, answer in the question's language. Its SHA-256 is pinned and a test caps its
+  measured size (217 tokens with the conservative counter, limit 260), so any change to the prompt
+  or its cost is a visible decision.
 - `ContextBuilder` turns ranked hits into numbered evidence (`E1..En`) inside a measured token
   budget (`window - system - question - max_new - margin`, margin `max(256, 10 %)`): exact
   duplicates are dropped, overlapping chunks of one version are folded into their exact union, a
