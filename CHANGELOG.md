@@ -6,6 +6,9 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 5: retrieval (in progress)
+- `diversify`: exact repeats of a text (`text_hash`) collapse to their first occurrence across
+  documents, and `max_per_document` caps how many places one document may take; rank order is kept.
+  The outcome reports collapsed, capped and unknown counts and the share of unique documents.
 - `rag_engine.retrieval.fusion`: reciprocal rank fusion (`k = 60`, dense weight 1.0, lexical
   weight 0.5 as starting values) and min-max weighted-score fusion of the dense and lexical
   channels. Every component (raw scores, per-channel ranks) is kept; ties are broken by chunk id,
