@@ -6,6 +6,11 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 4: embeddings and storage (in progress)
+- Acceptance tests for Phase 4 failure paths: sixteen injected corruptions that `doctor
+  --integrity` must report (and never repair), every fencing guard of the atomic publisher,
+  damaged stored vectors and model metadata at index load, indexing-handler refusals, Ollama
+  response and connection errors, and the exact token counter. Total coverage rose from 93 % to
+  94 %; `integrity.py` 79 → 96 %, `publishing.py` 81 → 97 %, `vector_flat.py` 83 → 98 %.
 - ONNX embeddings support the pinned `intfloat/multilingual-e5-small` snapshot offline (384
   dimensions, 512 tokens, `query: ` / `passage: ` prefixes, mean pooling). The adapter counts
   tokens with the model's own `tokenizer.json`, special tokens included, and refuses an input over
