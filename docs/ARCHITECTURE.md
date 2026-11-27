@@ -10,6 +10,7 @@ adapters are injected at a single composition root.
 container                                                 composition root: configuration, adapters, entry point
 cli                                                       command line (thin)
 evaluation                                                metrics, datasets and runners that measure the pipeline
+pipeline                                                  query orchestration: stages, time budget, final status
 generation                                                answer generation: prompt, model call, citation checks
 ingestion | retrieval | context                           use cases: the ingestion pipeline, search and context assembly
 storage | system | testing | observability | config | parsing | chunking | embedding | llm
@@ -335,8 +336,9 @@ with exactly the sentinel `<<INSUFFICIENT>>`, which is language-neutral and neve
   silently and is `E_CONTEXT_TRUNCATED`; a gap of more than 15 % between the counted and the
   reported prompt tokens is a `token_count_drift` warning; a reply cut by the length limit carries
   `answer_truncated`.
-- **Degenerate replies.** Fewer than two letters or digits (markers excluded), a lone marker, a
-  loop of repeated words, or the sentinel mixed with prose is degenerate. It gets one retry at
+- **Degenerate replies.** Fewer than `min_answer_chars` characters (20 by default, as specified;
+  citation markers excluded; `[answer] min_answer_chars`), fewer than two letters or digits, a lone
+  marker, a loop of repeated words, or the sentinel mixed with prose is degenerate. It gets one retry at
   temperature 0.3, then `E_DEGENERATE_ANSWER`.
 - **Citations.** Level 1: every `[E<n>]` must name evidence of this context and an answer must
   cite something; otherwise one retry, then `E_CITATION_INVALID`. A source that was not provided
@@ -393,6 +395,55 @@ valid only without the reranker and on a machine that has the memory for an embe
 resident model, which the owner decides; it was the first default and was withdrawn because
 the sum (about 1.2 + 3.5 GiB without the reranker) already exceeds the memory usually available.
 The price of `0` is a cold model load (a few seconds) on every question.
+
+## Query pipeline (`rag_engine.pipeline`)
+
+`RagPipeline.ask(query)` and `.stream(query)` run retrieval, context assembly, the sufficiency gate
+and generation under **one time budget** and always end in one of four statuses. There is no fifth
+way out: stage failures are statuses, only cancellation propagates.
+
+| Status | Meaning | Text | Citations | Model called |
+|---|---|---|---|---|
+| `answered` | the model answered and every citation resolves to evidence of this request | yes | at least one | yes |
+| `insufficient_evidence` | no hits, an empty context, the gate refused, or the model said the evidence lacks the answer | no | none | not when the gate or the search settled it |
+| `unverified` | the model produced text but its citations stayed invalid after one retry | no (kept apart as `raw_text`) | none | yes |
+| `error` | a stage failed; `error.code` and `error.stage` say which (`E_TIMEOUT`, `E_CONTEXT_BUDGET`, `E_DEGENERATE_ANSWER`, provider errors) | no | none | maybe |
+
+The table is enforced by `PipelineAnswer` itself: an `answered` result without a real answer (at
+least two letters or digits; the generator additionally enforces the 20-character default),
+without a citation, or citing evidence that is not among its sources cannot be built
+(NFR-08, tested on one-character, empty, punctuation-only and marker-only replies).
+
+- **Time.** `TimeBudget` splits the total allowance (`[answer] total_timeout_s`): retrieval may use
+  at most its share (25 % by default), context assembly its share (5 %), generation whatever is
+  left. Time comes from the injected monotonic clock. The budget is cooperative: it bounds every
+  await and is checked between stages, but cannot interrupt a synchronous call that never yields.
+- **Gate.** The sufficiency gate reads the calibration stored in the index on every request; with
+  none stored it lets the question through and says `uncalibrated`. A refusal by the gate answers
+  without any model call (tested with a spy: zero calls).
+- **Streaming.** `stream(query, verified_only=True)` sends evidence, then the validated text once,
+  then citations, then one `FinalEvent`. `verified_only=False` streams provisional drafts and
+  announces a failed validation with `RetractEvent` before the final event. A stream never raises
+  a pipeline failure; it ends with a final event of status `unverified` or `error`.
+- **Concurrency and cancellation.** `limits.llm_concurrency` (1 on the `low` profile) bounds
+  requests in flight. A cancelled request frees its slot and the model provider's slot and is not
+  an error status; the other requests are unaffected (tested with two concurrent requests, one
+  cancelled).
+- **Memory.** In one-shot use (`rag ask`) the in-process embedder and reranker are released before
+  a local model is called (`[answer] release_models`). Releasing is not assumed to free memory:
+  measured on the real E5-small model (`eval/scripts/release_memory.py`, one run), dropping the
+  model and collecting returned 383 of 1160 MiB of the process' resident set, and
+  `malloc_trim` after it returned 760 MiB; the hand-over therefore also calls `trim_heap()`. The
+  cross-encoder was not measured (loading it needs about 2.5 GiB). A long-running service keeps its
+  models and does not release them.
+- **Observability (NFR-07).** `pipeline.context` logs how many chunks were included, cut, dropped
+  and merged; the same counts are in `diagnostics.context`. Every pipeline event carries the
+  `request_id`; document text, questions and answers are never logged.
+
+`rag ask QUESTION [--stream [--live]] [--json] [--sources] [--show-unverified]` is a thin command
+over the pipeline. Exit codes: 0 answered; 10 insufficient evidence; 11 unverified; other values
+follow the error category (3 configuration, 6 provider, 7 resource, ...). `--stream --json` prints
+one event per line, ending with `final`.
 
 ## Command line
 

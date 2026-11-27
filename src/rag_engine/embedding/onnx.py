@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import gc
 import hashlib
 import importlib
 from collections.abc import Callable, Iterable, Sequence
@@ -135,7 +136,7 @@ class OnnxEmbedder:
                     retryable=False,
                     context={"error_type": type(exc).__name__},
                 ) from exc
-        self._backend = backend
+        self._backend: _Backend | None = backend
         self._token_counter = token_counter
         if model_directory_digest(model_dir) != model.revision:
             raise RagError(ErrorCode.E_EMBED_MODEL_MISMATCH, "ONNX model files changed during load")
@@ -157,6 +158,8 @@ class OnnxEmbedder:
     async def embed_documents(self, texts: Sequence[str]) -> Vectors:
         if not texts:
             return np.zeros((0, self.dimension), dtype=np.float32)
+        if self._backend is None:
+            raise RagError(ErrorCode.E_RESOURCE_GATE, "the ONNX model was released from memory")
         if self._active is not None and not self._active.done():
             raise RagError(ErrorCode.E_RESOURCE_GATE, "previous ONNX inference is still running")
         self._active = self._executor.submit(self._infer, list(texts))
@@ -186,7 +189,10 @@ class OnnxEmbedder:
                         "embedding input exceeds the model token limit",
                         context={"tokens": tokens, "limit": self._model.max_input_tokens},
                     )
-        rows = list(self._backend.embed(texts, batch_size=len(texts), parallel=None))
+        backend = self._backend
+        if backend is None:
+            raise RagError(ErrorCode.E_RESOURCE_GATE, "the ONNX model was released from memory")
+        rows = list(backend.embed(texts, batch_size=len(texts), parallel=None))
         return np.asarray(rows, dtype=np.float32)
 
     async def embed_query(self, text: str) -> Vectors:
@@ -194,3 +200,12 @@ class OnnxEmbedder:
 
     def close(self) -> None:
         self._executor.shutdown(wait=False, cancel_futures=True)
+
+    def release(self) -> None:
+        """Drop the loaded model so its memory can be returned; any later use is refused.
+
+        For a short-lived process that is about to hand the machine to a local generator. A long
+        running service keeps its models loaded and never calls this.
+        """
+        self._backend = None
+        gc.collect()

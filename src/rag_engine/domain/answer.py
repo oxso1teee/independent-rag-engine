@@ -16,8 +16,20 @@ from rag_engine.domain.ids import ChunkId, DocumentId, DocumentVersionId
 
 
 class AnswerStatus(StrEnum):
+    """What the generator concluded: an answer, a refusal, or text whose citations failed."""
+
     ANSWERED = "answered"
     REFUSED = "refused"
+    UNVERIFIED = "unverified"
+
+
+class AskStatus(StrEnum):
+    """What a caller of the whole pipeline is told."""
+
+    ANSWERED = "answered"
+    INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+    UNVERIFIED = "unverified"
+    ERROR = "error"
 
 
 class CitationProblem(StrEnum):

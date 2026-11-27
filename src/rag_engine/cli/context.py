@@ -21,8 +21,10 @@ from rag_engine.ingestion.jobs import JobQueue, Worker
 from rag_engine.ingestion.maintenance import IndexMaintenance
 from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.service import IngestService
+from rag_engine.pipeline import RagPipeline
 from rag_engine.ports import ParseLimits, Store, TokenCounter
 from rag_engine.retrieval.service import RetrievalService
+from rag_engine.retrieval.sufficiency import SufficiencyGate
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +75,19 @@ class SearchServices:
     context_policy: ContextPolicy
     llm_window: int | None
     llm_max_new: int
+    gate: Callable[[], SufficiencyGate] = lambda: SufficiencyGate(None, None)
+    """The sufficiency gate for the index as it is now (its calibration is read each time)."""
+    release_models: Callable[[], None] = lambda: None
+    """Drops the in-process embedder and reranker; the services are unusable for search after."""
+
+
+@dataclass(frozen=True, slots=True)
+class AskServices:
+    """A configured query pipeline over the published index, for one command."""
+
+    pipeline: RagPipeline
+    ids: IdFactory
+    defaults: SearchDefaults
 
 
 class Container(Protocol):
@@ -90,4 +105,8 @@ class Container(Protocol):
         self, config: Path | None, db: Path | None
     ) -> AbstractContextManager[SearchServices]:
         """Search services over the published index; nothing is written."""
+        ...
+
+    def ask(self, config: Path | None, db: Path | None) -> AbstractContextManager[AskServices]:
+        """The query pipeline over the published index; needs ``[llm]`` and an index."""
         ...

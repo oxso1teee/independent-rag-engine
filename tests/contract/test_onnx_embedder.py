@@ -254,3 +254,15 @@ def test_exact_counter_reports_a_missing_tokenizers_package(
     with pytest.raises(RagError) as info:
         exact_token_counter(tmp_path)
     assert info.value.code is ErrorCode.E_CONFIG_INVALID
+
+
+def test_a_released_model_refuses_further_use_and_drops_the_backend(tmp_path: Path) -> None:
+    model, directory = local_model(tmp_path)
+    provider = OnnxEmbedder(model, directory, backend=Backend())
+    assert asyncio.run(provider.embed_documents(["a"])).shape == (1, 4)
+    provider.release()
+    assert provider._backend is None
+    with pytest.raises(RagError) as info:
+        asyncio.run(provider.embed_documents(["a"]))
+    assert info.value.code is ErrorCode.E_RESOURCE_GATE
+    assert asyncio.run(provider.embed_documents([])).shape == (0, 4)  # nothing to embed is fine

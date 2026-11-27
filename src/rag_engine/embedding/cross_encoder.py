@@ -8,6 +8,7 @@ fused order. Scores are raw logits, comparable only within one model.
 
 from __future__ import annotations
 
+import gc
 import importlib
 import math
 from collections.abc import Callable, Iterable, Sequence
@@ -92,7 +93,12 @@ class OnnxCrossEncoder:
                     retryable=False,
                     context={"error_type": type(exc).__name__},
                 ) from exc
-        self._backend = backend
+        self._backend: _Backend | None = backend
+
+    def release(self) -> None:
+        """Drop the loaded model; a later call is refused (see ``OnnxEmbedder.release``)."""
+        self._backend = None
+        gc.collect()
 
     def rerank(
         self, query: str, candidates: Sequence[Candidate], budget: RerankBudget
@@ -100,6 +106,9 @@ class OnnxCrossEncoder:
         pool = list(candidates[: budget.pool_size])
         if not pool:
             return []
+        backend = self._backend
+        if backend is None:
+            raise RagError(ErrorCode.E_RESOURCE_GATE, "the reranker model was released from memory")
         for candidate in pool:
             tokens = self._count(query, candidate.text)
             if tokens > self._max_pair_tokens:
@@ -109,7 +118,7 @@ class OnnxCrossEncoder:
                     context={"tokens": tokens, "limit": self._max_pair_tokens},
                 )
         texts = [c.text for c in pool]
-        scores = [float(s) for s in self._backend.rerank(query, texts, self._batch_size)]
+        scores = [float(s) for s in backend.rerank(query, texts, self._batch_size)]
         if len(scores) != len(pool) or not all(math.isfinite(s) for s in scores):
             raise RagError(
                 ErrorCode.E_PROVIDER_UNAVAILABLE,

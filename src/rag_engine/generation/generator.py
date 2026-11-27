@@ -41,6 +41,7 @@ from rag_engine.ports import (
     GenerationParams,
     GenerationRequest,
     LLMProvider,
+    ModelLimits,
     TokenUsage,
 )
 
@@ -56,8 +57,12 @@ class GenerationPolicy:
     retry_temperature: float = 0.3
     max_attempts: int = 2
     strict_overlap: bool = False
-    min_answer_chars: int = 2
-    """An answer with fewer letters or digits (markers excluded) is degenerate."""
+    unverified_on_invalid: bool = False
+    """When the citations stay invalid after the retry, return the reply as ``UNVERIFIED`` (its
+    text kept apart as ``raw_text``, never as the answer) instead of raising."""
+    min_answer_chars: int = 20
+    """An answer shorter than this many characters (markers excluded) is degenerate: the
+    specification's default of 20."""
     drift_ratio: float = 0.15
 
     def __post_init__(self) -> None:
@@ -81,6 +86,8 @@ class GeneratedAnswer:
     attempts: int
     latency_ms: int
     warnings: tuple[str, ...] = ()
+    raw_text: str = ""
+    """The model's reply when it was not accepted as an answer (``UNVERIFIED``); never an answer."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,19 +133,33 @@ class DoneEvent:
 type AnswerEvent = EvidenceEvent | DeltaEvent | RetractEvent | CitationsEvent | DoneEvent
 
 
+class CitationRejected(RagError):
+    """The reply cites evidence that does not exist or does not support it."""
+
+    def __init__(self, text: str, check: CitationCheck, problems: list[CitationProblem]) -> None:
+        super().__init__(
+            ErrorCode.E_CITATION_INVALID,
+            "the answer cites evidence that does not exist or does not support it",
+            context={"problems": [p.value for p in problems], "unknown": list(check.unknown)},
+        )
+        self.text = text
+        self.check = check
+
+
 def is_refusal(text: str) -> bool:
     return text.strip(_WRAPPING) == REFUSAL_SENTINEL.strip(_WRAPPING)
 
 
-def is_degenerate(text: str, min_chars: int = 2) -> bool:
+def is_degenerate(text: str, min_chars: int = 20) -> bool:
     """Too short to be an answer, mixed with the refusal sentinel, or stuck in a loop.
 
-    Length is counted in letters and digits with the ``[E<n>]`` markers removed, so a reply that is
-    only a citation, a single character or punctuation never counts as an answer.
+    Length is counted in characters of the text with the ``[E<n>]`` markers removed and spaces
+    collapsed, and the text must hold at least two letters or digits, so a reply that is only a
+    citation, a single character or punctuation never counts as an answer.
     """
     stripped = text.strip()
-    visible = sum(char.isalnum() for char in _MARKER.sub("", stripped))
-    if visible < min_chars:
+    plain = " ".join(_MARKER.sub("", stripped).split())
+    if len(plain) < min_chars or sum(char.isalnum() for char in plain) < 2:
         return True
     if REFUSAL_SENTINEL in stripped and not is_refusal(stripped):
         return True
@@ -156,6 +177,10 @@ class AnswerGenerator:
         self._llm = llm
         self._validator = validator or CitationValidator()
         self._policy = policy or GenerationPolicy()
+
+    def limits(self) -> ModelLimits:
+        """The window and answer allowance of the model behind this generator."""
+        return self._llm.limits()
 
     # ----------------------------------------------------------------- one-shot
 
@@ -198,6 +223,10 @@ class AnswerGenerator:
             self._record(outcome)
             return _with_warnings(outcome, warnings)
         assert failure is not None  # noqa: S101 - max_attempts >= 1, so a failure was recorded
+        if isinstance(failure, CitationRejected) and self._policy.unverified_on_invalid:
+            outcome = self._unverified(failure, rendered, usage, self._policy.max_attempts, latency)
+            self._record(outcome)
+            return _with_warnings(outcome, warnings)
         raise failure
 
     # ----------------------------------------------------------------- streaming
@@ -263,6 +292,12 @@ class AnswerGenerator:
         except RagError as error:
             if sent:
                 yield RetractEvent(error.code, error.message)
+            if isinstance(error, CitationRejected) and self._policy.unverified_on_invalid:
+                rejected = self._unverified(error, rendered, usage, 1, 0)
+                self._record(rejected)
+                yield CitationsEvent(())
+                yield DoneEvent(_with_warnings(rejected, ["usage_estimated"]))
+                return
             raise
         self._record(outcome)
         outcome = _with_warnings(outcome, ["usage_estimated"])
@@ -331,14 +366,7 @@ class AnswerGenerator:
             if p is not CitationProblem.LOW_OVERLAP or self._policy.strict_overlap
         ]
         if fatal:
-            raise RagError(
-                ErrorCode.E_CITATION_INVALID,
-                "the answer cites evidence that does not exist or does not support it",
-                context={
-                    "problems": [p.value for p in fatal],
-                    "unknown": list(check.unknown),
-                },
-            )
+            raise CitationRejected(answer, check, fatal)
         return GeneratedAnswer(
             AnswerStatus.ANSWERED,
             answer,
@@ -358,6 +386,19 @@ class AnswerGenerator:
         return GeneratedAnswer(
             AnswerStatus.REFUSED, "", (), None, TokenUsage(0, 0), "", "answer.v1", 0, 0,
             ("no_evidence",),
+        )  # fmt: skip
+
+    @staticmethod
+    def _unverified(
+        rejected: CitationRejected,
+        rendered: RenderedPrompt,
+        usage: TokenUsage,
+        attempts: int,
+        latency: int,
+    ) -> GeneratedAnswer:
+        return GeneratedAnswer(
+            AnswerStatus.UNVERIFIED, "", (), rejected.check, usage, rendered.prompt_sha256,
+            rendered.template_id, attempts, latency, raw_text=rejected.text,
         )  # fmt: skip
 
     def _record(self, answer: GeneratedAnswer) -> None:
