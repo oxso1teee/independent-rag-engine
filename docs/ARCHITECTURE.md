@@ -261,6 +261,34 @@ contracts are in [ADR 0008](adr/0008-parsing-and-chunking-contracts.md).
 Parsing and chunking are pure computation: they depend on the domain and the ports only, and
 the import contracts keep them independent of each other.
 
+## Retrieval (`rag_engine.retrieval`)
+
+One call of `RetrievalService.search` is a deterministic function of the query and the published
+index. The service sees only ports (`VectorIndex`, `LexicalIndex`, `ChunkFilter`, `ChunkCatalog`,
+`EmbeddingProvider`) and an injected snapshot callable, so refreshing the vector matrix and
+reading the generation stay in the composition root.
+
+```
+query text
+ -> QueryProcessor    NFC, control characters, token limit (E_QUERY_INVALID), script language
+ -> ChunkFilter       metadata filters to a set of searchable chunk ids (bound parameters only)
+ -> dense channel     query prefix + embed_query, exact cosine over the fp16 matrix, candidate_k
+ -> lexical channel   FTS5 / BM25 with the Russian/English analyzer, candidate_k
+ -> fusion            RRF (k = 60, weights 1.0 / 0.5) or min-max weighted scores
+ -> diversity         exact duplicate texts collapse, optional cap per document
+ -> top_k hits        HitScores (dense, lexical, fused) + diagnostics
+```
+
+- Only indexed, non-duplicate chunks of active documents' current versions can be returned.
+- Fusion keeps every raw score and per-channel rank; ties are broken by chunk id. The fused score
+  orders results inside one query and is not a probability.
+- Fallbacks are reported, not raised: `filter_matched_zero`, `no_index`, `dense_empty`,
+  `lexical_empty`. A query embedded by another model than the index's is `E_EMBED_MODEL_MISMATCH`.
+- The default mode is `dense` ([ADR 0013](adr/0013-default-retrieval-mode.md)); measured latency
+  and the evaluation method are in [`RETRIEVAL_EVALUATION.md`](RETRIEVAL_EVALUATION.md).
+- `rag_engine.evaluation` (above `ingestion` and `retrieval` in the layering) holds the metrics,
+  seeded bootstrap intervals, the dataset schema and the runner that scores rankings.
+
 ## Command line
 
 `rag source add|list|rebase` (`add` takes repeatable `--cleaner` line patterns),

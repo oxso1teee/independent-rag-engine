@@ -5,7 +5,7 @@ project until a release is cut.
 
 ## [Unreleased]
 
-### Phase 5: retrieval (in progress)
+### Phase 5: retrieval (implemented; labels await review)
 - `eval/scripts/benchmark_search.py`: end-to-end search latency over a real published index.
   Hybrid p95 is 30.2 ms at 10⁴ chunks and 281.6 ms at 10⁵ (query embedding excluded), peak 85 and
   280 MiB; Phase 5 acceptance criteria and their evidence are tabulated in `docs/TESTING.md`.
@@ -51,7 +51,7 @@ project until a release is cut.
   nDCG@k for one ranking, and seeded percentile bootstrap intervals, plain and paired over queries.
   Values are checked against hand-computed rankings; the same seed reproduces an interval exactly.
 
-### Phase 4: embeddings and storage (in progress)
+### Phase 4: embeddings and storage (complete)
 - Decision D-03 closed ([ADR 0012](docs/adr/0012-embedding-default-evaluation.md)): the default
   embedding model is `intfloat/multilingual-e5-small` through ONNX, chosen by an explicit rule
   (resource gate, paired quality interval, tie-breaks). Evidence in `docs/EMBEDDING_BAKEOFF.md`: NoMIRACL judged-pool ranking in
