@@ -82,7 +82,7 @@ supported for machines that can host them; any supported model can be configured
 
 - The sample is 80 queries over judged pools; intervals are about ±0.04–0.05, so differences
   below that are not detectable. The scores do not predict full-corpus recall.
-- **Qwen3 4B quality was not measured.** The decision does not depend on it: the model fails the
+- **Qwen3 4B quality was not measured, and the owner decided not to measure it (2026-11-27).** The decision does not depend on it: the model fails the
   resource gate on the target machine whatever its quality. If a machine with at least 4 GiB of
   free memory becomes the target, resume the cached run
   (`bakeoff_nomiracl.py quality qwen3-embedding:4b`) and apply rule 2 again.
