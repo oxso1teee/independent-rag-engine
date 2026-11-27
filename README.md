@@ -121,6 +121,7 @@ eval/datasets/     versioned question sets
 - [Testing](docs/TESTING.md)
 - [Phase 4 embedding measurements](docs/EMBEDDING_BAKEOFF.md)
 - [Retrieval evaluation](docs/RETRIEVAL_EVALUATION.md)
+- [Reviewing an evaluation dataset](docs/DATASET_REVIEW.md)
 - [Changelog](CHANGELOG.md)
 - [Architecture decision records](docs/adr/README.md)
 
