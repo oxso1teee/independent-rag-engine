@@ -17,3 +17,4 @@ supersedes the old one.
 | [0010](0010-embedding-input-identity.md) | Embedding input and model identity | Accepted |
 | [0011](0011-read-only-integrity-inspection.md) | Read-only integrity inspection | Accepted |
 | [0012](0012-embedding-default-evaluation.md) | Default embedding model: multilingual-e5-small through ONNX (D-03) | Accepted |
+| [0013](0013-default-retrieval-mode.md) | Default retrieval mode stays dense; hybrid is an option | Accepted (provisional) |

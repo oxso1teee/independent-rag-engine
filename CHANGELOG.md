@@ -6,6 +6,13 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 5: retrieval (in progress)
+- Evaluation: dataset schema v2 with a strict parser and validator (verbatim anchors, absence terms,
+  question-type rules, split policy over shared gold documents, reviewer checks, metric
+  eligibility), `retrieval_mini_v1` (18 original documents, 44 English and Russian questions, all
+  unreviewed), a scoring runner (document- and chunk-level metrics, bootstrap summaries by type and
+  language, paired comparison, saturation and anecdotal flags) and `eval/scripts/retrieval_eval.py`,
+  which drives the real ingest and search. First exploratory result: dense and hybrid saturate the
+  set, lexical is lower. ADR 0013 keeps `dense` as the default; see `docs/RETRIEVAL_EVALUATION.md`.
 - `rag search QUERY`: dense, lexical or hybrid retrieval over the published index with metadata
   filters (`--source`, `--path-prefix`, `--path-glob`, `--tag`, `--tag-all`, `--language`, `--kind`,
   `--modified-after/-before`, `--doc-id`, `--exclude-doc-id`), `--top-k`, `--candidate-k`, `--full`,

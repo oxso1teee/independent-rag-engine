@@ -23,9 +23,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from rag_engine.cli.search import load_details
-
 from rag_engine.cli.main import main as rag
+from rag_engine.cli.search import load_details
 from rag_engine.container import DefaultContainer
 from rag_engine.domain import RetrievalMode, RetrievalQuery
 from rag_engine.embedding.onnx import model_directory_digest
@@ -143,8 +142,9 @@ def main() -> None:
         config, db = work / "rag.toml", work / "rag.db"
         write_config(config, args.model_dir.resolve(), 'mode = "hybrid"')
         prefix = ["--config", str(config), "--db", str(db)]
-        assert rag([*prefix, "source", "add", "corpus", str(corpus_dir)], container=container) == 0
-        assert rag([*prefix, "ingest", "corpus", "--json"], container=container) == 0
+        for step in (["source", "add", "corpus", str(corpus_dir)], ["ingest", "corpus", "--json"]):
+            if rag([*prefix, *step], container=container) != 0:
+                sys.exit(f"rag {step[0]} failed")
         for mode in MODES:
             scores, timings, generation, model = run_mode(container, config, db, questions, mode)
             all_scores[mode.value] = scores
@@ -217,9 +217,11 @@ def vars_of_interval(interval: Any) -> dict[str, float | bool]:
 def render(report: dict[str, Any]) -> str:
     manifest = report["manifest"]
     lines = [
-        f"# Retrieval evaluation: {manifest['dataset']} ({manifest['split']}, {manifest['questions']} questions)",
+        f"# Retrieval evaluation: {manifest['dataset']} "
+        f"({manifest['split']}, {manifest['questions']} questions)",
         "",
-        f"dataset sha256 `{manifest['dataset_sha256'][:16]}`; model `{manifest['embedding_model']}`; "
+        f"dataset sha256 `{manifest['dataset_sha256'][:16]}`; "
+        f"model `{manifest['embedding_model']}`; "
         f"seed {manifest['seed']}; index generation {manifest['index_generation']}",
     ]
     if manifest["exploratory"]:
