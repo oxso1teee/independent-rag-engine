@@ -6,6 +6,9 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 5: retrieval (in progress)
+- `diversify`: exact repeats of a text (`text_hash`) collapse to their first occurrence across
+  documents, and `max_per_document` caps how many places one document may take; rank order is kept.
+  The outcome reports collapsed, capped and unknown counts and the share of unique documents.
 - `QueryProcessor`: NFC, control characters to spaces, invisible format characters dropped,
   whitespace collapsed, a character cap before tokenising and a token limit (a query over it is
   refused, never truncated), and script-based language detection with an optional hint. New error
