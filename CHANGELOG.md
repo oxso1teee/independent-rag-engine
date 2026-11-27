@@ -6,6 +6,10 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 5: retrieval (in progress)
+- `rag_engine.retrieval.fusion`: reciprocal rank fusion (`k = 60`, dense weight 1.0, lexical
+  weight 0.5 as starting values) and min-max weighted-score fusion of the dense and lexical
+  channels. Every component (raw scores, per-channel ranks) is kept; ties are broken by chunk id,
+  so the order depends only on the inputs. A chunk absent from a channel adds nothing for it.
 - `rag_engine.evaluation`: Recall@k, Precision@k, hit rate (coverage), reciprocal rank and graded
   nDCG@k for one ranking, and seeded percentile bootstrap intervals, plain and paired over queries.
   Values are checked against hand-computed rankings; the same seed reproduces an interval exactly.

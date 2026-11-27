@@ -10,7 +10,7 @@ adapters are injected at a single composition root.
 container                                                 composition root: configuration, adapters, entry point
 cli                                                       command line (thin)
 evaluation                                                metrics, datasets and runners that measure the pipeline
-ingestion                                                 use cases of the ingestion pipeline
+ingestion | retrieval                                      use cases: the ingestion pipeline and search
 storage | system | testing | observability | config | parsing | chunking
                                                           adapters and cross-cutting services
 ports                                                     Protocol contracts
