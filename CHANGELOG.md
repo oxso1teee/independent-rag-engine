@@ -5,7 +5,7 @@ project until a release is cut.
 
 ## [Unreleased]
 
-### Phase 6: reranking and context (in progress)
+### Phase 6: reranking and context (implemented; two criteria unmet)
 - `OnnxCrossEncoder` (offline, files pinned by fingerprint, pairs over the window refused) and the
   `[rerank]` and `[context]` settings; `rag context QUERY` shows the evidence a question would get,
   the measured token budget (`window - system - question - max_new - margin`) and everything that
