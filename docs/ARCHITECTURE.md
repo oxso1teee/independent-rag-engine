@@ -67,7 +67,7 @@ listed in `domain/errors.py`; a snapshot test fails on any change.
 | `resource` | `E_CONTEXT_BUDGET`, `E_RESOURCE_GATE`, `E_TIMEOUT`* |
 | `storage` | `E_STORE_LOCKED`*, `E_MIGRATION_REQUIRED` |
 | `integrity` | `E_EMBED_MODEL_MISMATCH`, `E_INTEGRITY` |
-| `user` | `E_FILTER_INVALID` |
+| `user` | `E_FILTER_INVALID`, `E_QUERY_INVALID` |
 
 \* retryable by default. `context` holds scalars and nested sequences/mappings of scalars (deeply immutable,
 restored intact by `copy` and `pickle`) and must never contain document

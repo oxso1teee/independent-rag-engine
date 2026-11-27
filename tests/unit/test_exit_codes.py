@@ -54,6 +54,7 @@ def test_every_error_code_maps_to_the_code_of_its_category(code: ErrorCode) -> N
         (ErrorCode.E_MIGRATION_REQUIRED, 8),
         (ErrorCode.E_INTEGRITY, 9),
         (ErrorCode.E_FILTER_INVALID, 2),
+        (ErrorCode.E_QUERY_INVALID, 2),
         (ErrorCode.E_CONFIG_INVALID, 3),
     ],
 )
