@@ -8,6 +8,7 @@ from collections.abc import Callable
 import pytest
 
 from rag_engine.domain import ErrorCode, RagError
+from rag_engine.generation.resilience import ResilientLLM
 from rag_engine.ports import (
     FinishReason,
     GenerationParams,
@@ -33,6 +34,7 @@ def scripted(*steps: Reply | Fail) -> ScriptedLLM:
 
 FACTORIES: dict[str, Callable[[], LLMProvider]] = {
     "scripted": lambda: scripted(Reply(ANSWER), Reply(ANSWER)),
+    "resilient-scripted": lambda: ResilientLLM(scripted(Reply(ANSWER), Reply(ANSWER))),
 }
 
 
