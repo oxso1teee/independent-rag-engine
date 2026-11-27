@@ -1,0 +1,1358 @@
+{
+  "name": "retrieval-mini",
+  "version": 1,
+  "corpus": "eval/corpus/mini_v1",
+  "questions": [
+    {
+      "id": "en-k1",
+      "split": "dev",
+      "type": "keyword",
+      "language": "en",
+      "question": "What time are nightly database backups made?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_backup_policy.md",
+          "anchor": "every night at 02:30 UTC",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Every night at 02:30 UTC.",
+      "reference_facts": [
+        "Every night at 02:30 UTC."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-k2",
+      "split": "dev",
+      "type": "keyword",
+      "language": "en",
+      "question": "What is the HTTP status for exceeding the rate limit?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_api_limits.md",
+          "anchor": "answers with HTTP status 429",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "HTTP status 429.",
+      "reference_facts": [
+        "HTTP status 429."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-k3",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "Who must be paged within 5 minutes?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_incident_response.md",
+          "anchor": "the on-call engineer must be paged within 5 minutes",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The on-call engineer.",
+      "reference_facts": [
+        "The on-call engineer."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-k4",
+      "split": "dev",
+      "type": "keyword",
+      "language": "en",
+      "question": "On which day does the LANTERN-GUEST password change?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_office_network.md",
+          "anchor": "changes its password every Monday",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Every Monday.",
+      "reference_facts": [
+        "Every Monday."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-k5",
+      "split": "dev",
+      "type": "keyword",
+      "language": "en",
+      "question": "How many days are audit logs kept?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_data_retention.md",
+          "anchor": "Audit logs are kept for 400 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "400 days.",
+      "reference_facts": [
+        "400 days."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-k6",
+      "split": "dev",
+      "type": "keyword",
+      "language": "en",
+      "question": "How often are cryptographic keys rotated?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_key_management.md",
+          "anchor": "rotated every 90 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Every 90 days.",
+      "reference_facts": [
+        "Every 90 days."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-p1",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long do we hold on to nightly copies before discarding them?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_backup_policy.md",
+          "anchor": "Daily copies are kept for 14 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "14 days.",
+      "reference_facts": [
+        "14 days."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-p2",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What happens automatically when a deployment starts failing for too many users?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_release_checklist.md",
+          "anchor": "If the error rate rises above 2 percent the release is rolled back automatically",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The release is rolled back automatically.",
+      "reference_facts": [
+        "The release is rolled back automatically."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-p3",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What is the maximum amount I can spend on food while travelling?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_expense_policy.md",
+          "anchor": "Meals are reimbursed up to 40 euros per day",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "40 euros per day.",
+      "reference_facts": [
+        "40 euros per day."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-p4",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When does a newcomer get hardware before starting?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_onboarding.md",
+          "anchor": "A laptop is shipped to every new hire at least 2 days before the start date",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "At least 2 days before the start date.",
+      "reference_facts": [
+        "At least 2 days before the start date."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-p5",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How quickly must we write up what went wrong after a serious outage?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_incident_response.md",
+          "anchor": "A written postmortem is published within 5 business days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Within 5 business days.",
+      "reference_facts": [
+        "Within 5 business days."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-p6",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Do I need special sign-off for large purchases?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_expense_policy.md",
+          "anchor": "Any single expense above 500 euros needs approval from a director",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Yes, a director must approve any expense above 500 euros.",
+      "reference_facts": [
+        "Yes, a director must approve any expense above 500 euros."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-p7",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Which kind of login device do administrators use?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_key_management.md",
+          "anchor": "Administrators sign in with hardware security tokens",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Hardware security tokens.",
+      "reference_facts": [
+        "Hardware security tokens."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-p8",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How are temporary downloads cleaned up for customers?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_data_retention.md",
+          "anchor": "Customer data exports are removed from download storage after 7 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "They are removed after 7 days.",
+      "reference_facts": [
+        "They are removed after 7 days."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-m1",
+      "split": "dev",
+      "type": "multi_doc",
+      "language": "en",
+      "question": "Which retention periods apply to database backups and to application logs?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_backup_policy.md",
+          "anchor": "Daily copies are kept for 14 days",
+          "min_support": 1
+        },
+        {
+          "doc": "en_data_retention.md",
+          "anchor": "Application logs are deleted after 30 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Daily backups 14 days; application logs 30 days.",
+      "reference_facts": [
+        "Daily backups 14 days; application logs 30 days."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-m2",
+      "split": "test",
+      "type": "multi_doc",
+      "language": "en",
+      "question": "Who gets paged for a SEV1 and how is a rollout stopped when errors spike?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_incident_response.md",
+          "anchor": "the on-call engineer must be paged within 5 minutes",
+          "min_support": 1
+        },
+        {
+          "doc": "en_release_checklist.md",
+          "anchor": "the release is rolled back automatically",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The on-call engineer within 5 minutes; the release rolls back automatically above 2 percent errors.",
+      "reference_facts": [
+        "The on-call engineer within 5 minutes; the release rolls back automatically above 2 percent errors."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-m3",
+      "split": "dev",
+      "type": "multi_doc",
+      "language": "en",
+      "question": "What is encrypted before leaving the data centre and how long are customer exports available?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_backup_policy.md",
+          "anchor": "encrypted with AES-256",
+          "min_support": 1
+        },
+        {
+          "doc": "en_data_retention.md",
+          "anchor": "removed from download storage after 7 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Backup copies are encrypted with AES-256; exports are available for 7 days.",
+      "reference_facts": [
+        "Backup copies are encrypted with AES-256; exports are available for 7 days."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-x1",
+      "split": "dev",
+      "type": "keyword",
+      "language": "en",
+      "question": "Which flag lets the import command run without changing anything?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "mixed_release_notes.md",
+          "anchor": "the --dry-run flag for the import command",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The --dry-run flag.",
+      "reference_facts": [
+        "The --dry-run flag."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-k1",
+      "split": "dev",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Во сколько создаются резервные копии баз данных?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_backup.md",
+          "anchor": "создаются ежедневно в 03:10",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Ежедневно в 03:10 по московскому времени.",
+      "reference_facts": [
+        "Ежедневно в 03:10 по московскому времени."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-k2",
+      "split": "test",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Сколько календарных дней отпуска положено сотруднику?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_otpusk.md",
+          "anchor": "28 календарных дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "28 календарных дней.",
+      "reference_facts": [
+        "28 календарных дней."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-k3",
+      "split": "dev",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Через сколько минут оповещение передаётся второму инженеру?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_dezhurstvo.md",
+          "anchor": "в течение 15 минут",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Через 15 минут.",
+      "reference_facts": [
+        "Через 15 минут."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-k4",
+      "split": "test",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Сколько составляют суточные при поездках по России?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_komandirovki.md",
+          "anchor": "1000 рублей в день",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "1000 рублей в день.",
+      "reference_facts": [
+        "1000 рублей в день."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-k5",
+      "split": "test",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Какая минимальная длина пароля?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_parole.md",
+          "anchor": "не менее 14 символов",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Не менее 14 символов.",
+      "reference_facts": [
+        "Не менее 14 символов."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-k6",
+      "split": "dev",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Какой порог загрузки процессора вызывает оповещение?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_monitoring.md",
+          "anchor": "превышает 85 процентов",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Более 85 процентов дольше 10 минут.",
+      "reference_facts": [
+        "Более 85 процентов дольше 10 минут."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-p1",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как долго мы держим копии данных до удаления?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_backup.md",
+          "anchor": "Копии хранятся 10 дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "10 дней.",
+      "reference_facts": [
+        "10 дней."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-p2",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Что нужно сделать за две недели до ухода в отпуск?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_otpusk.md",
+          "anchor": "Заявление нужно подать не позднее чем за 14 дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Подать заявление не позднее чем за 14 дней.",
+      "reference_facts": [
+        "Подать заявление не позднее чем за 14 дней."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-p3",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как компенсируют работу в субботу и воскресенье у дежурных?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_dezhurstvo.md",
+          "anchor": "За работу в выходные предоставляется отгул",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Предоставляется отгул.",
+      "reference_facts": [
+        "Предоставляется отгул."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-p4",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Куда обращаться, чтобы получить права на систему?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_dostupy.md",
+          "anchor": "Заявка на доступ оформляется через внутренний портал",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Через внутренний портал.",
+      "reference_facts": [
+        "Через внутренний портал."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-p5",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько денег на повышение квалификации положено в год?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_obuchenie.md",
+          "anchor": "60 тысяч рублей в год",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "60 тысяч рублей в год.",
+      "reference_facts": [
+        "60 тысяч рублей в год."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-p6",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Что делать с отчётом о тратах после поездки?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_komandirovki.md",
+          "anchor": "Авансовый отчёт нужно сдать в течение 5 рабочих дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Сдать в течение 5 рабочих дней.",
+      "reference_facts": [
+        "Сдать в течение 5 рабочих дней."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-p7",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Можно ли делиться учётными данными по электронной почте?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_parole.md",
+          "anchor": "передавать пароль по почте запрещено",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Нет, запрещено.",
+      "reference_facts": [
+        "Нет, запрещено."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-p8",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как часто проверяют, что копии действительно восстанавливаются?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_backup.md",
+          "anchor": "Проверка восстановления выполняется раз в квартал",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Раз в квартал.",
+      "reference_facts": [
+        "Раз в квартал."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-m1",
+      "split": "dev",
+      "type": "multi_doc",
+      "language": "ru",
+      "question": "Как часто пересматриваются права доступа и как часто проверяется восстановление копий?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_dostupy.md",
+          "anchor": "пересматриваются раз в полгода",
+          "min_support": 1
+        },
+        {
+          "doc": "ru_backup.md",
+          "anchor": "Проверка восстановления выполняется раз в квартал",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Права раз в полгода; восстановление раз в квартал.",
+      "reference_facts": [
+        "Права раз в полгода; восстановление раз в квартал."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-m2",
+      "split": "test",
+      "type": "multi_doc",
+      "language": "ru",
+      "question": "Сколько выделяется на обучение в год и сколько платят суточных в командировке?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_obuchenie.md",
+          "anchor": "60 тысяч рублей в год",
+          "min_support": 1
+        },
+        {
+          "doc": "ru_komandirovki.md",
+          "anchor": "1000 рублей в день",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "60 тысяч рублей в год на обучение; суточные 1000 рублей в день.",
+      "reference_facts": [
+        "60 тысяч рублей в год на обучение; суточные 1000 рублей в день."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-m3",
+      "split": "dev",
+      "type": "multi_doc",
+      "language": "ru",
+      "question": "Когда передаётся дежурство и в каких случаях оповещения отключаются?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_dezhurstvo.md",
+          "anchor": "по понедельникам в 10:00",
+          "min_support": 1
+        },
+        {
+          "doc": "ru_monitoring.md",
+          "anchor": "В праздничные дни оповещения низкой важности отключаются",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "По понедельникам в 10:00; в праздничные дни отключаются оповещения низкой важности.",
+      "reference_facts": [
+        "По понедельникам в 10:00; в праздничные дни отключаются оповещения низкой важности."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-x1",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Что улучшено в импорте больших файлов в версии 2.4?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "mixed_release_notes.md",
+          "anchor": "ускоряет импорт больших файлов примерно вдвое",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Импорт ускорен примерно вдвое.",
+      "reference_facts": [
+        "Импорт ускорен примерно вдвое."
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-n1",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the company's policy on dogs in the office?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "dogs",
+        "pets"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-n2",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How large is the annual bonus?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "bonus"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-n3",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Which cloud provider hosts the production cluster?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "cloud provider",
+        "kubernetes"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en-n4",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How long is parental leave?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "parental"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-n1",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какой размер премии по итогам года?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "премия",
+        "премии"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-n2",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Где находится столовая для сотрудников?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "столовая",
+        "столовой"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-n3",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какой язык программирования используется для бэкенда?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "python",
+        "java"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru-n4",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Сколько дней длится декретный отпуск?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "декрет"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "drafted from the corpus documents; awaiting human review",
+        "created": "2026-11-27"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    }
+  ]
+}
