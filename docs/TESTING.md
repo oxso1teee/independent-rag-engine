@@ -31,6 +31,35 @@ batch invariance, prefixes, the 512-token window counted with special tokens, re
 concurrent call) with `RAG_TEST_E5_DIR=<model snapshot directory> uv run pytest tests/external`.
 Sockets stay disabled, so a successful run also shows that nothing is fetched.
 
+## Phase 4 acceptance: criteria and evidence
+
+| Criterion | Evidence |
+|---|---|
+| NFR-01 memory: search over 10⁴ chunks ≤ 300 MiB, over 10⁵ (1024-d fp16) ≤ 600 MiB | `eval/scripts/benchmark_refresh.py` loads a real schema-v3 database through `FlatVectorIndex.refresh` in a fresh process: 10⁴ chunks peak 80.7 MiB, 10⁵ chunks peak 275.9 MiB (see [`EMBEDDING_BAKEOFF.md`](EMBEDDING_BAKEOFF.md)) |
+| NFR-03 dense search p95 ≤ 100 ms at 10⁴ and ≤ 400 ms at 10⁵ (4 vCPU) | `eval/scripts/benchmark_dense.py` (two runs: 10⁴ p95 25.4 and 53.8 ms; 10⁵ p95 216.1 and 255.4 ms) and the CI-excluded budget test `tests/perf/test_flat_vector_index.py` |
+| NFR-05 one edited paragraph in a 100-chunk document re-embeds ≤ 3 chunks | `tests/e2e/test_indexed_ingest_cli.py::test_one_paragraph_edit_reembeds_at_most_three_of_hundred_chunks`, with and without section headings; counts the inputs the provider actually receives |
+| NFR-06 `kill -9` at any point leaves a database that opens, passes `doctor --integrity`, and a rerun completes | `tests/chaos/test_kill_points.py` (every ingestion stage), `tests/chaos/test_index_publication_kill.py` (inside publication), `tests/chaos/model_switch_child.py` via the e2e test (inside the model switch) |
+| Atomic publication | `tests/integration/test_index_publication.py`, `tests/integration/test_publication_guards.py` (every fencing guard refuses and leaves no version) |
+| `doctor --integrity` finds corruption and never writes | `tests/integration/test_integrity_corruption.py` (16 injected corruptions, each reported by name, file hash unchanged; damaged vectors and model metadata are also refused when the flat index loads), `tests/e2e/test_indexed_ingest_cli.py` |
+| `doctor --integrity` clean after 1000 random operations | the e2e test applies 1000 lexical, rebuild, GC and search operations drawn from a seeded `random.Random(4)` and checks the database after them; `tests/integrity/test_ingestion_model.py` is the model-based Hypothesis test that checks the invariants after every step. The 1000-operation sequence is seeded pseudo-random, not Hypothesis |
+| Model switching, GC, FTS consistency | the e2e test (`index switch-model`, interrupted switch, retention GC, `index rebuild --lexical`), `tests/contract/test_sqlite_lexical_index.py`, `tests/integration/test_migrations.py::test_v3_fts_uses_stable_chunk_rowids` |
+| Embedding service (batches, cache, retry, limits, norms) and providers | `tests/unit/test_embedding_service.py`, `tests/contract/test_embedding_provider_contract.py`, `tests/contract/test_ollama_embedder.py`, `tests/contract/test_onnx_embedder.py`, real weights in `tests/external/` |
+| End-to-end ingestion | `tests/e2e/test_indexed_ingest_cli.py::test_configured_ingest_publishes_current_version` |
+| D-03 decision recorded | [ADR 0012](adr/0012-embedding-default-evaluation.md) |
+
+Total statement-and-branch coverage is 94 % (93 % before the failure-path tests of this phase,
+96–97 % at the end of Phase 3). The remaining gap is code that only runs with real weights
+(`embedding/onnx.py`, covered by the opt-in `external` tests), the isolated parser worker (its
+process is not measured by coverage) and CLI error branches.
+
+**Known limit: native HTML allocation failures.** When the memory cap of the parser worker is
+exhausted inside the native HTML library, the library raises `SelectolaxError("Can't parse
+HTML.")`. That is indistinguishable from malformed input, so the worker reports `corrupt`
+instead of `memory`. Measured with a 400 MB data limit: the data segment was full (400 of 400 MB)
+in one case and at 345 MB in another, and the worker starts with a baseline of its own, so no
+threshold separates the two cases reliably. The classifier is unchanged; isolation still contains
+the failure.
+
 ## Failure injection (`tests/chaos`)
 
 A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test

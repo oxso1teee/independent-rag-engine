@@ -6,8 +6,15 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 4: embeddings and storage (in progress)
-- Reproducible RU/EN model probe and 10k/100k exact dense benchmarks, with measured local
-  results and acceptance limits in `docs/EMBEDDING_BAKEOFF.md`. D-03 remains open.
+- Decision D-03 closed ([ADR 0012](docs/adr/0012-embedding-default-evaluation.md)): the default
+  embedding model is `intfloat/multilingual-e5-small` through ONNX, chosen by an explicit rule
+  (resource gate, paired quality interval, tie-breaks). Evidence in `docs/EMBEDDING_BAKEOFF.md`: NoMIRACL judged-pool ranking in
+  English and Russian with paired bootstrap intervals, uncached latency, throughput and memory of
+  E5-small and Qwen3 0.6B, exact dense search at 10k and 100k vectors, and the memory of loading a
+  real 100k-vector index (peak 276 MiB). Qwen3 4B quality could not be measured on the 7.8 GiB
+  development machine and is recorded as such. Scripts: `eval/scripts/bakeoff_nomiracl.py`,
+  `bakeoff_report.py`, `benchmark_dense.py`, `benchmark_refresh.py`.
+- Phase 4 acceptance criteria and their evidence are tabulated in `docs/TESTING.md`.
 - ONNX embeddings support the pinned `intfloat/multilingual-e5-small` snapshot offline (384
   dimensions, 512 tokens, `query: ` / `passage: ` prefixes, mean pooling). The adapter counts
   tokens with the model's own `tokenizer.json`, special tokens included, and refuses an input over

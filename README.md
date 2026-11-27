@@ -39,6 +39,7 @@ Markdown, HTML and plain text work out of the box. Optional formats are separate
 | PDF | `uv sync --extra pdf` | text layer only; a scan without text is refused (`no_text_layer`) |
 | DOCX | `uv sync --extra docx` | headings, lists, tables, quotes and code from styles; password-protected files are refused |
 | exact token counting | `uv sync --extra tokenizers` | counts with a local `tokenizer.json` |
+| ONNX embeddings | `uv sync --extra onnx` | in-process, offline; the recommended default model is `intfloat/multilingual-e5-small` ([ADR 0012](docs/adr/0012-embedding-default-evaluation.md)) |
 
 ## Quick start
 
@@ -67,6 +68,15 @@ uv run rag doctor --integrity        # inspect SQLite, published FTS and vectors
 uv run rag index switch-model      # stage every visible vector, then activate atomically
 uv run python eval/scripts/chunk_grid.py   # chunk shapes at 192/256/384 tokens; ranks nothing
 ```
+
+### Embedding model
+
+Embedding is off until configured; nothing is downloaded automatically. The recommended default
+is `intfloat/multilingual-e5-small` (MIT, 384 dimensions, 512-token window) run offline through
+ONNX Runtime; [ADR 0012](docs/adr/0012-embedding-default-evaluation.md) records the measurements
+behind that choice and its limits. Provision the model files yourself, set `provider = "onnx"` and
+`model_dir`, and pin `revision` to the fingerprint of the directory (see `rag.example.toml`).
+Ollama models remain supported when the machine can host them.
 
 The local development environment used for Phase 4 measurements occupied 368 MB on disk
 (including optional dependencies and development tools, excluding model weights). Install size
