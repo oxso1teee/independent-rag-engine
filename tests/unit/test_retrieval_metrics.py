@@ -116,3 +116,14 @@ def test_paired_bootstrap_needs_equal_non_empty_samples() -> None:
         paired_bootstrap([1.0], [1.0, 2.0], seed=1)
     with pytest.raises(ValueError, match="empty"):
         bootstrap_mean([], seed=1)
+
+
+def test_ndcg_from_gains_uses_the_given_ideal() -> None:
+    from rag_engine.evaluation.metrics import ndcg_from_gains
+
+    # gains 0, 2, 1 against an ideal of one grade-2 item: (2/log2(3) + 1/log2(4)) / 2
+    expected = (2 / math.log2(3) + 1 / 2) / 2
+    assert ndcg_from_gains([0, 2, 1], [2], 3) == pytest.approx(expected)
+    assert ndcg_from_gains([2], [2], 5) == pytest.approx(1.0)
+    with pytest.raises(ValueError, match="relevant"):
+        ndcg_from_gains([1], [0], 3)

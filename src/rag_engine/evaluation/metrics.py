@@ -69,3 +69,16 @@ def ndcg_at_k(ranked: Sequence[str], relevant: Mapping[str, int], k: int) -> flo
     ideal_gains = sorted(positives.values(), reverse=True)[:k]
     ideal = sum(gain / math.log2(rank + 1) for rank, gain in enumerate(ideal_gains, start=1))
     return actual / ideal
+
+
+def ndcg_from_gains(gains: Sequence[float], ideal: Sequence[float], k: int) -> float:
+    """nDCG@k when the gain of each ranked item and the best possible gains are already known.
+
+    ``gains`` are in ranked order; ``ideal`` holds the gains of the best achievable ranking.
+    """
+    _check_k(k)
+    best = sum(g / math.log2(rank + 1) for rank, g in enumerate(sorted(ideal, reverse=True)[:k], 1))
+    if best <= 0:
+        raise ValueError("the query has no relevant document")
+    got = sum(g / math.log2(rank + 1) for rank, g in enumerate(gains[:k], start=1))
+    return got / best
