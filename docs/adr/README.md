@@ -18,3 +18,4 @@ supersedes the old one.
 | [0011](0011-read-only-integrity-inspection.md) | Read-only integrity inspection | Accepted |
 | [0012](0012-embedding-default-evaluation.md) | Default embedding model: multilingual-e5-small through ONNX (D-03) | Accepted |
 | [0013](0013-default-retrieval-mode.md) | Default retrieval mode stays dense; hybrid is an option | Accepted (provisional) |
+| [0014](0014-reranker-off-by-default.md) | Reranking stays off by default | Accepted (provisional) |

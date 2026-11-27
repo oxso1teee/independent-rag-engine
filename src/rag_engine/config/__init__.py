@@ -3,12 +3,14 @@
 from rag_engine.config.profiles import PROFILE_LIMITS, ProfileLimits, ResourceProfile
 from rag_engine.config.settings import (
     ChunkingSettings,
+    ContextSettings,
     EmbeddingSettings,
     IngestSettings,
     LimitOverrides,
     LlmSettings,
     LoggingSettings,
     ParsingSettings,
+    RerankSettings,
     RetrievalSettings,
     Settings,
     StorageSettings,
@@ -19,6 +21,7 @@ from rag_engine.config.settings import (
 __all__ = [
     "PROFILE_LIMITS",
     "ChunkingSettings",
+    "ContextSettings",
     "EmbeddingSettings",
     "IngestSettings",
     "LimitOverrides",
@@ -26,6 +29,7 @@ __all__ = [
     "LoggingSettings",
     "ParsingSettings",
     "ProfileLimits",
+    "RerankSettings",
     "ResourceProfile",
     "RetrievalSettings",
     "Settings",

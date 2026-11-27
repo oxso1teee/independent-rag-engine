@@ -102,6 +102,36 @@ class RetrievalSettings(_Section):
         return self
 
 
+class RerankSettings(_Section):
+    """Optional cross-encoder reranking; off until a measured gain justifies it (see ADR 0014)."""
+
+    enabled: bool = False
+    model: ModelName | None = None
+    revision: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    model_dir: Path | None = None
+    pool_size: int = Field(default=30, ge=1, le=100)
+    timeout_s: float = Field(default=10.0, gt=0, le=600)
+    batch_size: int = Field(default=8, ge=1, le=64)
+    max_pair_tokens: int = Field(default=512, ge=16, le=8192)
+    threads: int = Field(default=1, ge=1, le=64)
+
+    @model_validator(mode="after")
+    def _require_a_pinned_model_when_enabled(self) -> RerankSettings:
+        if self.enabled and (self.model is None or self.model_dir is None or self.revision is None):
+            raise ValueError("rerank.model, rerank.model_dir and rerank.revision are required")
+        return self
+
+
+class ContextSettings(_Section):
+    """How retrieved chunks become evidence."""
+
+    max_chunks_per_document: int | None = Field(default=3, ge=1)
+    order: Literal["by_score", "by_document_order"] = "by_score"
+    small_to_big: bool = False
+    min_evidence_items: int = Field(default=1, ge=1, le=100)
+    item_overhead_tokens: int = Field(default=8, ge=0, le=256)
+
+
 class LlmSettings(_Section):
     enabled: bool = False
     provider: ProviderName | None = None
@@ -191,6 +221,8 @@ class Settings(BaseSettings):
     chunking: ChunkingSettings = Field(default_factory=ChunkingSettings)
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     retrieval: RetrievalSettings = Field(default_factory=RetrievalSettings)
+    rerank: RerankSettings = Field(default_factory=RerankSettings)
+    context: ContextSettings = Field(default_factory=ContextSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
 

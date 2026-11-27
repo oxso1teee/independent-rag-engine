@@ -26,6 +26,7 @@ from rag_engine.cli.context import (
 )
 from rag_engine.config import IngestSettings, ParsingSettings, Settings, load_settings
 from rag_engine.config.settings import EmbeddingSettings
+from rag_engine.context.builder import ContextBuilder, ContextPolicy
 from rag_engine.domain import (
     ChunkPolicy,
     EmbeddingModel,
@@ -37,6 +38,7 @@ from rag_engine.domain import (
     RetrievalMode,
     Source,
 )
+from rag_engine.embedding.cross_encoder import OnnxCrossEncoder
 from rag_engine.embedding.ollama import OllamaEmbedder
 from rag_engine.embedding.onnx import OnnxEmbedder
 from rag_engine.embedding.service import EmbeddingService
@@ -51,8 +53,16 @@ from rag_engine.observability import configure_logging
 from rag_engine.parsing.cleaners import compile_cleaners
 from rag_engine.parsing.isolation import ParserWorker
 from rag_engine.parsing.registry import default_parsers
-from rag_engine.ports import Clock, EmbeddingProvider, ParseLimits, SourceAdapter, Store
+from rag_engine.ports import (
+    Clock,
+    EmbeddingProvider,
+    ParseLimits,
+    RerankBudget,
+    SourceAdapter,
+    Store,
+)
 from rag_engine.retrieval.query import QueryProcessor
+from rag_engine.retrieval.rerank import RerankStage
 from rag_engine.retrieval.service import FusionSettings, IndexSnapshot, RetrievalService
 from rag_engine.storage.content import SqliteChunkContentReader
 from rag_engine.storage.filters import SqliteChunkCatalog, SqliteChunkFilter
@@ -272,6 +282,7 @@ class DefaultContainer:
         path = db if db is not None else settings.storage.db_path
         store = open_store_read_only(path)
         built = None
+        stage: RerankStage | None = None
         try:
             retrieval = settings.retrieval
             embedder = None
@@ -297,6 +308,20 @@ class DefaultContainer:
                     metadata = store.reader().get_index_metadata() or metadata
                 return IndexSnapshot(metadata.index_generation, model_id)
 
+            counter = build_counter(settings.chunking.counter, settings.chunking.tokenizer_json)
+            rerank = settings.rerank
+            if rerank.enabled and rerank.model and rerank.model_dir and rerank.revision:
+                stage = RerankStage(
+                    OnnxCrossEncoder(
+                        rerank.model,
+                        rerank.model_dir,
+                        rerank.revision,
+                        max_pair_tokens=rerank.max_pair_tokens,
+                        batch_size=rerank.batch_size,
+                        threads=rerank.threads,
+                    ),
+                    RerankBudget(pool_size=rerank.pool_size, timeout_s=rerank.timeout_s),
+                )
             service = RetrievalService(
                 embedder=embedder,
                 query_prefix=prefix,
@@ -305,10 +330,8 @@ class DefaultContainer:
                 filters=SqliteChunkFilter(path),
                 catalog=SqliteChunkCatalog(path),
                 content=SqliteChunkContentReader(path),
-                queries=QueryProcessor(
-                    build_counter(settings.chunking.counter, settings.chunking.tokenizer_json),
-                    max_tokens=retrieval.query_max_tokens,
-                ),
+                rerank=stage,
+                queries=QueryProcessor(counter, max_tokens=retrieval.query_max_tokens),
                 snapshot=snapshot,
                 fusion=FusionSettings(
                     method=retrieval.fusion,
@@ -326,8 +349,21 @@ class DefaultContainer:
                 defaults=SearchDefaults(
                     RetrievalMode(retrieval.mode), retrieval.top_k, retrieval.candidate_k
                 ),
+                context=ContextBuilder(counter, SqliteChunkContentReader(path)),
+                counter=counter,
+                context_policy=ContextPolicy(
+                    max_chunks_per_document=settings.context.max_chunks_per_document,
+                    order=settings.context.order,
+                    small_to_big=settings.context.small_to_big,
+                    min_evidence_items=settings.context.min_evidence_items,
+                    item_overhead_tokens=settings.context.item_overhead_tokens,
+                ),
+                llm_window=settings.llm.context_window,
+                llm_max_new=settings.llm.max_new_tokens,
             )
         finally:
+            if stage is not None:
+                stage.close()
             if built is not None:
                 asyncio.run(built.aclose())
             store.close()
