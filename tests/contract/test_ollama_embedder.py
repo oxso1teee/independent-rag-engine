@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from dataclasses import replace
 
 import httpx
 import numpy as np
@@ -152,3 +153,104 @@ def test_http_failures_are_classified(status: int, code: ErrorCode, retryable: b
         asyncio.run(run())
     assert info.value.code is code and info.value.retryable is retryable
     assert "private document text" not in str(info.value)
+
+
+def run_with(handler: object, texts: list[str], **options: object) -> np.ndarray:
+    async def run() -> np.ndarray:
+        async with httpx.AsyncClient(
+            transport=httpx.MockTransport(handler),  # type: ignore[arg-type]
+            base_url="http://test",
+        ) as client:
+            return await OllamaEmbedder(model(), client=client, **options).embed_documents(texts)  # type: ignore[arg-type]
+
+    return asyncio.run(run())
+
+
+def tags_then(embed: httpx.Response) -> object:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/tags":
+            return httpx.Response(200, json={"models": [{"name": "test:latest", "digest": DIGEST}]})
+        return embed
+
+    return handler
+
+
+def variant(*, provider: str = "ollama", revision: str = DIGEST) -> EmbeddingModel:
+    model_id = EmbeddingModelId.build(
+        provider=provider,
+        name="test:latest",
+        revision=revision,
+        dimension=4,
+        normalized=True,
+        query_prefix="",
+        document_prefix="",
+    )
+    return replace(model(), id=model_id, provider=provider, revision=revision)
+
+
+def test_a_model_of_another_provider_is_refused() -> None:
+    with pytest.raises(RagError) as info:
+        OllamaEmbedder(variant(provider="onnx"))
+    assert info.value.code is ErrorCode.E_CONFIG_INVALID
+
+
+def test_a_non_positive_timeout_is_refused() -> None:
+    with pytest.raises(RagError) as info:
+        OllamaEmbedder(model(), timeout_s=0)
+    assert info.value.code is ErrorCode.E_CONFIG_INVALID
+
+
+def test_an_empty_batch_does_not_touch_the_network() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise AssertionError(request.url)
+
+    assert run_with(handler, []).shape == (0, 4)
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        httpx.Response(200, json={"embeddings": "not numbers"}),
+        httpx.Response(200, json={"embeddings": [[0.0, 0.0, 0.0, 0.0]]}),
+        httpx.Response(200, content=b"not json"),
+        httpx.Response(200, json=[1, 2, 3]),
+    ],
+    ids=["non-numeric", "zero-vector", "invalid-json", "json-array"],
+)
+def test_unusable_embed_responses_are_rejected(response: httpx.Response) -> None:
+    with pytest.raises(RagError) as info:
+        run_with(tags_then(response), ["x"])
+    assert info.value.code in {ErrorCode.E_PROVIDER_UNAVAILABLE, ErrorCode.E_EMBED_DIM_MISMATCH}
+
+
+@pytest.mark.parametrize(
+    "tags",
+    [
+        httpx.Response(200, json={"models": "none"}),
+        httpx.Response(200, json={"models": [1, {"name": "other", "digest": DIGEST}]}),
+    ],
+    ids=["models-not-a-list", "model-absent"],
+)
+def test_unusable_model_listings_stop_before_embedding(tags: httpx.Response) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/api/tags"
+        return tags
+
+    with pytest.raises(RagError) as info:
+        run_with(handler, ["x"])
+    assert info.value.code is ErrorCode.E_PROVIDER_UNAVAILABLE
+
+
+def test_a_refused_connection_is_a_retryable_unavailable_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("refused", request=request)
+
+    with pytest.raises(RagError) as info:
+        run_with(handler, ["x"])
+    assert info.value.code is ErrorCode.E_PROVIDER_UNAVAILABLE
+
+
+def test_a_rate_limit_is_reported_as_such() -> None:
+    with pytest.raises(RagError) as info:
+        run_with(tags_then(httpx.Response(429)), ["x"])
+    assert info.value.code is ErrorCode.E_RATE_LIMITED
