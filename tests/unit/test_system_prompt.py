@@ -7,7 +7,7 @@ import pytest
 from rag_engine.chunking.tokens import HeuristicTokenCounter
 from rag_engine.context.prompt import (
     PROMPT_SHA256,
-    REFUSAL_SENTENCE,
+    REFUSAL_SENTINEL,
     SYSTEM_PROMPT,
     TOKEN_LIMIT,
     system_prompt_sha256,
@@ -31,6 +31,6 @@ def test_the_prompt_stays_within_its_token_limit_with_a_conservative_counter() -
 
 def test_the_prompt_states_the_rules_generation_depends_on() -> None:
     assert "[E1]" in SYSTEM_PROMPT and "[E2]" in SYSTEM_PROMPT  # the citation marker format
-    assert REFUSAL_SENTENCE in SYSTEM_PROMPT  # the exact refusal that is later recognised
+    assert REFUSAL_SENTINEL in SYSTEM_PROMPT  # the refusal that generation recognises
     assert "only" in SYSTEM_PROMPT.lower() and "language of the question" in SYSTEM_PROMPT
     assert "{" not in SYSTEM_PROMPT  # no unfilled placeholder
