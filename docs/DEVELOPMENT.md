@@ -36,6 +36,8 @@ uv run rag source add wiki ~/wiki -C '^Last edited:.*$'   # drop matching whole 
 uv run rag chunks ~/wiki/page.md          # parse and chunk one file; writes nothing
 uv run rag chunks --source wiki page.md   # a document of a source, with its cleaners applied
 uv run rag chunks page.md --strategy recursive --full --json
+uv run rag search "query text" --mode hybrid --top-k 5 --source wiki --tag draft --json
+uv run rag search "query text" --language ru --kind table --modified-after 2026-01-01 --debug
 ```
 
 The database path comes from `[storage] db_path` in `rag.toml` (default `data/rag.db`),

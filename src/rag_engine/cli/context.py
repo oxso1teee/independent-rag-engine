@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from rag_engine.domain import ChunkPolicy, EmbeddingModel, IdFactory
+from rag_engine.domain import ChunkPolicy, EmbeddingModel, IdFactory, RetrievalMode
 from rag_engine.embedding.service import EmbeddingService
 from rag_engine.ingestion.identity import SourceRegistry
 from rag_engine.ingestion.jobs import JobQueue, Worker
@@ -21,6 +21,7 @@ from rag_engine.ingestion.maintenance import IndexMaintenance
 from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.service import IngestService
 from rag_engine.ports import ParseLimits, Store
+from rag_engine.retrieval.service import RetrievalService
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +52,23 @@ class Processing:
     build: Callable[[Sequence[str], str | None], DocumentProcessor]
 
 
+@dataclass(frozen=True, slots=True)
+class SearchDefaults:
+    mode: RetrievalMode
+    top_k: int
+    candidate_k: int
+
+
+@dataclass(frozen=True, slots=True)
+class SearchServices:
+    """A read-only view of the index: the search pipeline, the store for display, defaults."""
+
+    retrieval: RetrievalService
+    store: Store
+    ids: IdFactory
+    defaults: SearchDefaults
+
+
 class Container(Protocol):
     def open(
         self, config: Path | None, db: Path | None, *, read_only: bool
@@ -60,4 +78,10 @@ class Container(Protocol):
 
     def processing(self, config: Path | None) -> Processing:
         """Parsing and chunking configured from ``config``; needs no database."""
+        ...
+
+    def search(
+        self, config: Path | None, db: Path | None
+    ) -> AbstractContextManager[SearchServices]:
+        """Search services over the published index; nothing is written."""
         ...

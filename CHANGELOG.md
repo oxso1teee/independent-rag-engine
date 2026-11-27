@@ -6,6 +6,13 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 5: retrieval (in progress)
+- `rag search QUERY`: dense, lexical or hybrid retrieval over the published index with metadata
+  filters (`--source`, `--path-prefix`, `--path-glob`, `--tag`, `--tag-all`, `--language`, `--kind`,
+  `--modified-after/-before`, `--doc-id`, `--exclude-doc-id`), `--top-k`, `--candidate-k`, `--full`,
+  `--debug` (counts, per-hit channel ranks, timings) and `--json`. It opens the database read-only
+  and writes nothing; bad input is a user error (exit 2) with `E_QUERY_INVALID` or
+  `E_FILTER_INVALID`. New `[retrieval]` settings section (default mode `dense`, `top_k = 8`,
+  `candidate_k = 40`, RRF `k = 60`).
 - `RetrievalService`: one deterministic pipeline over ports: query processing, metadata prefilter,
   dense and lexical channels (`candidate_k` each), fusion, duplicate collapsing and the document
   cap, then `top_k` hits with every score component and per-channel rank in the diagnostics. The
