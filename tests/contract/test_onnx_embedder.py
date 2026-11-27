@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import threading
 from collections.abc import Iterable, Sequence
+from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -22,9 +24,9 @@ class Backend:
         self.calls: list[list[str]] = []
 
     def embed(
-        self, documents: Sequence[str], *, batch_size: int, parallel: int
+        self, documents: Sequence[str], *, batch_size: int, parallel: int | None
     ) -> Iterable[np.ndarray]:
-        assert batch_size == len(documents) and parallel == 1
+        assert batch_size == len(documents) and parallel is None
         self.calls.append(list(documents))
         for _ in documents:
             vector = np.zeros(self.dimension, dtype=np.float32)
@@ -105,13 +107,92 @@ def test_missing_extra_does_not_attempt_download(
     assert info.value.code is ErrorCode.E_CONFIG_INVALID
 
 
+def test_e5_registers_offline_fastembed_model_with_required_settings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original, directory = local_model(tmp_path)
+    name = "intfloat/multilingual-e5-small"
+    model = replace(
+        original,
+        id=EmbeddingModelId.build(
+            provider="onnx",
+            name=name,
+            revision=original.revision,
+            dimension=384,
+            normalized=True,
+            query_prefix="query: ",
+            document_prefix="passage: ",
+        ),
+        name=name,
+        dimension=384,
+        max_input_tokens=512,
+        query_prefix="query: ",
+        document_prefix="passage: ",
+    )
+    registered: list[dict[str, object]] = []
+    loaded: list[dict[str, object]] = []
+
+    class TextEmbedding(Backend):
+        @staticmethod
+        def list_supported_models() -> list[dict[str, str]]:
+            return []
+
+        @staticmethod
+        def add_custom_model(**kwargs: object) -> None:
+            registered.append(kwargs)
+
+        def __init__(self, **kwargs: object) -> None:
+            super().__init__(384)
+            loaded.append(kwargs)
+
+    def module(module_name: str) -> SimpleNamespace:
+        if module_name == "fastembed":
+            return SimpleNamespace(TextEmbedding=TextEmbedding)
+        if module_name == "fastembed.common.model_description":
+            return SimpleNamespace(
+                PoolingType=SimpleNamespace(MEAN="mean"),
+                ModelSource=lambda **kwargs: SimpleNamespace(**kwargs),
+            )
+        raise AssertionError(module_name)
+
+    monkeypatch.setattr("rag_engine.embedding.onnx.importlib.import_module", module)
+    provider = OnnxEmbedder(model, directory, token_counter=len)
+    assert registered[0]["model"] == name
+    assert registered[0]["pooling"] == "mean"
+    assert registered[0]["dim"] == 384
+    assert loaded[0]["local_files_only"] is True
+    assert asyncio.run(provider.embed_documents(["passage: example"])).shape == (1, 384)
+    provider.close()
+    with pytest.raises(RagError) as info:
+        OnnxEmbedder(replace(model, max_input_tokens=513), directory, token_counter=len)
+    assert info.value.code is ErrorCode.E_CONFIG_INVALID
+
+
+def test_input_over_the_token_limit_is_refused_instead_of_truncated(tmp_path: Path) -> None:
+    model, directory = local_model(tmp_path)
+    backend = Backend()
+    # one token per character, so the 64-token limit of the test model is easy to hit
+    provider = OnnxEmbedder(model, directory, backend=backend, token_counter=len)
+    assert asyncio.run(provider.embed_documents(["x" * 64])).shape == (1, 4)
+    with pytest.raises(RagError) as info:
+        asyncio.run(provider.embed_documents(["short", "x" * 65]))
+    assert info.value.code is ErrorCode.E_RESOURCE_GATE
+    assert not info.value.retryable
+    assert info.value.context == {"tokens": 65, "limit": 64}
+    assert backend.calls == [["x" * 64]]  # the refused batch never reached the model
+    with pytest.raises(RagError) as query_info:
+        asyncio.run(provider.embed_query("x" * 65))
+    assert query_info.value.code is ErrorCode.E_RESOURCE_GATE
+    provider.close()
+
+
 def test_timed_out_inference_cannot_start_a_second_cpu_job(tmp_path: Path) -> None:
     model, directory = local_model(tmp_path)
     release = threading.Event()
 
     class BlockingBackend(Backend):
         def embed(
-            self, documents: Sequence[str], *, batch_size: int, parallel: int
+            self, documents: Sequence[str], *, batch_size: int, parallel: int | None
         ) -> Iterable[np.ndarray]:
             release.wait(timeout=1)
             return super().embed(documents, batch_size=batch_size, parallel=parallel)

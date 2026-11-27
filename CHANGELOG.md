@@ -6,6 +6,12 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 4: embeddings and storage (in progress)
+- ONNX embeddings support the pinned `intfloat/multilingual-e5-small` snapshot offline (384
+  dimensions, 512 tokens, `query: ` / `passage: ` prefixes, mean pooling). The adapter counts
+  tokens with the model's own `tokenizer.json`, special tokens included, and refuses an input over
+  the window with `E_RESOURCE_GATE` instead of letting the inference library truncate it. Inference
+  runs in-process (`parallel=None`) so a second concurrent call is still refused, not queued.
+  Opt-in tests with the real weights run with `RAG_TEST_E5_DIR` set (marker `external`).
 - `rag doctor --integrity` checks the read-only SQLite snapshot, foreign keys, model identity,
   vector shape and norm, current versions, chunk provenance, FTS consistency and index generation.
 - Replaced-version chunks lose their indexed flag when unpublished. Embedding GC retains vectors

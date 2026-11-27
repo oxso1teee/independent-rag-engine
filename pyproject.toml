@@ -99,6 +99,7 @@ markers = [
     "perf: measured budgets (NFR); not part of the pull-request CI, run with `make perf`",
     "chaos: failure injection, including SIGKILL at defined points",
     "integrity: data-model invariants and property-based model checks",
+    "external: needs locally provisioned model files; skipped when they are absent",
 ]
 
 [tool.coverage.run]
