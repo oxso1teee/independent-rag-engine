@@ -6,6 +6,12 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Phase 5: retrieval (in progress)
+- `RetrievalService`: one deterministic pipeline over ports: query processing, metadata prefilter,
+  dense and lexical channels (`candidate_k` each), fusion, duplicate collapsing and the document
+  cap, then `top_k` hits with every score component and per-channel rank in the diagnostics. The
+  model's query prefix is applied once by the service. A filter that matches nothing, an index
+  without a published model and a silent channel are reported as fallbacks, not errors; a query
+  model that differs from the index model is `E_EMBED_MODEL_MISMATCH`.
 - `diversify`: exact repeats of a text (`text_hash`) collapse to their first occurrence across
   documents, and `max_per_document` caps how many places one document may take; rank order is kept.
   The outcome reports collapsed, capped and unknown counts and the share of unique documents.
