@@ -5,15 +5,11 @@ from __future__ import annotations
 import pytest
 
 from rag_engine.domain import (
-    ChunkId,
     Context,
-    ContextBudget,
-    ContextReport,
-    Evidence,
-    EvidenceLocator,
 )
 from rag_engine.domain.answer import CitationProblem
 from rag_engine.generation.citations import CitationValidator, extract_markers, split_sentences
+from rag_engine.testing import evidence_context
 from tests.factories import make_ids
 
 pytestmark = pytest.mark.unit
@@ -28,27 +24,7 @@ RUSSIAN = "Резервные копии создаются ежедневно �
 
 
 def make_context(*texts: str) -> Context:
-    items = []
-    for number, text in enumerate(texts, start=1):
-        chunk = ChunkId.derive(VERSION, "cite", number)
-        items.append(
-            Evidence(
-                evidence_id=f"E{number}",
-                chunk_id=chunk,
-                matched=(chunk,),
-                document_id=DOC,
-                version_id=VERSION,
-                text=text,
-                truncated=False,
-                locator=EvidenceLocator("notes", f"d{number}.md", None, ("H",), None, None, 0, 10),
-                score=0.5,
-                tokens=len(text.split()),
-            )
-        )
-    budget = ContextBudget(1000, 100, 20, 100, 100, 680)
-    used = sum(item.tokens for item in items)
-    report = ContextReport((), (), (), (), used, 680, "0" * 64)
-    return Context(tuple(items), budget, used, report, "0" * 64)
+    return evidence_context(texts, document_id=DOC, version_id=VERSION)
 
 
 VALIDATOR = CitationValidator()
@@ -68,7 +44,7 @@ def test_a_supported_cited_answer_is_valid() -> None:
     context = make_context(BACKUPS, PRINTERS)
     check = VALIDATOR.validate("Backups run every night at 02:30 UTC [E1].", context)
     assert check.ok and check.cited == ("E1",) and not check.unknown
-    assert check.sentences[0].grounded and check.sentences[0].coverage == pytest.approx(1.0)
+    assert check.sentences[0].overlap_ok and check.sentences[0].coverage == pytest.approx(1.0)
 
 
 def test_a_marker_that_names_no_evidence_is_invalid() -> None:
@@ -84,10 +60,10 @@ def test_an_answer_without_any_citation_is_invalid() -> None:
     assert check.uncited_sentences == ("Backups run every night.",)
 
 
-def test_a_sentence_that_the_cited_passage_does_not_support_is_ungrounded() -> None:
+def test_a_sentence_that_the_cited_passage_does_not_support_has_low_overlap() -> None:
     context = make_context(BACKUPS, PRINTERS)
     check = VALIDATOR.validate("The printers are encrypted with a hardware token [E1].", context)
-    assert CitationProblem.UNGROUNDED in check.problems
+    assert CitationProblem.LOW_OVERLAP in check.problems
     assert check.sentences[0].coverage is not None and check.sentences[0].coverage < 0.5
 
 

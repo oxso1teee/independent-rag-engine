@@ -1,7 +1,7 @@
 """Citation validation for a generated answer.
 
 Level 1 is structural: every ``[E<n>]`` marker must name evidence that was in the context, and an
-answer must cite something. Level 2 is lexical grounding: a cited sentence must share enough of its
+answer must cite something. Level 2 is lexical overlap: a cited sentence must share enough of its
 content terms with the evidence it cites. Level 2 is a cheap, deterministic screen, not entailment:
 it catches a marker pasted on an unrelated passage, not a paraphrase that distorts the meaning.
 A sentence that cannot be judged this way (too few terms, or written in another script than its
@@ -87,8 +87,8 @@ class CitationValidator:
             problems.append(CitationProblem.UNKNOWN_MARKER)
         if not cited:
             problems.append(CitationProblem.NO_CITATION)
-        if any(not item.grounded for item in checks):
-            problems.append(CitationProblem.UNGROUNDED)
+        if any(not item.overlap_ok for item in checks):
+            problems.append(CitationProblem.LOW_OVERLAP)
         return CitationCheck(cited, unknown, tuple(uncited), tuple(checks), tuple(problems))
 
     def _check(self, sentence: str, ids: Sequence[str], by_id: dict[str, str]) -> SentenceCheck:

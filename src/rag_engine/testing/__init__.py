@@ -1,5 +1,6 @@
 """Deterministic test doubles shipped with the package; none needs network or models."""
 
+from rag_engine.testing.contexts import evidence_context
 from rag_engine.testing.fake_reranker import FakeReranker
 from rag_engine.testing.fakes import FakeClock, InMemorySource
 from rag_engine.testing.hashing_embedder import HashingEmbedder
@@ -15,4 +16,5 @@ __all__ = [
     "ScriptExhaustedError",
     "ScriptedLLM",
     "Step",
+    "evidence_context",
 ]
