@@ -8,6 +8,7 @@ adapters are injected at a single composition root.
 
 ```
 container                                                 composition root: configuration, adapters, entry point
+api                                                       HTTP transport (extra `api`), thin like the command line
 cli                                                       command line (thin)
 evaluation                                                metrics, datasets and runners that measure the pipeline
 pipeline                                                  query orchestration: stages, time budget, final status
@@ -444,6 +445,28 @@ without a citation, or citing evidence that is not among its sources cannot be b
 over the pipeline. Exit codes: 0 answered; 10 insufficient evidence; 11 unverified; other values
 follow the error category (3 configuration, 6 provider, 7 resource, ...). `--stream --json` prints
 one event per line, ending with `final`.
+
+## HTTP API (`rag_engine.api`)
+
+The API is a transport, like the command line, and holds no business rule: search and answers call
+the same `RetrievalService` and `RagPipeline`, management calls use the same `Services`, and filter
+parsing and the JSON form of results are shared with the command line
+(`retrieval.presentation`, `pipeline.presentation`). Details, endpoints and the security model are
+in [API.md](API.md); the contract is the committed [openapi.json](openapi.json).
+
+- **Errors** are `application/problem+json` with the engine's stable codes mapped to HTTP statuses in
+  one table (`api/problems.py`); unexpected exceptions become a generic 500 that reveals nothing.
+- **Security.** Bearer token from an environment variable; a bind beyond the loopback refuses to
+  start without it; bodies, questions and pages are bounded; CORS is off; responses carry no
+  filesystem paths; the API can write only into *managed* sources, never into a directory the owner
+  registered with the command line.
+- **Lifecycle.** Management requests open the store per request. The query services (embedding model,
+  vector index, chat provider) are opened on the first query and kept, so a server that never
+  receives a query loads nothing; they are closed with the server (`run_sync` lets the container
+  close providers from inside a running event loop). A server keeps its models loaded and never
+  uses the one-shot memory hand-over of `rag ask`.
+- **Background indexing.** Ingestion queues jobs and returns 202; one drain at a time processes the
+  queue in a thread, and requests that arrive meanwhile ask it to go round once more.
 
 ## Command line
 

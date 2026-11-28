@@ -21,3 +21,4 @@ supersedes the old one.
 | [0014](0014-reranker-off-by-default.md) | Reranking stays off by default | Accepted (provisional) |
 | [0015](0015-generation-contracts.md) | Generation contracts: refusal sentinel, provisional streaming, lexical overlap | Accepted |
 | [0016](0016-query-pipeline-contract.md) | Query pipeline: four statuses, one time budget, verified streaming | Accepted |
+| [0017](0017-http-api.md) | The HTTP API: a thin transport with a narrow write surface | Accepted |

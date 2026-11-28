@@ -5,10 +5,11 @@ include_external_packages = True
 # Dependency direction: every layer may import only the layers below it.
 # Layers in one row (separated by "|") are independent of each other.
 [importlinter:contract:layers]
-name = Layered architecture: container > cli > evaluation > pipeline > generation > ingestion | retrieval | context > adapters > ports > domain
+name = Layered architecture: container > api > cli > evaluation > pipeline > generation > ingestion | retrieval | context > adapters > ports > domain
 type = layers
 layers =
     rag_engine.container
+    rag_engine.api
     rag_engine.cli
     rag_engine.evaluation
     rag_engine.pipeline
@@ -96,6 +97,7 @@ source_modules =
     rag_engine.llm
 forbidden_modules =
     rag_engine.container
+    rag_engine.api
     rag_engine.cli
     rag_engine.testing
     rag_engine.__main__
