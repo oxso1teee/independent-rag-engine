@@ -35,7 +35,9 @@ These are not packaging problems; they are the project's open criteria and none 
    variant (`--workers`, `--churn-every`) exists but has not been run: it needs 2.5 GiB of free
    memory and the reference machine had 1.9–2.4 GiB while the desktop was in use.
 5. **The database is about 5.6× the source text without vectors** against a target of about 3×
-   ([AUDIT.md](AUDIT.md), F-2); decide whether to relax the target or schedule the schema work.
+   ([AUDIT.md](AUDIT.md), F-2). The owner chose to ship first and migrate afterwards
+   ([ADR 0022](adr/0022-slimmer-storage.md)); the target stays as written and the release notes must
+   say the database is larger than it.
 
 ## Decisions for the owner
 
