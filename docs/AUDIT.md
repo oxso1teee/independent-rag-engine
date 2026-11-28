@@ -47,7 +47,7 @@ per-phase evidence tables are in [TESTING.md](TESTING.md). No target was changed
 | ID | Verdict | Measurement |
 |---|---|---|
 | NFR-01 | PASS | idle server 88 MiB (limit 150); 10⁴ chunks peak 81 MiB, 10⁵ chunks 276 MiB (limits 300 / 600) |
-| NFR-02 | environment PASS; database FAIL | environment without models: 82 MB core, 150 MB with every optional extra (limit 300 MB, no torch). Database: 5.6× the source text without vectors, 7.0× with them, against about 3× plus vectors; composition in F-2 |
+| NFR-02 | environment PASS; database FAIL (deferred, F-2) | environment without models: 82 MB core, 150 MB with every optional extra (limit 300 MB, no torch). Database: 5.6× the source text without vectors, 7.0× with them, against about 3× plus vectors; composition in F-2 |
 | NFR-03 | PASS | dense p95 25–54 ms at 10⁴, 216–255 ms at 10⁵ (limits 100 / 400 ms) |
 | NFR-04 | PASS | rescan of 1000 unchanged files 0.15 s (limit 5 s), 0 parser calls |
 | NFR-05 | PASS | incremental re-embedding test: a one-paragraph edit re-embeds at most 3 chunks |
@@ -80,7 +80,7 @@ Docker image 80 MB, non-root, healthy, refuses to start without a token; `make p
 | # | Finding | Why not, and what is needed |
 |---|---|---|
 | F-1 | ~~No command writes the gate calibration~~ | **closed** by `rag calibrate` (see "F-1 re-audit" below) |
-| F-2 | Database about 5.6× the source text without vectors and 7.0× with them (real prose, 3.5 MB), target about 3× plus vectors. Measured composition below | a schema change (migration 0004) is too risky for a hardening release; owner decision: relax the clause, or schedule the work after the first release |
+| F-2 | Database 5.6× the source text without vectors and 7.0× with them (real prose, 3.5 MB), target about 3× plus vectors; composition below | **DEFERRED by the owner (2026-11-28): the storage migration comes after the first release; the target is not relaxed.** Plan: [ADR 0022](adr/0022-slimmer-storage.md) |
 | F-3 | Coverage gaps: the parser worker subprocess (0 % in-process, covered by e2e through the worker), `cli/ask_render.py` 72 % | acceptable for the release, listed here |
 | F-4 | The memory gate refuses the 4B model on this machine | by design; see L-1 |
 

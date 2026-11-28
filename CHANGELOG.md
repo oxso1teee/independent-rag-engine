@@ -6,6 +6,8 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Final audit and release hardening
+- The database is larger than its target (5.6× the text without vectors against about 3×); the
+  migration is planned after the first release (ADR 0022).
 - Fix: a chunk with no word character (an ASCII table border, a rule) is no longer indexed. It used
   to stop the whole document from publishing (`E_INTEGRITY`, a dead job). Chunk coverage is unchanged.
 - `eval/scripts/db_size.py` (size per table and column) and a harder `eval/scripts/soak.py`
