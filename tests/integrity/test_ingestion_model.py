@@ -1,6 +1,6 @@
 """Model-based test: random sequences of file operations and rescans against a naive model.
 
-The model knows only the rules of the specification: a file that appears becomes an active
+The model knows only the documented rules: a file that appears becomes an active
 document, one that disappears becomes a tombstone (and is dropped after the grace period), a
 tombstone whose file returns is restored with the same identity, and a file that is renamed
 keeps its document. After every rescan the database must agree with the model, identities
@@ -135,7 +135,7 @@ class IngestionMachine(RuleBasedStateMachine):
         return list(self.store.reader().list_documents(source.id))
 
     def _predict(self) -> None:
-        """Advance the naive model through one scan (the rules of the specification)."""
+        """Advance the naive model through one scan (the documented rules)."""
         live = {k: c for k, (c, missing) in self.known.items() if missing is None}
         vanished = {k: c for k, c in live.items() if k not in self.disk}
         appeared = {k: c for k, c in self.disk.items() if k not in self.known}

@@ -282,7 +282,7 @@ def test_retrieval_settings_reject_invalid_values(bad: dict[str, object]) -> Non
         Settings(retrieval=bad)
 
 
-def test_rerank_is_off_by_default_and_context_defaults_follow_the_specification() -> None:
+def test_rerank_is_off_by_default_and_context_defaults_follow_the_requirements() -> None:
     settings = Settings()
     assert settings.rerank.enabled is False and settings.rerank.pool_size == 30
     context = settings.context

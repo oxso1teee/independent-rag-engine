@@ -48,11 +48,47 @@ from rag_engine.evaluation.dataset import (
     validate_dataset,
 )
 from rag_engine.evaluation.generation import GenerationSample, score_answer, summarize_generation
+from rag_engine.evaluation.judge import LexicalJudge
+from rag_engine.evaluation.llm_run import Asker, evaluate_answers, summarize_records
 from rag_engine.generation.generator import AnswerGenerator, GenerationPolicy
 from rag_engine.pipeline import PipelineAnswer, PipelineLimits, RagPipeline
 from rag_engine.ports import GenerationRequest, GenerationResult, ModelLimits
 from rag_engine.system import SystemClock, system_id_factory
 from rag_engine.testing import Reply, ScriptedLLM, evidence_context
+
+
+class Recorder:
+    """Passes questions to a pipeline and keeps each reply, so one run feeds both reports."""
+
+    def __init__(self, pipeline: Asker) -> None:
+        self._pipeline = pipeline
+        self.replies: list[PipelineAnswer] = []
+
+    async def ask(self, query: RetrievalQuery) -> PipelineAnswer:
+        reply = await self._pipeline.ask(query)
+        self.replies.append(reply)
+        return reply
+
+
+def measure(
+    pipeline: Asker, questions: list[Question]
+) -> tuple[list[GenerationSample], dict[str, object]]:
+    """One e2e pass: the mechanical samples and the quality metrics (lexical judge)."""
+    recorder = Recorder(pipeline)
+    judge = LexicalJudge()
+
+    def make_query(question: Question) -> RetrievalQuery:
+        return RetrievalQuery(
+            request_id=system_id_factory().request_id(),
+            text=question.question,
+            mode=RetrievalMode.DENSE,
+            top_k=5,
+        )
+
+    records = asyncio.run(evaluate_answers(recorder, questions, judge, make_query))
+    samples = [score_answer(q, a) for q, a in zip(questions, recorder.replies, strict=True)]
+    return samples, asdict(summarize_records(records, judge_id=judge.judge_id))
+
 
 _FIRST_PASSAGE = re.compile(r"\[E1\][^\n]*\n([^\n]+)")
 
@@ -87,7 +123,9 @@ def main() -> None:
         "--dataset", type=Path, default=ROOT / "eval/datasets/retrieval_mini_v1.json"
     )
     parser.add_argument("--mode", choices=("e2e", "oracle"), default="e2e")
-    parser.add_argument("--llm", choices=("stub", "ollama"), default="stub")
+    parser.add_argument("--llm", choices=("stub", "ollama", "openai_compat"), default="stub")
+    parser.add_argument("--base-url", default=None, help="for openai_compat, e.g. https://host/v1")
+    parser.add_argument("--api-key-env", default=None, help="name of the variable holding the key")
     parser.add_argument("--model", default="qwen3.5:4b")
     parser.add_argument("--context-window", type=int, default=4096)
     parser.add_argument("--include-unreviewed", action="store_true")
@@ -122,8 +160,19 @@ def main() -> None:
             f"context_window = {args.context_window}\nmax_new_tokens = 256\n"
         )
 
+    if args.llm == "openai_compat":
+        if not args.base_url:
+            sys.exit("--base-url is required for openai_compat")
+        key = f'api_key_env = "{args.api_key_env}"\n' if args.api_key_env else ""
+        llm_section = (
+            f'[llm]\nenabled = true\nprovider = "openai_compat"\nmodel = "{args.model}"\n'
+            f'base_url = "{args.base_url}"\n{key}'
+            f"context_window = {args.context_window}\nmax_new_tokens = 256\n"
+        )
+
     container = DefaultContainer()
     samples: list[GenerationSample] = []
+    quality: dict[str, object] | None = None
     with tempfile.TemporaryDirectory(prefix="rag-gen-") as folder:
         work = Path(folder)
         config, db = work / "rag.toml", work / "rag.db"
@@ -134,10 +183,9 @@ def main() -> None:
         for step in (["source", "add", "corpus", str(corpus_dir)], ["ingest", "corpus", "--json"]):
             if rag([*prefix, *step], container=container) != 0:
                 sys.exit(f"rag {step[0]} failed")
-        if args.llm == "ollama":
+        if args.llm != "stub":
             with container.ask(config, db) as services:
-                for question in questions:
-                    samples.append(score_answer(question, run_e2e(services.pipeline, question)))
+                samples, quality = measure(services.pipeline, questions)
         else:
             with container.search(config, db) as searcher:
                 stub = CitingStub()
@@ -154,11 +202,10 @@ def main() -> None:
                     clock=SystemClock(),
                     limits=PipelineLimits(total_timeout_s=60.0),
                 )
-                for question in questions:
-                    if args.mode == "oracle":
-                        samples.append(oracle(generator, question, corpus_dir))
-                    else:
-                        samples.append(score_answer(question, run_e2e(pipeline, question)))
+                if args.mode == "oracle":
+                    samples = [oracle(generator, q, corpus_dir) for q in questions]
+                else:
+                    samples, quality = measure(pipeline, questions)
 
     summary = summarize_generation(samples)
     result = {
@@ -173,21 +220,21 @@ def main() -> None:
             if args.llm == "stub"
             else "Real model run through the resource gate."
         ),
-        "not_measured": ["faithfulness", "hallucination rate", "answer correctness"],
+        "quality": quality,
+        "quality_caveat": (
+            "answer correctness is a match against reference facts; faithfulness, hallucination "
+            "and citation precision use the lexical judge (a screen, not an entailment check, "
+            "uncalibrated against people) and unreviewed labels"
+        ),
+        "not_measured": (
+            ["faithfulness", "hallucination rate", "answer correctness"] if quality is None else []
+        ),
     }
     text = json.dumps(result, indent=2, sort_keys=True, default=str)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(text + "\n", encoding="utf-8")
     print(text)
-
-
-def run_e2e(pipeline: RagPipeline, question: Question) -> PipelineAnswer:
-    ids = system_id_factory()
-    query = RetrievalQuery(
-        request_id=ids.request_id(), text=question.question, mode=RetrievalMode.DENSE, top_k=5
-    )
-    return asyncio.run(pipeline.ask(query))
 
 
 def oracle(generator: AnswerGenerator, question: Question, corpus: Path) -> GenerationSample:

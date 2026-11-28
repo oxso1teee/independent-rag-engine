@@ -5,7 +5,38 @@ checked a question, it is a draft: metrics are computed only from questions mark
 `edited`, and a reviewer name that looks like a program is refused. This page describes how to
 review `eval/datasets/retrieval_mini_v1.json` (44 questions over `eval/corpus/mini_v1`).
 
-## Steps
+## Reviewing all questions in one page (review kit)
+
+`review_kit.py` builds one self-contained HTML page for every question of the hard set (141) and
+the mini set (44): 185 cards, each with the question, the source document with the gold quote
+highlighted, the reference answer and facts, and for questions without an answer the terms that
+must not occur. Nothing is sent anywhere and nothing in a dataset changes while you work.
+
+1. Build the page (`--dataset` may be repeated; the 136 questions of
+   `eval/datasets/gate_heldout_v2.json` can be added the same way):
+
+   ```bash
+   uv run python eval/scripts/review_kit.py build
+   ```
+
+2. Open `eval_runs/review_kit/review_kit.html` in a browser. For each card choose *accept*,
+   *edit* (with the corrected question and/or reference answer) or *reject* (with a reason).
+   Progress is kept in the browser; leave a card undecided to leave the question a draft.
+3. Export the decisions as CSV with the button on the page.
+4. Apply them under your name. One new file per dataset is written with the version raised by one;
+   an existing file is never overwritten, and a reviewer name that looks like a program is refused:
+
+   ```bash
+   uv run python eval/scripts/review_kit.py apply --sheet <exported.csv> \
+       --reviewer "Your Name" --outdir eval/datasets
+   ```
+
+5. Point the evaluation scripts at the new versions and re-run them
+   (`docs/EVALUATION.md`). The re-run, not this page, decides what the reviewed numbers are.
+
+The kit never marks a question reviewed by itself; that is only possible through step 4.
+
+## Steps (CSV sheet, one dataset)
 
 1. Export a sheet (nothing in the dataset changes):
 

@@ -7,8 +7,8 @@ quality); the consequence is stated under [Limits](#limits-and-when-to-revisit).
 
 The default embedding model sets RU/EN retrieval quality, indexing speed, memory, disk and
 licence obligations. The product supports Ollama models pinned by digest and local ONNX files
-pinned by a directory fingerprint. The specification names the target machine: 4 vCPU, about
-7.8 GiB RAM of which often only 1.5–3 GiB is available, no GPU. Candidates, as the specification
+pinned by a directory fingerprint. The requirements name the target machine: 4 vCPU, about
+7.8 GiB RAM of which often only 1.5–3 GiB is available, no GPU. Candidates, as the requirements
 framed D-03 plus the larger sibling: `intfloat/multilingual-e5-small` (ONNX), `qwen3-embedding:0.6b`
 and `qwen3-embedding:4b` (Ollama). A hashing test double cannot establish quality.
 
@@ -17,7 +17,7 @@ and `qwen3-embedding:4b` (Ollama). A hashing test double cannot establish qualit
 The proposal of 2026-11-26 fixed the comparison before any model was ranked: Recall@5 and nDCG@10
 with paired uncertainty intervals, plus throughput, latency, memory, size and licence. The order
 of the criteria below, in particular the resource gate, was written down after the quality of
-E5-small and Qwen3 0.6B had been seen; it follows the environment stated in the specification
+E5-small and Qwen3 0.6B had been seen; it follows the environment stated in the requirements
 rather than any score.
 
 1. **Resource gate.** A default must fit the target machine: its resident memory should stay

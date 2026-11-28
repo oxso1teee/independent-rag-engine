@@ -1,0 +1,3983 @@
+{
+  "name": "gate-heldout",
+  "version": 2,
+  "corpus": "eval/corpus/gate_v2",
+  "questions": [
+    {
+      "id": "en_cafeteria-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When does the cafeteria open and close?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_cafeteria.md",
+          "anchor": "opens at 08:00 and closes at 15:30",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The cafeteria opens at 08:00 and closes at 15:30.",
+      "reference_facts": [
+        "opens at 08:00 and closes at 15:30"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_cafeteria-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда открывается и закрывается столовая?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_cafeteria.md",
+          "anchor": "opens at 08:00 and closes at 15:30",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The cafeteria opens at 08:00 and closes at 15:30.",
+      "reference_facts": [
+        "opens at 08:00 and closes at 15:30"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_cafeteria-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How are vegetarian meals marked?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_cafeteria.md",
+          "anchor": "marked with a green label",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Vegetarian meals are marked with a green label.",
+      "reference_facts": [
+        "marked with a green label"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_cafeteria-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как отмечены вегетарианские блюда?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_cafeteria.md",
+          "anchor": "marked with a green label",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Vegetarian meals are marked with a green label.",
+      "reference_facts": [
+        "marked with a green label"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_gym-1-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "Which floor is the gym on?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_gym.md",
+          "anchor": "on the lower ground floor",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The gym is on the lower ground floor.",
+      "reference_facts": [
+        "on the lower ground floor"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_gym-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "На каком этаже находится спортзал?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_gym.md",
+          "anchor": "on the lower ground floor",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The gym is on the lower ground floor.",
+      "reference_facts": [
+        "on the lower ground floor"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_gym-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What is needed to use the gym?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_gym.md",
+          "anchor": "requires a signed waiver",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Gym access requires a signed waiver.",
+      "reference_facts": [
+        "requires a signed waiver"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_gym-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Что нужно для посещения спортзала?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_gym.md",
+          "anchor": "requires a signed waiver",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Gym access requires a signed waiver.",
+      "reference_facts": [
+        "requires a signed waiver"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_library-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "For how long can a library book be borrowed?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_library.md",
+          "anchor": "lends books for 21 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The library lends books for 21 days.",
+      "reference_facts": [
+        "lends books for 21 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_library-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "На какой срок выдаются книги из библиотеки?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_library.md",
+          "anchor": "lends books for 21 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The library lends books for 21 days.",
+      "reference_facts": [
+        "lends books for 21 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_library-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many books may one member borrow?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_library.md",
+          "anchor": "borrow up to 5 books",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Each member may borrow up to 5 books.",
+      "reference_facts": [
+        "borrow up to 5 books"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_library-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько книг может взять один читатель?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_library.md",
+          "anchor": "borrow up to 5 books",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Each member may borrow up to 5 books.",
+      "reference_facts": [
+        "borrow up to 5 books"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_shuttle-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How often does the shuttle bus leave the station?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_shuttle.md",
+          "anchor": "every 20 minutes",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The shuttle bus leaves the station every 20 minutes.",
+      "reference_facts": [
+        "every 20 minutes"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_shuttle-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как часто отправляется автобус от станции?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_shuttle.md",
+          "anchor": "every 20 minutes",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The shuttle bus leaves the station every 20 minutes.",
+      "reference_facts": [
+        "every 20 minutes"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_shuttle-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When does the last shuttle depart?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_shuttle.md",
+          "anchor": "departs at 21:40",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The last shuttle departs at 21:40.",
+      "reference_facts": [
+        "departs at 21:40"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_shuttle-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Во сколько уходит последний автобус?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_shuttle.md",
+          "anchor": "departs at 21:40",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The last shuttle departs at 21:40.",
+      "reference_facts": [
+        "departs at 21:40"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_badge-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How much is a replacement badge?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_badge.md",
+          "anchor": "cost 12 euros",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Replacement badges cost 12 euros.",
+      "reference_facts": [
+        "cost 12 euros"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_badge-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько стоит замена бейджа?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_badge.md",
+          "anchor": "cost 12 euros",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Replacement badges cost 12 euros.",
+      "reference_facts": [
+        "cost 12 euros"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_badge-2-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "On which day are badges printed?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_badge.md",
+          "anchor": "printed on Wednesdays",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Badges are printed on Wednesdays.",
+      "reference_facts": [
+        "printed on Wednesdays"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_badge-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой день печатают бейджи?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_badge.md",
+          "anchor": "printed on Wednesdays",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Badges are printed on Wednesdays.",
+      "reference_facts": [
+        "printed on Wednesdays"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_laptop_refresh-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How often are laptops replaced?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_laptop_refresh.md",
+          "anchor": "replaced every 4 years",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Laptops are replaced every 4 years.",
+      "reference_facts": [
+        "replaced every 4 years"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_laptop_refresh-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как часто заменяют ноутбуки?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_laptop_refresh.md",
+          "anchor": "replaced every 4 years",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Laptops are replaced every 4 years.",
+      "reference_facts": [
+        "replaced every 4 years"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_laptop_refresh-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many laptop models can developers choose from?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_laptop_refresh.md",
+          "anchor": "choose between two models",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Developers may choose between two models.",
+      "reference_facts": [
+        "choose between two models"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_laptop_refresh-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Из скольких моделей ноутбука могут выбирать разработчики?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_laptop_refresh.md",
+          "anchor": "choose between two models",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Developers may choose between two models.",
+      "reference_facts": [
+        "choose between two models"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_conference-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Who must approve conference travel?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_conference.md",
+          "anchor": "needs approval from a director",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Conference travel needs approval from a director.",
+      "reference_facts": [
+        "needs approval from a director"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_conference-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Кто должен согласовать поездку на конференцию?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_conference.md",
+          "anchor": "needs approval from a director",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Conference travel needs approval from a director.",
+      "reference_facts": [
+        "needs approval from a director"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_conference-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How are conference registration fees paid?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_conference.md",
+          "anchor": "paid by the company card",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Registration fees are paid by the company card.",
+      "reference_facts": [
+        "paid by the company card"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_conference-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как оплачиваются регистрационные взносы на конференции?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_conference.md",
+          "anchor": "paid by the company card",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Registration fees are paid by the company card.",
+      "reference_facts": [
+        "paid by the company card"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_phones-1-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "After how many years are company phones replaced?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_phones.md",
+          "anchor": "replaced after 3 years",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Company phones are replaced after 3 years.",
+      "reference_facts": [
+        "replaced after 3 years"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_phones-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Через сколько лет заменяют корпоративные телефоны?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_phones.md",
+          "anchor": "replaced after 3 years",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Company phones are replaced after 3 years.",
+      "reference_facts": [
+        "replaced after 3 years"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_phones-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many minutes of personal use do company phones allow?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_phones.md",
+          "anchor": "limited to 100 minutes per month",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Personal use of company phones is limited to 100 minutes per month.",
+      "reference_facts": [
+        "limited to 100 minutes per month"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_phones-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько минут личного использования разрешено на корпоративном телефоне?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_phones.md",
+          "anchor": "limited to 100 minutes per month",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Personal use of company phones is limited to 100 minutes per month.",
+      "reference_facts": [
+        "limited to 100 minutes per month"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_security_training-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How often is security training repeated?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_security_training.md",
+          "anchor": "repeated every 12 months",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Security training is repeated every 12 months.",
+      "reference_facts": [
+        "repeated every 12 months"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_security_training-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как часто повторяют обучение по безопасности?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_security_training.md",
+          "anchor": "repeated every 12 months",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Security training is repeated every 12 months.",
+      "reference_facts": [
+        "repeated every 12 months"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_security_training-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long does the security course take?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_security_training.md",
+          "anchor": "takes about 45 minutes",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The course takes about 45 minutes.",
+      "reference_facts": [
+        "takes about 45 minutes"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_security_training-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько длится курс по безопасности?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_security_training.md",
+          "anchor": "takes about 45 minutes",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The course takes about 45 minutes.",
+      "reference_facts": [
+        "takes about 45 minutes"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_audit-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "In which months do internal audits take place?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_audit.md",
+          "anchor": "in March and September",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Internal audits take place in March and September.",
+      "reference_facts": [
+        "in March and September"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_audit-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какие месяцы проходят внутренние аудиты?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_audit.md",
+          "anchor": "in March and September",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Internal audits take place in March and September.",
+      "reference_facts": [
+        "in March and September"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_audit-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How soon must audit findings be answered?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_audit.md",
+          "anchor": "answered within 21 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Audit findings must be answered within 21 days.",
+      "reference_facts": [
+        "answered within 21 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_audit-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой срок нужно ответить на замечания аудита?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_audit.md",
+          "anchor": "answered within 21 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Audit findings must be answered within 21 days.",
+      "reference_facts": [
+        "answered within 21 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_holidays-1-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "Is the office open on 25 December?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_holidays.md",
+          "anchor": "closed on 25 December",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The office is closed on 25 December.",
+      "reference_facts": [
+        "closed on 25 December"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_holidays-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Работает ли офис 25 декабря?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_holidays.md",
+          "anchor": "closed on 25 December",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The office is closed on 25 December.",
+      "reference_facts": [
+        "closed on 25 December"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_holidays-2-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "Is the office open on 1 January?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_holidays.md",
+          "anchor": "also closed on 1 January",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The office is also closed on 1 January.",
+      "reference_facts": [
+        "also closed on 1 January"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_holidays-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Работает ли офис 1 января?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_holidays.md",
+          "anchor": "also closed on 1 January",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The office is also closed on 1 January.",
+      "reference_facts": [
+        "also closed on 1 January"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_mentoring-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When are mentoring sessions held?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_mentoring.md",
+          "anchor": "every second Thursday",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Mentoring sessions are held every second Thursday.",
+      "reference_facts": [
+        "every second Thursday"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_mentoring-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда проходят встречи наставничества?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_mentoring.md",
+          "anchor": "every second Thursday",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Mentoring sessions are held every second Thursday.",
+      "reference_facts": [
+        "every second Thursday"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_mentoring-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many mentees may a mentor support?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_mentoring.md",
+          "anchor": "support up to 3 mentees",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "A mentor may support up to 3 mentees.",
+      "reference_facts": [
+        "support up to 3 mentees"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_mentoring-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько подопечных может вести наставник?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_mentoring.md",
+          "anchor": "support up to 3 mentees",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "A mentor may support up to 3 mentees.",
+      "reference_facts": [
+        "support up to 3 mentees"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_cafe-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какие часы работает столовая?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_cafe.md",
+          "anchor": "открыта с 8:00 до 15:30",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Столовая открыта с 8:00 до 15:30.",
+      "reference_facts": [
+        "открыта с 8:00 до 15:30"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_cafe-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What are the canteen's opening hours?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_cafe.md",
+          "anchor": "открыта с 8:00 до 15:30",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Столовая открыта с 8:00 до 15:30.",
+      "reference_facts": [
+        "открыта с 8:00 до 15:30"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_cafe-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Чем отмечены вегетарианские блюда?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_cafe.md",
+          "anchor": "отмечены зелёной меткой",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Вегетарианские блюда отмечены зелёной меткой.",
+      "reference_facts": [
+        "отмечены зелёной меткой"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_cafe-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What marks the vegetarian dishes in the canteen?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_cafe.md",
+          "anchor": "отмечены зелёной меткой",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Вегетарианские блюда отмечены зелёной меткой.",
+      "reference_facts": [
+        "отмечены зелёной меткой"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sport-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Где находится спортзал?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sport.md",
+          "anchor": "в цокольном этаже",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Спортзал находится в цокольном этаже.",
+      "reference_facts": [
+        "в цокольном этаже"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sport-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Where is the fitness room located?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sport.md",
+          "anchor": "в цокольном этаже",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Спортзал находится в цокольном этаже.",
+      "reference_facts": [
+        "в цокольном этаже"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sport-2-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Что нужно подписать для посещения спортзала?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sport.md",
+          "anchor": "нужно подписать соглашение",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Для посещения спортзала нужно подписать соглашение.",
+      "reference_facts": [
+        "нужно подписать соглашение"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sport-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What must be signed to use the fitness room?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sport.md",
+          "anchor": "нужно подписать соглашение",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Для посещения спортзала нужно подписать соглашение.",
+      "reference_facts": [
+        "нужно подписать соглашение"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_library-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "На сколько дней выдают книги из библиотеки?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_library.md",
+          "anchor": "выдаются на 21 день",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Книги из библиотеки выдаются на 21 день.",
+      "reference_facts": [
+        "выдаются на 21 день"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_library-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "For how many days are library books lent?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_library.md",
+          "anchor": "выдаются на 21 день",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Книги из библиотеки выдаются на 21 день.",
+      "reference_facts": [
+        "выдаются на 21 день"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_library-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько книг может взять один читатель?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_library.md",
+          "anchor": "не более 5 книг",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Один читатель может взять не более 5 книг.",
+      "reference_facts": [
+        "не более 5 книг"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_library-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What is the limit of books per reader?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_library.md",
+          "anchor": "не более 5 книг",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Один читатель может взять не более 5 книг.",
+      "reference_facts": [
+        "не более 5 книг"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_shuttle-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как часто ходит служебный автобус?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_shuttle.md",
+          "anchor": "каждые 20 минут",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Служебный автобус отходит от станции каждые 20 минут.",
+      "reference_facts": [
+        "каждые 20 минут"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_shuttle-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How frequent is the company bus?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_shuttle.md",
+          "anchor": "каждые 20 минут",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Служебный автобус отходит от станции каждые 20 минут.",
+      "reference_facts": [
+        "каждые 20 минут"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_shuttle-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда уходит последний служебный автобус?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_shuttle.md",
+          "anchor": "уходит в 21:40",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Последний автобус уходит в 21:40.",
+      "reference_facts": [
+        "уходит в 21:40"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_shuttle-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "At what time does the final company bus go?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_shuttle.md",
+          "anchor": "уходит в 21:40",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Последний автобус уходит в 21:40.",
+      "reference_facts": [
+        "уходит в 21:40"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_badge-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько стоит замена пропуска?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_badge.md",
+          "anchor": "стоит 600 рублей",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Замена пропуска стоит 600 рублей.",
+      "reference_facts": [
+        "стоит 600 рублей"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_badge-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What does replacing an access card cost?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_badge.md",
+          "anchor": "стоит 600 рублей",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Замена пропуска стоит 600 рублей.",
+      "reference_facts": [
+        "стоит 600 рублей"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_badge-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой день печатают пропуска?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_badge.md",
+          "anchor": "печатают по средам",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Пропуска печатают по средам.",
+      "reference_facts": [
+        "печатают по средам"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_badge-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "On what weekday are access cards printed?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_badge.md",
+          "anchor": "печатают по средам",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Пропуска печатают по средам.",
+      "reference_facts": [
+        "печатают по средам"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_laptop-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как часто заменяют ноутбуки сотрудников?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_laptop.md",
+          "anchor": "раз в 4 года",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Ноутбуки заменяют раз в 4 года.",
+      "reference_facts": [
+        "раз в 4 года"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_laptop-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What is the laptop replacement cycle?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_laptop.md",
+          "anchor": "раз в 4 года",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Ноутбуки заменяют раз в 4 года.",
+      "reference_facts": [
+        "раз в 4 года"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_laptop-2-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Из скольких моделей выбирают разработчики?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_laptop.md",
+          "anchor": "одну из двух моделей",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Разработчики могут выбрать одну из двух моделей.",
+      "reference_facts": [
+        "одну из двух моделей"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_laptop-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many models can programmers pick from?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_laptop.md",
+          "anchor": "одну из двух моделей",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Разработчики могут выбрать одну из двух моделей.",
+      "reference_facts": [
+        "одну из двух моделей"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_conf-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Кто согласует поездку на конференцию?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_conf.md",
+          "anchor": "требует согласования директора",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Поездка на конференцию требует согласования директора.",
+      "reference_facts": [
+        "требует согласования директора"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_conf-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Whose consent does a conference trip need?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_conf.md",
+          "anchor": "требует согласования директора",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Поездка на конференцию требует согласования директора.",
+      "reference_facts": [
+        "требует согласования директора"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_conf-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Чем оплачивается регистрационный взнос?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_conf.md",
+          "anchor": "оплачивается корпоративной картой",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Регистрационный взнос оплачивается корпоративной картой.",
+      "reference_facts": [
+        "оплачивается корпоративной картой"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_conf-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What pays the registration fee?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_conf.md",
+          "anchor": "оплачивается корпоративной картой",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Регистрационный взнос оплачивается корпоративной картой.",
+      "reference_facts": [
+        "оплачивается корпоративной картой"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_phone-1-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Через сколько лет заменяют корпоративные телефоны?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_phone.md",
+          "anchor": "заменяют через 3 года",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Корпоративные телефоны заменяют через 3 года.",
+      "reference_facts": [
+        "заменяют через 3 года"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_phone-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "After what period are work phones replaced?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_phone.md",
+          "anchor": "заменяют через 3 года",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Корпоративные телефоны заменяют через 3 года.",
+      "reference_facts": [
+        "заменяют через 3 года"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_phone-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько минут в месяц разрешено для личных звонков?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_phone.md",
+          "anchor": "ограничено 100 минутами в месяц",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Личное использование ограничено 100 минутами в месяц.",
+      "reference_facts": [
+        "ограничено 100 минутами в месяц"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_phone-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many private minutes a month are allowed on a work phone?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_phone.md",
+          "anchor": "ограничено 100 минутами в месяц",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Личное использование ограничено 100 минутами в месяц.",
+      "reference_facts": [
+        "ограничено 100 минутами в месяц"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sec-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как часто повторяется обучение по безопасности?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sec.md",
+          "anchor": "повторяется каждые 12 месяцев",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Обучение по безопасности повторяется каждые 12 месяцев.",
+      "reference_facts": [
+        "повторяется каждые 12 месяцев"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sec-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How often must the safety course be retaken?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sec.md",
+          "anchor": "повторяется каждые 12 месяцев",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Обучение по безопасности повторяется каждые 12 месяцев.",
+      "reference_facts": [
+        "повторяется каждые 12 месяцев"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sec-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько времени занимает курс по безопасности?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sec.md",
+          "anchor": "занимает около 45 минут",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Курс занимает около 45 минут.",
+      "reference_facts": [
+        "занимает около 45 минут"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sec-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long is the safety course?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sec.md",
+          "anchor": "занимает около 45 минут",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Курс занимает около 45 минут.",
+      "reference_facts": [
+        "занимает около 45 минут"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_audit-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какие месяцы проходят внутренние аудиты?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_audit.md",
+          "anchor": "в марте и сентябре",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Внутренние аудиты проходят в марте и сентябре.",
+      "reference_facts": [
+        "в марте и сентябре"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_audit-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Which months are internal audits held?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_audit.md",
+          "anchor": "в марте и сентябре",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Внутренние аудиты проходят в марте и сентябре.",
+      "reference_facts": [
+        "в марте и сентябре"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_audit-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой срок отвечают на замечания аудита?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_audit.md",
+          "anchor": "в течение 21 дня",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "На замечания аудита нужно ответить в течение 21 дня.",
+      "reference_facts": [
+        "в течение 21 дня"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_audit-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Within what time are audit remarks answered?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_audit.md",
+          "anchor": "в течение 21 дня",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "На замечания аудита нужно ответить в течение 21 дня.",
+      "reference_facts": [
+        "в течение 21 дня"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_holidays-1-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Работает ли офис 31 декабря?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_holidays.md",
+          "anchor": "закрыт 31 декабря",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Офис закрыт 31 декабря.",
+      "reference_facts": [
+        "закрыт 31 декабря"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_holidays-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Does the office work on 31 December?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_holidays.md",
+          "anchor": "закрыт 31 декабря",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Офис закрыт 31 декабря.",
+      "reference_facts": [
+        "закрыт 31 декабря"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_holidays-2-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Работает ли офис 8 марта?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_holidays.md",
+          "anchor": "закрыт также 8 марта",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Офис закрыт также 8 марта.",
+      "reference_facts": [
+        "закрыт также 8 марта"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_holidays-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Does the office work on 8 March?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_holidays.md",
+          "anchor": "закрыт также 8 марта",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Офис закрыт также 8 марта.",
+      "reference_facts": [
+        "закрыт также 8 марта"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_mentor-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда проходят встречи наставников?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_mentor.md",
+          "anchor": "каждый второй четверг",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Встречи наставников проходят каждый второй четверг.",
+      "reference_facts": [
+        "каждый второй четверг"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_mentor-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When do mentor meetings take place?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_mentor.md",
+          "anchor": "каждый второй четверг",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Встречи наставников проходят каждый второй четверг.",
+      "reference_facts": [
+        "каждый второй четверг"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_mentor-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько подопечных может вести наставник?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_mentor.md",
+          "anchor": "не более 3 подопечных",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Один наставник может вести не более 3 подопечных.",
+      "reference_facts": [
+        "не более 3 подопечных"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_mentor-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What is the maximum number of mentees per mentor?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_mentor.md",
+          "anchor": "не более 3 подопечных",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Один наставник может вести не более 3 подопечных.",
+      "reference_facts": [
+        "не более 3 подопечных"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-1",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How much does a cafeteria meal cost?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "meal cost"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-2",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Who runs the gym?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "runs the gym"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-3",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the fine for a late library book?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "fine"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-4",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Where is the shuttle bus stop at the office?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "bus stop"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-5",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Who prints the badges?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "prints the badges"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-6",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Which brand are the company laptops?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "brand"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-7",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Who books the flights for conference travel?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "flights"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-8",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What happens to a company phone after it is replaced?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "after it is replaced"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-9",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Who teaches the security training?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "teaches"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-10",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Who carries out the internal audits?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "carries out"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-11",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Is the office closed on 26 December?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "26 December"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-12",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How long does one mentoring session last?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "session last"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-13",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Is the cafeteria open on Saturdays?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "Saturdays"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-14",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Which weekdays does the shuttle bus run?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "weekdays"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-15",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Сколько стоит обед в столовой?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "стоит обед"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-16",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Кто руководит спортзалом?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "руководит"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-17",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какой штраф за просрочку библиотечной книги?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "штраф"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-18",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Где остановка служебного автобуса у офиса?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "остановк"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-19",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Кто печатает пропуска?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "печатает пропуска"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-20",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какой марки выдают ноутбуки?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "марки"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-21",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Кто бронирует билеты на конференцию?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "билеты"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-22",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Что делают с телефоном после замены?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "после замены"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-23",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Кто проводит обучение по безопасности?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "проводит обучение"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-24",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Кто проводит внутренние аудиты?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "проводит внутренние"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-25",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Работает ли офис 2 января?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "2 января"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-26",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Сколько длится одна встреча наставников?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "одна встреча"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-27",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Работает ли столовая по субботам?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "по субботам"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "near-miss-28",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "В какие дни недели ходит служебный автобус?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "дни недели"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-1",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the company's policy on remote work from abroad?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "abroad"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-2",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How many days of sick leave are paid?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "sick leave"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-3",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the process for requesting a salary review?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "salary"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-4",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Which health insurance provider does the company use?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "insurance"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-5",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Where can I store my bicycle?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "bicycle"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-6",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Who is the data protection officer?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "protection officer"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-7",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какая политика по работе из другой страны?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "другой страны"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-8",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Сколько дней больничного оплачивается?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "больничного"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-9",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Как запросить пересмотр зарплаты?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "зарплат"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-10",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какая страховая компания обслуживает сотрудников?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "страховая"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-11",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Где хранить велосипед?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "велосипед"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "absent-12",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Кто отвечает за защиту персональных данных?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "персональных данных"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_gate_set.py after the gate rules under test were fixed; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    }
+  ]
+}

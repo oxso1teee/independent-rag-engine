@@ -62,7 +62,7 @@ class GenerationPolicy:
     text kept apart as ``raw_text``, never as the answer) instead of raising."""
     min_answer_chars: int = 20
     """An answer shorter than this many characters (markers excluded) is degenerate: the
-    specification's default of 20."""
+    required default of 20."""
     drift_ratio: float = 0.15
 
     def __post_init__(self) -> None:

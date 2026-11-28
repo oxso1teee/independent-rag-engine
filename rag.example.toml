@@ -9,6 +9,7 @@ profile = "low"
 # llm_concurrency = 1
 # embed_concurrency = 1
 # embed_batch = 16
+# reranker_enabled = false
 # ingest_workers = 1
 # max_loaded_vectors_mb = 512
 
@@ -34,6 +35,7 @@ enabled = false
 # revision = "installed-model-sha256-digest"
 # dimension = 1024
 # max_input_tokens = 8192
+# batch_tokens = 4096              # tokens per embedding request
 # base_url = "http://127.0.0.1:11434"
 # model_dir = "/path/to/local/onnx/model"
 # ONNX (extra `onnx`): `revision` is the fingerprint of every file in model_dir, not an upstream id:
@@ -57,6 +59,7 @@ enabled = false
 
 # Optional cross-encoder reranking. Off by default (ADR 0014); the files are provisioned by hand.
 [rerank]
+# threads = 1                       # CPU threads of the cross-encoder
 # enabled = false
 # model = "BAAI/bge-reranker-v2-m3-int8"
 # model_dir = "/path/to/local/reranker"
@@ -82,6 +85,8 @@ enabled = false
 # max_archive_mb = 200
 # max_archive_ratio = 100
 # timeout_s = 60
+# max_archive_entries = 10000      # entries of a DOCX or other archive
+# max_nesting = 200                 # nesting depth of a document
 # isolate = ["pdf", "docx", "html"]   # formats parsed in a separate worker process
 # isolation_memory_mb = 1024         # worker data-segment cap (plan 250 MB + 14 MB per million characters); isolate = [] disables isolation
 
@@ -97,12 +102,42 @@ enabled = false
 
 [llm]
 enabled = false
-# provider = "local"
+# provider = "ollama"               # or "openai_compat" (then base_url is required)
 # model = "your-chat-model"
-# context_window = 8192
+# context_window = 8192             # required: the window is never guessed
 # max_new_tokens = 512
+# base_url = "http://127.0.0.1:11434"
+# request_timeout_s = 180
+# max_retries = 2                   # only for "unreachable", "5xx" and "slow down" errors
+# keep_alive = "0"                  # Ollama: unload the model after every answer (the safe default
+#                                   # here; a resident model plus the embedder may not fit in memory,
+#                                   # and a value other than "0" is refused together with [rerank])
+# think = false                     # let a reasoning-capable Ollama model think
 # api_key_env = "RAG_LLM_API_KEY"   # name of the environment variable holding the key
+
+# The whole query pipeline (`rag ask`, `POST /v1/answers`).
+[answer]
+# total_timeout_s = 300
+# retrieval_share = 0.25            # share of the budget retrieval may use
+# context_share = 0.05              # generation gets what is left
+# min_answer_chars = 20             # a shorter reply (citation markers excluded) is never an answer
+# strict_overlap = false            # treat low lexical overlap with the evidence as unverified
+# release_models = true             # one-shot use: free the in-process models before a local model runs
+
+# The HTTP API (`rag serve`). Listening beyond the loopback address needs a token.
+[api]
+# host = "127.0.0.1"
+# port = 8765
+# token_env = "RAG_API_TOKEN"       # name of the variable holding the bearer token (16+ characters)
+# max_body_bytes = 8388608
+# max_question_chars = 4000
+# idempotency_ttl_s = 86400
+# cors_origins = []                 # CORS stays off unless origins are listed
+# metrics = false                   # Prometheus text at GET /v1/metrics (needs the token)
 
 [logging]
 level = "INFO"
 json_output = true
+# file = "logs/rag.log"            # write to a file rotated by size (readable by its owner only)
+# rotate_mb = 10
+# backups = 5

@@ -3,7 +3,7 @@
 `rag serve` runs the API (extra `api`: `pip install "independent-rag-engine[api]"`). It is a thin
 transport over the same services as the command line: the same retrieval, the same query pipeline,
 the same error codes. The machine-readable contract is [`openapi.json`](openapi.json) (also served
-at `/v1/openapi.json`); a test fails when the API changes without it.
+at `/v1/openapi.json`, behind the token); a test fails when the API changes without it.
 
 ## Starting the server
 

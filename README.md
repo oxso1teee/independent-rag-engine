@@ -164,6 +164,8 @@ eval/datasets/     versioned question sets
 - [Phase 4 embedding measurements](docs/EMBEDDING_BAKEOFF.md)
 - [Retrieval evaluation](docs/RETRIEVAL_EVALUATION.md)
 - [Reviewing an evaluation dataset](docs/DATASET_REVIEW.md)
+- [Verifying a real language model](docs/LLM_VERIFICATION.md)
+- [Requirements and audit](docs/REQUIREMENTS.md)
 - [Changelog](CHANGELOG.md)
 - [Architecture decision records](docs/adr/README.md)
 

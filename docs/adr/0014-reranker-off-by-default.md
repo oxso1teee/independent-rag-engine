@@ -6,7 +6,7 @@ when reviewed labels and a harder evaluation set exist.
 ## Context
 
 A cross-encoder can reorder a pool of candidates more precisely than the retrieval channels do, at
-the cost of memory and latency on every query. The specification allows reranking as an optional
+the cost of memory and latency on every query. The requirements allow reranking as an optional
 component and permits it to be enabled by default only after it has shown a gain on the evaluation
 set (paired nDCG@10 interval above zero on dev, confirmed on test, with a bounded p95 and memory).
 The target machine has 4 vCPU and often 1.5-3 GiB of free memory (ADR 0002), and the corpus is

@@ -133,7 +133,7 @@ The quality run for `qwen3-embedding:4b` was started twice and did not finish:
    avoid another OOM kill.
 
 So the 4B model does not run usefully alongside a desktop session on this machine. This is a
-finding in itself: the specification describes the target as 4 vCPU and about 7.8 GiB with often
+finding in itself: the project's target machine is 4 vCPU and about 7.8 GiB with often
 only 1.5–3 GiB available, and a model that needs about 3.5 GiB resident is outside it. The cached vectors written so
 far stay in `data/eval/nomiracl`, and the command above resumes the run once about 4 GiB is free.
 On the earlier 16-passage probe 4B reached nDCG@10 1.000 against 0.984 for 0.6B, a difference that

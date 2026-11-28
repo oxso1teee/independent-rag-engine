@@ -24,3 +24,4 @@ supersedes the old one.
 | [0017](0017-http-api.md) | The HTTP API: a thin transport with a narrow write surface | Accepted |
 | [0018](0018-hard-set-gate-and-reranker.md) | What the harder set showed about the gate, the reranker and hybrid retrieval | Accepted (provisional) |
 | [0019](0019-packaging-and-operations.md) | Packaging and operations: small, pinned, unprivileged, verifiable | Accepted |
+| [0020](0020-gate-signal-precedence.md) | The sufficiency gate trusts the strongest signal alone | Accepted (provisional) |

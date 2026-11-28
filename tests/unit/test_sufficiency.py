@@ -89,13 +89,17 @@ def test_the_dense_signal_decides_when_it_is_the_only_one() -> None:
     assert refused.reasons == ("dense_below_threshold",)
 
 
-def test_either_dense_or_rerank_is_enough() -> None:
+def test_the_reranker_decides_alone_when_it_ran() -> None:
     both = gate(rerank=2.0)
+    # a good rerank logit passes even with a weak dense cosine
     assert both.decide(Signals(dense=0.4, rerank=2.5, lexical_coverage=None)).sufficient
-    assert both.decide(Signals(dense=0.6, rerank=1.0, lexical_coverage=None)).sufficient
-    none = both.decide(Signals(dense=0.4, rerank=1.0, lexical_coverage=None))
-    assert not none.sufficient
-    assert set(none.reasons) == {"dense_below_threshold", "rerank_below_threshold"}
+    # a poor rerank logit refuses even when the dense cosine looks fine
+    lenient = both.decide(Signals(dense=0.6, rerank=1.0, lexical_coverage=None))
+    assert not lenient.sufficient and lenient.calibrated
+    assert lenient.reasons == ("rerank_below_threshold",)
+    # without a rerank score the dense cosine decides as before
+    assert both.decide(Signals(dense=0.6, rerank=None, lexical_coverage=None)).sufficient
+    assert not both.decide(Signals(dense=0.4, rerank=None, lexical_coverage=None)).sufficient
 
 
 def test_lexical_coverage_decides_only_when_no_semantic_signal_exists() -> None:

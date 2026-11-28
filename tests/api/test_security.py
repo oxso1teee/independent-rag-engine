@@ -32,6 +32,14 @@ def test_health_is_open_and_everything_else_needs_the_token(secured: Api) -> Non
     assert anonymous.post("/v1/answers", json={"question": "x"}).status_code == 401
 
 
+def test_the_schema_document_needs_the_token_like_everything_but_health(secured: Api) -> None:
+    anonymous = secured.client.__class__(secured.client.app)
+    assert anonymous.get("/v1/openapi.json").status_code == 401
+    served = secured.client.get("/v1/openapi.json")
+    assert served.status_code == 200 and served.json()["info"]["title"]
+    assert "/v1/openapi.json" not in served.json()["paths"]  # the schema does not describe itself
+
+
 def test_a_wrong_token_is_refused_and_the_right_one_accepted(secured: Api) -> None:
     secured.client.headers["Authorization"] = "Bearer " + "x" * 32
     assert secured.client.get("/v1/sources").status_code == 401
