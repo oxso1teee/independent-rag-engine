@@ -92,15 +92,26 @@ class CitationValidator:
         return CitationCheck(cited, unknown, tuple(uncited), tuple(checks), tuple(problems))
 
     def _check(self, sentence: str, ids: Sequence[str], by_id: dict[str, str]) -> SentenceCheck:
-        wanted = _terms(sentence)
-        script = _script(_MARKER.sub(" ", sentence))
-        support: set[str] = set()
-        comparable = False
-        for evidence_id in ids:
-            if _script(by_id[evidence_id]) == script:
-                comparable = True
-                support |= _terms(by_id[evidence_id])
-        if len(wanted) < _MIN_TERMS or not comparable:
+        coverage = lexical_coverage(sentence, [by_id[evidence_id] for evidence_id in ids])
+        if coverage is None:
             return SentenceCheck(sentence, tuple(ids), None, True)
-        coverage = len(wanted & support) / len(wanted)
         return SentenceCheck(sentence, tuple(ids), coverage, coverage >= self._min_coverage)
+
+
+def lexical_coverage(sentence: str, evidence: Sequence[str]) -> float | None:
+    """Share of the sentence's content terms found in the evidence written in its own script.
+
+    ``None`` when it cannot be judged this way: too few terms, or no evidence in the sentence's
+    script (a Russian sentence against English passages).
+    """
+    wanted = _terms(sentence)
+    script = _script(_MARKER.sub(" ", sentence))
+    support: set[str] = set()
+    comparable = False
+    for text in evidence:
+        if _script(text) == script:
+            comparable = True
+            support |= _terms(text)
+    if len(wanted) < _MIN_TERMS or not comparable:
+        return None
+    return len(wanted & support) / len(wanted)

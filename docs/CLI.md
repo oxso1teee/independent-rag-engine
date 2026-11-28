@@ -17,6 +17,7 @@ to standard error.
 | `rag context QUERY` | the context a question would get: evidence, token budget, what was left out |
 | `rag ask QUESTION` | answer with sources, or refuse (`--stream`, `--live`, `--sources`, `--show-unverified`) |
 | `rag index gc`, `rag index rebuild`, `rag index switch-model` | maintain the published indexes |
+| `rag eval validate DATASET`, `rag eval run`, `rag eval report RUN`, `rag eval compare A B`, `rag eval gate RUN BASELINE` | measure retrieval, compare runs pairwise, fail on a regression (see [EVALUATION.md](EVALUATION.md)) |
 | `rag backup DEST` | a verified, consistent copy of the database; refuses to overwrite |
 | `rag serve [--host H] [--port P]` | run the HTTP API (see [API.md](API.md)) |
 
@@ -36,6 +37,7 @@ to standard error.
 | 9 | integrity |
 | 10 | `ask`: insufficient evidence (a valid outcome, not a failure) |
 | 11 | `ask`: unverified answer (the citations did not hold up) |
+| 12 | `eval gate`: a metric is worse than its baseline |
 
 Codes 3 to 9 follow the error category of the engine's stable error codes; the exact code is in the
 text and in the JSON document. A script can therefore tell an answer (0) from a refusal (10) from a
