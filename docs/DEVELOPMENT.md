@@ -3,7 +3,8 @@
 ## Setup
 
 ```bash
-uv sync --frozen        # reproducible environment from uv.lock
+uv sync --frozen        # reproducible environment from uv.lock (the dev group includes the API)
+uv sync --frozen --extra onnx   # add the in-process embedding runtime when you need it
 ```
 
 Changing dependencies: edit `pyproject.toml`, run `uv lock`, commit `uv.lock`. CI runs
@@ -39,6 +40,9 @@ uv run rag chunks page.md --strategy recursive --full --json
 uv run rag search "query text" --mode hybrid --top-k 5 --source wiki --tag draft --json
 uv run rag search "query text" --language ru --kind table --modified-after 2026-01-01 --debug
 uv run rag context "query text" --window 4096 --max-new 512   # evidence, token budget, what was left out
+uv run rag ask "question" --sources          # needs [embedding] and [llm]; cited answer or refusal
+RAG_API_TOKEN=... uv run rag serve           # the HTTP API, see docs/API.md
+uv run rag eval run --dataset eval/datasets/retrieval_hard_v1.json --include-unreviewed -o run.json
 ```
 
 The database path comes from `[storage] db_path` in `rag.toml` (default `data/rag.db`),
@@ -51,7 +55,8 @@ whole texts, `--cleaner/-C` for extra line cleaners, `--strategy` to override
 DOCX and HTML are parsed in an isolated worker process unless `[parsing] isolate = []`.
 `eval/scripts/chunk_grid.py` prints how a corpus is cut at several target sizes (counts, token
 distribution, overlap, time) without ranking them. Storing versions and chunks, embedding and
-search are later phases: queued jobs stay queued for now.
+search are described in [ARCHITECTURE.md](ARCHITECTURE.md); without an embedding model configured,
+queued jobs stay queued.
 
 ## Tests
 
@@ -65,6 +70,18 @@ and real directories under `tmp_path`.
 - Time and identifiers are injected (`FakeClock`, `Uuid7Generator`); never call the
   system clock from domain or application code.
 - Write the failing test first, then the implementation.
+
+## Release and supply-chain checks
+
+| Command | Purpose |
+|---|---|
+| `docker build -t rag-engine:smoke . && scripts/docker_smoke.sh rag-engine:smoke` | the image refuses to start without a token, runs unprivileged, answers health, stays under 400 MB |
+| `scripts/package_smoke.sh` | the wheel installs into an empty environment without extras and `rag` works |
+| `uv run python scripts/generate_notices.py` | regenerate `THIRD_PARTY_NOTICES.md` and `sbom.cdx.json` after a dependency change (`--check` verifies them) |
+| `uv run python -m rag_engine.api.openapi docs/openapi.json` | regenerate the OpenAPI snapshot after an API change |
+| `uv run python eval/scripts/soak.py --embed-dir DIR` | one hour of searches against a real server (memory-gated) |
+
+The release procedure and the decisions that are not ours to make are in [RELEASE.md](RELEASE.md).
 
 ## Conventions
 
