@@ -34,11 +34,11 @@ carry the open items as known limitations.
 
 | # | Item | State |
 |---|---|---|
-| 1 | Sufficiency gate quality | 72.5 % correct refusals at 4.2 % false refusals on an independent held-out set, with the reranker; 32.5 % with dense alone; targets 90 % and 10 % ([EVALUATION.md](EVALUATION.md), [AUDIT.md](AUDIT.md)). A user can calibrate their own gate (`rag calibrate`, [CALIBRATION.md](CALIBRATION.md)); until then it is open and says so |
-| 2 | Real language model | never run through the pipeline: the memory gate refused the 4B model (needs 4.1 GiB, 3.2 available); [LLM_VERIFICATION.md](LLM_VERIFICATION.md) says how to run it elsewhere |
+| 1 | Sufficiency gate quality | 72.5 % correct refusals at 4.2 % false refusals on an independent held-out set, with the reranker; 32.5 % with dense alone; targets 90 % and 10 % ([EVALUATION.md](EVALUATION.md), [AUDIT.md](AUDIT.md)); the plan to reach it is [GATE_PLAN.md](GATE_PLAN.md). A user can calibrate their own gate (`rag calibrate`, [CALIBRATION.md](CALIBRATION.md)); until then it is open and says so |
+| 2 | Real language model | never run through the pipeline. Local 4B: the memory gate refused it (needs 4.1 GiB, 3.2 available). Hosted provider: no key is configured for this project, so nothing was sent anywhere; `eval/scripts/llm_e2e.py` is ready and tested against a fake endpoint ([LLM_VERIFICATION.md](LLM_VERIFICATION.md)). A hosted run would not show that Ollama works |
 | 3 | Human review of labels | none of the 185 questions of version 2 is reviewed (170 correct, 15 doubtful and 0 incorrect by the automatic audit); the 100-reviewed-questions criterion is unmet and no judge is calibrated; the page is `eval_runs/review_kit/review_kit.html` ([DATASET_REVIEW.md](DATASET_REVIEW.md)) |
-| 4 | Retrieval baseline | measured on version 2 for dense, hybrid and lexical ([BASELINE_V2.md](BASELINE_V2.md)); **reranking on version 2 not measured** (resource gate: 3.5 GiB needed, about 2.7 available); version 1 figures stand and are marked as such |
-| 5 | Soak | one hour of search passed; the harder variant (`--workers`, `--churn-every`) is written and not run (needs 2.5 GiB free; 1.9 to 2.7 available) |
+| 4 | Retrieval baseline | measured on version 2 for dense, hybrid and lexical ([BASELINE_V2.md](BASELINE_V2.md)); **reranking on version 2 not measured** (resource gate: 3.5 GiB needed; 1.8 to 3.0 available over the whole session); version 1 figures stand and are marked as such |
+| 5 | Soak | one hour of search passed. The hard variant ran once (10 min, 3 clients, concurrent indexing): all criteria met except file descriptors, which exposed a leak that is now fixed; the full re-run with indexing needs 3.7 GiB free and was stopped twice by the memory watchdog ([TESTING.md](TESTING.md)) |
 | 6 | Database size | 5.6× the source text without vectors against about 3×; migration planned after the release ([ADR 0022](adr/0022-slimmer-storage.md)); say so in the release notes |
 | 7 | Platforms | Linux and Python 3.12 / 3.13 verified in CI; macOS not verified |
 

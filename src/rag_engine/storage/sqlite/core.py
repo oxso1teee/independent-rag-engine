@@ -46,7 +46,9 @@ class SqliteStore:
         self.writer_lock = WriterLock(path.with_name(path.name + ".writer.lock"), writer_timeout_s)
         self.local = threading.local()
         self._guard = threading.Lock()
-        self._connections: list[sqlite3.Connection] = []
+        # (thread, its read connection): a connection outlives its thread only until the next
+        # thread asks for one, when the connections of finished threads are closed
+        self._connections: list[tuple[threading.Thread, sqlite3.Connection]] = []
         self._writer: sqlite3.Connection | None = None
         self._closed = False
 
@@ -59,7 +61,14 @@ class SqliteStore:
             conn = connect(self.path, busy_timeout_ms=self._busy_timeout_ms, read_only=True)
             self.local.reader = conn
             with self._guard:
-                self._connections.append(conn)
+                kept: list[tuple[threading.Thread, sqlite3.Connection]] = []
+                for thread, old in self._connections:
+                    if thread.is_alive():
+                        kept.append((thread, old))
+                    else:
+                        old.close()  # nobody can use a finished thread's connection again
+                kept.append((threading.current_thread(), conn))
+                self._connections = kept
         return SqliteReader(conn)
 
     def unit_of_work(self) -> UnitOfWork:
@@ -71,7 +80,7 @@ class SqliteStore:
             self._closed = True
             connections, self._connections = self._connections, []
             writer, self._writer = self._writer, None
-        for conn in connections:
+        for _, conn in connections:
             conn.close()
         if writer is not None:
             writer.close()

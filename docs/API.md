@@ -51,6 +51,11 @@ Every error is `application/problem+json` (RFC 9457):
 `E_METHOD_NOT_ALLOWED`, `E_BODY_TOO_LARGE`, `E_IDEMPOTENCY_CONFLICT`, `E_INTERNAL`. Every response
 carries `X-Request-ID`, the same id the logs use.
 
+**Simultaneous queries.** With the ONNX embedding provider one query is embedded at a time. A search or
+answer that arrives while another is being embedded is refused with `503`, the code `E_RESOURCE_GATE`
+and `Retry-After: 1`; a client should retry. This keeps memory bounded on a small machine; it is not an
+error of the request. (Providers that serve requests concurrently, such as Ollama, do not have it.)
+
 ## Endpoints
 
 | Method and path | Purpose |

@@ -167,6 +167,7 @@ eval/datasets/     versioned question sets
 - [Retrieval baseline on dataset version 2](docs/BASELINE_V2.md)
 - [Reviewing an evaluation dataset](docs/DATASET_REVIEW.md)
 - [Calibrating the sufficiency gate](docs/CALIBRATION.md)
+- [Plan to reach the 90/10 gate targets](docs/GATE_PLAN.md)
 - [Verifying a real language model](docs/LLM_VERIFICATION.md)
 - [Requirements and audit](docs/REQUIREMENTS.md)
 - [Changelog](CHANGELOG.md)
