@@ -5,6 +5,45 @@ checked a question, it is a draft: metrics are computed only from questions mark
 `edited`, and a reviewer name that looks like a program is refused. This page describes how to
 review `eval/datasets/retrieval_mini_v1.json` (44 questions over `eval/corpus/mini_v1`).
 
+## Batch review with the automatic audit (a table, not 185 cards)
+
+`audit_questions.py` screens every question against its own documents and sorts them into three
+groups. `review_kit.py build --audit` puts the result in the review page as a compact table.
+
+```bash
+uv run python eval/scripts/audit_questions.py                      # lexical layer: nothing to load
+uv run python eval/scripts/audit_questions.py --embed-dir <e5 dir> \
+    --output eval_runs/question_audit_semantic.json                # plus the semantic layer
+uv run python eval/scripts/review_kit.py build --audit eval_runs/question_audit_semantic.json
+```
+
+| Group | Meaning |
+|---|---|
+| **correct** | no objection found and the evidence is linked to the question |
+| **doubtful** | look at it: another passage fits as well, the answer has words the evidence lacks, the answer leaves out part of the evidence, or the link between question and evidence could not be shown |
+| **incorrect** | wrong on its face: a figure in the expected answer that no gold document contains, an evidence quote that has nothing to do with the question or the answer, a "missing" term that is in the corpus, gold evidence on an unanswerable question, a label contradicted by the text |
+
+What it can and cannot do. The **lexical layer** compares stems, figures and identifiers. It is blind
+across languages and for paraphrases by design, so on its own it leaves those as "doubtful: the link
+could not be shown". The **semantic layer** ranks every passage of the corpus for each question with
+the E5 model and says whether the gold passage is the best match, or how far down it is; it refuses
+to start below 2.3 GiB of free memory and a watchdog stops it if free memory falls under 0.45 GiB.
+Neither layer understands the question. "correct" means no automatic objection, **not** reviewed,
+and nothing here writes to a dataset, fills in a decision or marks a question as reviewed.
+
+The table (default view of the page) is sorted incorrect, doubtful, correct. Each row shows the
+question, the expected answer, the findings and your decision; the arrow opens the evidence with its
+surrounding text, the audit's reasons and, for an unanswerable question, the closest passages.
+
+**Group confirmation.** Filter or select rows (all shown, only the shown "correct", or by hand), open
+their evidence (one by one, or "Open evidence of all shown"), then *Accept selected* or *Reject
+selected…* (one reason for all). A group action applies only to rows that are both selected and
+opened; it tells you how many it skipped, mentions how many of the accepted rows carry an audit
+objection, and asks you to type the number of questions before it records anything. Decisions stay in
+the page (and the browser's storage) until you press *Export decisions (CSV)*; nothing changes in a
+dataset until `review_kit.py apply` records them under your name. Edits (a corrected question or
+answer) are made in the card view; a wrong gold quote cannot be edited, so reject the question.
+
 ## Reviewing all questions in one page (review kit)
 
 `review_kit.py` builds one self-contained HTML page for every question of the hard set (141) and

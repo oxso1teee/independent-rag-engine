@@ -14,6 +14,7 @@ questions, and ``retrieval_mini_v1``, 44); ``--dataset`` adds or replaces them.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -32,6 +33,9 @@ def main() -> None:
     parser.add_argument(
         "--output", type=Path, default=ROOT / "eval_runs/review_kit/review_kit.html"
     )
+    parser.add_argument(
+        "--audit", type=Path, help="a report of audit_questions.py: adds the audit column and table"
+    )
     parser.add_argument("--sheet", type=Path)
     parser.add_argument("--reviewer")
     parser.add_argument("--outdir", type=Path, default=ROOT / "eval" / "datasets")
@@ -41,7 +45,11 @@ def main() -> None:
         sources = [load_source(path, ROOT) for path in paths]
         if args.action == "build":
             args.output.parent.mkdir(parents=True, exist_ok=True)
-            args.output.write_text(build_kit(sources), encoding="utf-8")
+            audits = None
+            if args.audit is not None:
+                report = json.loads(args.audit.read_text(encoding="utf-8"))
+                audits = {item["key"]: item for item in report["audits"]}
+            args.output.write_text(build_kit(sources, audits=audits), encoding="utf-8")
             total = sum(len(s.dataset.questions) for s in sources)
             print(f"{total} questions from {len(sources)} datasets written to {args.output}")
             return
