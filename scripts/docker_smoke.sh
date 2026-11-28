@@ -31,4 +31,21 @@ curl -fsS "http://127.0.0.1:${PORT}/v1/health" | grep -q '"status":"ok"'
 [ "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${TOKEN}" \
     "http://127.0.0.1:${PORT}/v1/stats")" = 200 ]
 [ "$(docker exec "$NAME" id -u)" = 10001 ]
+
+# The quickstart in a clean container: initialise, register a folder, ingest, back up, verify, check.
+NOTES="$(mktemp -d)"
+printf '# Backups\n\nBackups run every night at 02:30 UTC.\n' > "$NOTES/a.md"
+chmod 755 "$NOTES" && chmod 644 "$NOTES/a.md"
+docker run --rm -v "$NOTES:/notes:ro" --entrypoint sh "$IMAGE" -c '
+  set -e
+  rag init --dir /data/ws >/dev/null
+  rag --config /data/ws/rag.toml config check
+  rag --config /data/ws/rag.toml source add notes /notes >/dev/null
+  rag --config /data/ws/rag.toml ingest notes --json >/dev/null
+  rag --config /data/ws/rag.toml status --json | grep -q "\"name\": \"notes\""
+  rag --config /data/ws/rag.toml backup /data/backup.db >/dev/null
+  rag verify /data/backup.db
+  rag --config /data/ws/rag.toml doctor --integrity >/dev/null
+'
+rm -rf "$NOTES"
 echo "docker smoke test passed"
