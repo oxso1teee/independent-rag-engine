@@ -27,7 +27,7 @@ from rag_engine.testing import HashingEmbedder
 pytestmark = pytest.mark.e2e
 
 ROOT = Path(__file__).resolve().parents[2]
-KEY = "sk-test-0123456789"
+KEY = "-".join(["fake", "credential", "for", "tests"])  # built, so no scanner mistakes it for a key
 DIGEST = "9" * 64
 MODEL = "fake-model"
 FIRST = re.compile(r"\[E1\][^\n]*\n([^\n]+)")
