@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root{--bg:#fff;--fg:#1c1e21;--muted:#5f6670;--line:#d7dbe0;--card:#f7f8fa;--ok:#1a7f37;--bad:#b42318;--edit:#9a6700;--mark:#fff3a3}
+@media (prefers-color-scheme:dark){:root{--bg:#16181c;--fg:#e6e8eb;--muted:#9aa3ad;--line:#33383f;--card:#1e2126;--ok:#4ac26b;--bad:#ff7b72;--edit:#e3b341;--mark:#5c4b00}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+header{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px}
+h1{font-size:18px;margin:0 0 6px}.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input,textarea,button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+button{cursor:pointer}button.primary{background:var(--ok);color:#fff;border-color:var(--ok)}
+main{max-width:980px;margin:0 auto;padding:12px 16px 80px}
+.card{border:1px solid var(--line);background:var(--card);border-radius:8px;margin:14px 0;padding:12px 14px}
+.card.done{border-left:5px solid var(--ok)}.card.rej{border-left:5px solid var(--bad)}.card.edt{border-left:5px solid var(--edit)}
+.meta{color:var(--muted);font-size:13px}.badge{display:inline-block;border:1px solid var(--line);border-radius:10px;padding:0 8px;margin-right:6px;font-size:12px}
+.q{font-size:17px;font-weight:600;margin:6px 0}.lbl{font-weight:600;margin-top:8px;font-size:13px;color:var(--muted);text-transform:uppercase}
+.ev{border-left:3px solid var(--line);padding:4px 10px;margin:4px 0;white-space:pre-wrap}mark{background:var(--mark);color:inherit}
+details{margin:6px 0}summary{cursor:pointer;color:var(--muted)}pre{white-space:pre-wrap;margin:6px 0}
+.decide{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;align-items:center}textarea{width:100%;min-height:48px}
+.hint{color:var(--muted);font-size:13px}.warn{color:var(--bad);font-size:13px}
+.v-correct{--vc:var(--ok)}.v-doubtful{--vc:var(--edit)}.v-incorrect{--vc:var(--bad)}
+.chip{display:inline-block;border:1px solid var(--vc,var(--line));color:var(--vc,var(--fg));border-radius:10px;padding:0 8px;font-size:12px;white-space:nowrap}
+.bulk{display:none;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0;padding:8px;border:1px solid var(--line);background:var(--card);border-radius:8px}
+body.table .bulk{display:flex}body.table #cards{display:none}body:not(.table) #table-view{display:none}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+th{position:sticky;top:var(--hh,92px);background:var(--bg);z-index:1}tr.row.sel{background:var(--card)}
+tr.row.dec-accept td:first-child{border-left:4px solid var(--ok)}tr.row.dec-reject td:first-child{border-left:4px solid var(--bad)}tr.row.dec-edit td:first-child{border-left:4px solid var(--edit)}
+tr.more td{background:var(--card);padding:8px 14px}td.q{font-size:14px;font-weight:600;margin:0;min-width:240px}.small{font-size:12px;color:var(--muted)}
+.seen{color:var(--ok)}body.table main{max-width:1400px}
+</style></head><body>
+<header><h1>__TITLE__</h1>
+<div class="bar">
+ <button id="view-table">Table</button><button id="view-cards">Cards</button>
+ <label>Audit <select id="f-verdict"><option value="">all</option><option value="incorrect">incorrect</option><option value="doubtful">doubtful</option><option value="correct">correct</option></select></label>
+ <label>Flag <select id="f-flag"></select></label>
+ <label>Dataset <select id="f-dataset"></select></label>
+ <label>Split <select id="f-split"><option value="">all</option><option>dev</option><option>test</option></select></label>
+ <label>Type <select id="f-type"></select></label>
+ <label>Language <select id="f-lang"><option value="">all</option><option>en</option><option>ru</option></select></label>
+ <label>Show <select id="f-state"><option value="">all</option><option value="todo">not decided</option><option value="done">decided</option></select></label>
+ <input id="f-text" placeholder="search the questions" size="22">
+ <span id="progress" class="hint"></span>
+ <button id="export" class="primary">Export decisions (CSV)</button>
+</div></header>
+<main id="main">
+<p class="hint" id="intro">Decide each question: <b>accept</b> if the question and its labels are right as they are; <b>edit</b> if they are right after your change; <b>reject</b> (with a reason) if it should not be used. Leave it undecided if you are unsure: it stays a draft. Your choices are saved in this browser as you go; export them when you are done. The <b>audit</b> column is an automatic screen (see the note below the table): it is a hint, it never decides anything for you.</p>
+<div id="table-view">
+ <div class="bulk" id="bulk">
+  <span id="sel-info"></span>
+  <button id="b-sel-visible">Select all shown</button>
+  <button id="b-sel-correct">Select shown "correct"</button>
+  <button id="b-open">Open evidence of all shown</button>
+  <button id="b-clear">Clear selection</button>
+  <span class="hint">|</span>
+  <button id="b-accept" class="primary">Accept selected (after viewing)</button>
+  <button id="b-reject">Reject selected…</button>
+ </div>
+ <table><thead><tr><th><input type="checkbox" id="all"></th><th></th><th>Audit</th><th>Question</th><th>Expected answer</th><th>Findings</th><th>Your decision</th></tr></thead><tbody id="grid"></tbody></table>
+ <p class="hint" id="audit-note"></p>
+</div>
+<div id="cards"></div>
+<details><summary>All source documents</summary><div id="docs"></div></details>
+</main>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const KEY = 'review-kit:' + D.cards.length + ':' + D.cards[0].key + ':' + D.cards[D.cards.length-1].key;
+let state = {};
+let selected = new Set();
+let opened = new Set();
+try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { state = {}; }
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const HAS_AUDIT = D.cards.some(c => c.audit);
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} progress(); }
+function st(key) { return state[key] || {decision:'', eq:'', ea:'', notes:''}; }
+function setSt(key, field, value) { (state[key] = st(key))[field] = value; }
+function progress() {
+  const done = D.cards.filter(c => st(c.key).decision).length;
+  $('progress').textContent = done + ' of ' + D.cards.length + ' decided';
+}
+function opts(sel, values, first) { sel.innerHTML = '<option value="">' + first + '</option>' + values.map(v => '<option>' + esc(v) + '</option>').join(''); }
+opts($('f-dataset'), Object.keys(D.datasets), 'all');
+opts($('f-type'), [...new Set(D.cards.map(c => c.type))], 'all');
+opts($('f-flag'), [...new Set(D.cards.flatMap(c => c.audit ? c.audit.flags.filter(f => f.severity !== 'info').map(f => f.id) : []))].sort(), 'all');
+if (!HAS_AUDIT) { $('f-verdict').parentElement.style.display = 'none'; $('f-flag').parentElement.style.display = 'none'; }
+function evidence(c) {
+  if (!c.evidence.length) return '<div class="hint">No evidence: the documents must not answer this question.</div>';
+  return c.evidence.map(e => '<div class="ev"><b>' + esc(e.doc) + '</b><br>' + esc(e.before) + '<mark>' + esc(e.anchor) + '</mark>' + esc(e.after) + '</div>').join('');
+}
+function absent(c) {
+  if (c.answerable) return '';
+  const near = c.closest.length ? c.closest.map(n => '<div class="ev"><b>' + esc(n.doc) + '</b>: ' + esc(n.text) + '</div>').join('') : '<div class="hint">Nothing in the corpus shares terms with the question.</div>';
+  return '<div class="lbl">Terms that must not occur in the corpus</div><div>' + esc(c.absence_terms.join(', ')) + '</div>' +
+         '<div class="lbl">Closest passages in the corpus (is any of them an answer?)</div>' + near;
+}
+function verdictChip(c) {
+  if (!c.audit) return '';
+  const v = c.audit.verdict; const sym = v === 'correct' ? '✓ correct' : v === 'doubtful' ? '? doubtful' : '✗ incorrect';
+  return '<span class="chip v-' + v + '">' + sym + '</span>';
+}
+function auditDetail(c) {
+  if (!c.audit) return '';
+  const flags = c.audit.flags.filter(f => f.severity !== 'info').map(f => '<div class="' + (f.severity === 'hard' ? 'warn' : 'hint') + '"><b>' + esc(f.id) + '</b>: ' + esc(f.message) + '</div>').join('');
+  const passed = c.audit.passed.length ? '<div class="hint">Checks passed: ' + esc(c.audit.passed.join(', ')) + '</div>' : '';
+  const m = Object.entries(c.audit.metrics).map(([k, v]) => k + '=' + v).join('  ');
+  return '<div class="lbl">Automatic audit</div>' + (flags || '<div class="hint">No objection found.</div>') + passed + '<div class="small">' + esc(m) + '</div>';
+}
+function filtered() {
+  const f = {verdict:$('f-verdict').value, flag:$('f-flag').value, dataset:$('f-dataset').value, split:$('f-split').value, type:$('f-type').value, lang:$('f-lang').value, state:$('f-state').value, text:$('f-text').value.toLowerCase()};
+  const order = {incorrect:0, doubtful:1, correct:2};
+  return D.cards.filter(c => (!f.verdict || (c.audit && c.audit.verdict === f.verdict)) && (!f.flag || (c.audit && c.audit.flags.some(x => x.id === f.flag))) &&
+    (!f.dataset || c.dataset === f.dataset) && (!f.split || c.split === f.split) && (!f.type || c.type === f.type) &&
+    (!f.lang || c.language === f.lang) && (!f.state || (f.state === 'done') === !!st(c.key).decision) && (!f.text || c.question.toLowerCase().includes(f.text)))
+    .map((c, i) => [c, i]).sort((a, b) => (HAS_AUDIT ? order[a[0].audit.verdict] - order[b[0].audit.verdict] : 0) || a[1] - b[1]).map(x => x[0]);
+}
+function renderTable(list) {
+  $('grid').innerHTML = list.map(c => {
+    const s = st(c.key); const open = opened.has(c.key);
+    const flags = c.audit ? c.audit.flags.filter(f => f.severity !== 'info').map(f => '<span class="chip v-' + (f.severity === 'hard' ? 'incorrect' : 'doubtful') + '" title="' + esc(f.message) + '">' + esc(f.id) + '</span>').join(' ') : '';
+    const decision = ['accept','reject'].map(v => '<label><input type="radio" name="t-' + esc(c.key) + '" data-key="' + esc(c.key) + '" data-f="decision" value="' + v + '"' + (s.decision === v ? ' checked' : '') + '> ' + v + '</label>').join(' ') +
+      (s.decision === 'edit' ? ' <b>edit</b>' : '') + (s.decision ? ' <button data-clear="' + esc(c.key) + '">clear</button>' : '');
+    return '<tr class="row' + (selected.has(c.key) ? ' sel' : '') + (s.decision ? ' dec-' + s.decision : '') + '" id="r-' + esc(c.key) + '">' +
+      '<td><input type="checkbox" data-sel="' + esc(c.key) + '"' + (selected.has(c.key) ? ' checked' : '') + '></td>' +
+      '<td><button data-open="' + esc(c.key) + '" title="show the evidence">' + (open ? '▾' : '▸') + '</button>' + (open ? '<div class="seen small">viewed</div>' : '') + '</td>' +
+      '<td>' + verdictChip(c) + '<div class="small">' + esc(c.id) + '<br>' + esc(c.type) + ' · ' + esc(c.split) + ' · ' + esc(c.language) + (c.answerable ? '' : ' · no answer') + '</div></td>' +
+      '<td class="q">' + esc(c.question) + '</td><td>' + (c.answerable ? esc(c.reference_answer) : '<span class="hint">(no answer expected)</span>') + '</td>' +
+      '<td>' + flags + '</td><td>' + decision + '</td></tr>' +
+      (open ? '<tr class="more"><td></td><td colspan="6">' + '<div class="lbl">Evidence in the documents</div>' + evidence(c) + absent(c) + auditDetail(c) +
+        '<div class="hint">Origin: ' + esc(c.provenance) + '. To edit the question or the answer use the card view.</div></td></tr>' : '');
+  }).join('') || '<tr><td colspan="7" class="hint">No question matches the filters.</td></tr>';
+  const seen = [...selected].filter(k => opened.has(k)).length;
+  $('sel-info').textContent = selected.size + ' selected, ' + seen + ' of them viewed';
+}
+function renderCards(list) {
+  $('cards').innerHTML = list.map(c => {
+    const s = st(c.key); const cls = s.decision === 'accept' ? 'done' : s.decision === 'edit' ? 'edt' : s.decision === 'reject' ? 'rej' : '';
+    const radios = ['accept','edit','reject'].map(v => '<label><input type="radio" name="d-' + esc(c.key) + '" data-key="' + esc(c.key) + '" data-f="decision" value="' + v + '"' + (s.decision === v ? ' checked' : '') + '> ' + v + '</label>').join('');
+    return '<div class="card ' + cls + '" id="c-' + esc(c.key) + '">' +
+      '<div class="meta">' + verdictChip(c) + ' <span class="badge">' + esc(D.datasets[c.dataset]) + '</span><span class="badge">' + esc(c.id) + '</span><span class="badge">' + esc(c.split) + '</span><span class="badge">' + esc(c.type) + '</span><span class="badge">' + esc(c.language) + '</span><span class="badge">' + (c.answerable ? 'has an answer' : 'NO answer expected') + '</span></div>' +
+      '<div class="q">' + esc(c.question) + '</div>' +
+      (c.answerable ? '<div class="lbl">Expected answer</div><div>' + esc(c.reference_answer) + '</div><div class="lbl">Facts the answer must contain</div><div>' + esc(c.reference_facts.join(' | ')) + '</div>' : '') +
+      '<div class="lbl">Evidence in the documents</div>' + evidence(c) + absent(c) + auditDetail(c) +
+      '<div class="hint">Origin: ' + esc(c.provenance) + '</div>' +
+      '<div class="decide">' + radios + '<button data-clear="' + esc(c.key) + '">clear</button></div>' +
+      (s.decision === 'edit' ? '<div class="lbl">Corrected question (leave empty to keep)</div><textarea data-key="' + esc(c.key) + '" data-f="eq">' + esc(s.eq) + '</textarea><div class="lbl">Corrected expected answer (leave empty to keep)</div><textarea data-key="' + esc(c.key) + '" data-f="ea">' + esc(s.ea) + '</textarea>' : '') +
+      '<div class="lbl">Notes' + (s.decision === 'reject' ? ' (required: why is it rejected?)' : '') + '</div><textarea data-key="' + esc(c.key) + '" data-f="notes">' + esc(s.notes) + '</textarea>' +
+      '</div>';
+  }).join('') || '<p class="hint">No question matches the filters.</p>';
+}
+function render() {
+  const list = filtered();
+  if (document.body.classList.contains('table')) renderTable(list); else renderCards(list);
+  progress();
+}
+function setView(table) { document.body.classList.toggle('table', table); render(); }
+$('view-table').addEventListener('click', () => setView(true));
+$('view-cards').addEventListener('click', () => setView(false));
+$('audit-note').textContent = HAS_AUDIT ? D.audit_note : '';
+// --- group actions: they act only on rows that are selected AND whose evidence has been opened
+function shown() { return filtered().map(c => c.key); }
+$('b-sel-visible').addEventListener('click', () => { shown().forEach(k => selected.add(k)); render(); });
+$('b-sel-correct').addEventListener('click', () => { const ok = new Set(D.cards.filter(c => c.audit && c.audit.verdict === 'correct').map(c => c.key)); shown().filter(k => ok.has(k)).forEach(k => selected.add(k)); render(); });
+$('b-open').addEventListener('click', () => { const keys = shown(); if (keys.length > 60 && !confirm('Open the evidence of ' + keys.length + ' questions? The page gets long; the rows then count as viewed.')) return; keys.forEach(k => opened.add(k)); render(); });
+$('b-clear').addEventListener('click', () => { selected = new Set(); render(); });
+$('all').addEventListener('change', e => { if (e.target.checked) shown().forEach(k => selected.add(k)); else selected = new Set(); render(); });
+function viewedSelection() { const keys = [...selected]; return {ready: keys.filter(k => opened.has(k)), skipped: keys.filter(k => !opened.has(k))}; }
+$('b-accept').addEventListener('click', () => {
+  const {ready, skipped} = viewedSelection();
+  if (!ready.length) { alert('Nothing to accept: open the evidence (▸ or "Open evidence of all shown") of the selected questions first. A question you have not looked at cannot be accepted in bulk.'); return; }
+  const flagged = ready.filter(k => { const c = D.cards.find(x => x.key === k); return c.audit && c.audit.verdict !== 'correct'; }).length;
+  const msg = 'You are accepting ' + ready.length + ' question(s) as correct, having read each question, its expected answer and its evidence.' +
+    (flagged ? '\n\n' + flagged + ' of them carry an audit objection (doubtful or incorrect). You decide; the audit only advises.' : '') +
+    (skipped.length ? '\n\n' + skipped.length + ' selected question(s) were not opened and are left undecided.' : '') +
+    '\n\nThis records your decision in this page only. Nothing changes in a dataset until you export the sheet and apply it under your name.';
+  const typed = prompt(msg + '\n\nType the number ' + ready.length + ' to confirm.');
+  if (typed === null || typed.trim() !== String(ready.length)) return;
+  ready.forEach(k => setSt(k, 'decision', 'accept')); selected = new Set(skipped); save(); render();
+});
+$('b-reject').addEventListener('click', () => {
+  const {ready, skipped} = viewedSelection();
+  if (!ready.length) { alert('Nothing to reject: open the evidence of the selected questions first.'); return; }
+  const why = prompt('Why are these ' + ready.length + ' question(s) rejected? (the same reason is recorded for each)');
+  if (!why || !why.trim()) return;
+  ready.forEach(k => { setSt(k, 'decision', 'reject'); setSt(k, 'notes', why.trim()); }); selected = new Set(skipped); save(); render();
+});
+document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.f && t.tagName === 'TEXTAREA') { setSt(t.dataset.key, t.dataset.f, t.value); save(); } });
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset && t.dataset.f === 'decision') { setSt(t.dataset.key, 'decision', t.value); if (t.value === 'accept' || t.value === 'reject') opened.add(t.dataset.key); save(); render(); }
+  else if (t.dataset && t.dataset.sel) { if (t.checked) selected.add(t.dataset.sel); else selected.delete(t.dataset.sel); render(); }
+  else if (t.id && t.id.startsWith('f-')) render();
+});
+document.addEventListener('input', e => { if (e.target.id === 'f-text') render(); });
+document.addEventListener('click', e => {
+  const d = e.target.dataset || {};
+  if (d.clear) { delete state[d.clear]; save(); render(); }
+  if (d.open) { if (opened.has(d.open)) opened.delete(d.open); else opened.add(d.open); render(); }
+});
+$('docs').innerHTML = Object.entries(D.documents).map(([n, t]) => '<details><summary>' + esc(n) + '</summary><pre>' + esc(t) + '</pre></details>').join('');
+function csvCell(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+$('export').addEventListener('click', () => {
+  const problems = [];
+  D.cards.forEach(c => { const s = st(c.key);
+    if (s.decision === 'reject' && !s.notes.trim()) problems.push(c.key + ': a rejection needs a reason in the notes');
+    if (s.decision === 'edit' && !s.eq.trim() && !s.ea.trim()) problems.push(c.key + ': an edit needs a corrected question or answer'); });
+  if (problems.length && !confirm('These rows will be refused when the sheet is applied:\n\n' + problems.slice(0, 12).join('\n') + (problems.length > 12 ? '\n…' : '') + '\n\nExport anyway?')) return;
+  const rows = [D.columns.join(',')];
+  D.cards.forEach(c => { const s = st(c.key);
+    const r = {dataset:c.dataset, id:c.id, split:c.split, type:c.type, language:c.language, question:c.question, answerable:c.answerable ? 'yes' : 'no', gold:c.gold,
+      context:c.evidence.map(e => '[' + e.doc + '] ' + e.before + e.anchor + e.after).join('\n'), reference_answer:c.reference_answer, absence_terms:c.absence_terms.join(', '),
+      status:c.status, decision:s.decision, edited_question:s.eq, edited_reference_answer:s.ea, notes:s.notes,
+      audit:c.audit ? c.audit.verdict + (c.audit.hint ? ': ' + c.audit.hint : '') : ''};
+    rows.push(D.columns.map(k => csvCell(r[k])).join(',')); });
+  const blob = new Blob([rows.join('\n') + '\n'], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'review_decisions.csv'; a.click();
+});
+document.body.classList.toggle('table', HAS_AUDIT);
+render();
+</script></body></html>

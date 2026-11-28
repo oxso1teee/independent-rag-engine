@@ -6,6 +6,10 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Final audit and release hardening
+- Preliminary automatic audit of evaluation questions (`eval/scripts/audit_questions.py`,
+  `evaluation/question_audit.py`): correct / doubtful / incorrect, lexical and optional semantic
+  layer; and a batch-review table in the review page with group accept and reject that act only on
+  rows the person selected and opened. Nothing is marked reviewed and no dataset is changed.
 - The database is larger than its target (5.6× the text without vectors against about 3×); the
   migration is planned after the first release (ADR 0022).
 - Fix: a chunk with no word character (an ASCII table border, a rule) is no longer indexed. It used
