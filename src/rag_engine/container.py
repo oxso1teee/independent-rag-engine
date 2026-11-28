@@ -9,12 +9,15 @@ through constructors.
 from __future__ import annotations
 
 import asyncio
+import importlib
 import os
 import random
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Coroutine, Iterator, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Any
 
 from rag_engine.chunking.registry import ChunkerRegistry, build_counter
 from rag_engine.cli import main as cli_main
@@ -78,6 +81,21 @@ from rag_engine.storage.lexical import SqliteLexicalIndex
 from rag_engine.storage.sqlite import open_store, open_store_read_only
 from rag_engine.storage.vector_flat import FlatVectorIndex
 from rag_engine.system import SystemClock, system_id_factory, trim_heap
+
+
+def run_sync[T](coroutine: Coroutine[Any, Any, T]) -> T:
+    """Run a coroutine to completion from synchronous code, also inside a running event loop.
+
+    Closing providers is asynchronous but happens in ``finally`` blocks of synchronous context
+    managers, which a long-running service enters and leaves inside its own loop, where
+    ``asyncio.run`` is not allowed; a short-lived helper thread with its own loop is used then.
+    """
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coroutine)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(asyncio.run, coroutine).result()
 
 
 def filesystem_adapter(source: Source) -> SourceAdapter:
@@ -346,7 +364,7 @@ class DefaultContainer:
             yield services
         finally:
             if built is not None:
-                asyncio.run(built.aclose())
+                run_sync(built.aclose())
             store.close()
 
     @contextmanager
@@ -459,11 +477,13 @@ class DefaultContainer:
             if stage is not None:
                 stage.close()
             if built is not None:
-                asyncio.run(built.aclose())
+                run_sync(built.aclose())
             store.close()
 
     @contextmanager
-    def ask(self, config: Path | None, db: Path | None) -> Iterator[AskServices]:
+    def ask(
+        self, config: Path | None, db: Path | None, *, release_models: bool = True
+    ) -> Iterator[AskServices]:
         settings = load_settings(config)
         if not settings.llm.enabled:
             raise RagError(ErrorCode.E_CONFIG_INVALID, "no language model is configured: set [llm]")
@@ -497,11 +517,36 @@ class DefaultContainer:
                         shares=StageShares(answer.retrieval_share, answer.context_share),
                         concurrency=settings.effective_limits().llm_concurrency,
                     ),
-                    release_models=searcher.release_models if answer.release_models else None,
+                    release_models=(
+                        searcher.release_models
+                        if release_models and answer.release_models
+                        else None
+                    ),
                 )
-                yield AskServices(pipeline, searcher.ids, searcher.defaults)
+                yield AskServices(pipeline, searcher.ids, searcher.defaults, searcher)
             finally:
-                asyncio.run(chat.aclose())
+                run_sync(chat.aclose())
+
+    def serve(
+        self, config: Path | None, db: Path | None, *, host: str | None, port: int | None
+    ) -> int:
+        """Run the HTTP API (needs the ``api`` extra) until it is stopped."""
+        try:
+            uvicorn = importlib.import_module("uvicorn")
+            api = importlib.import_module("rag_engine.api.app")
+        except ImportError as exc:
+            raise RagError(
+                ErrorCode.E_CONFIG_INVALID, "the api extra is required: install rag[api]"
+            ) from exc
+        settings = load_settings(config)
+        configure_logging(settings.logging.level, json_output=settings.logging.json_output)
+        bind = settings.api.model_copy(
+            update={"host": host or settings.api.host, "port": port or settings.api.port}
+        )
+        token = api.resolve_token(bind)  # refuses a non-loopback bind without a token
+        application = api.create_app(self, config, db, settings, token=token, bind=bind)
+        uvicorn.run(application, host=bind.host, port=bind.port, log_config=None)
+        return 0
 
     def processing(self, config: Path | None) -> Processing:
         settings = load_settings(config)

@@ -29,6 +29,10 @@ docx = [
 onnx = [
     "fastembed>=0.6,<1",
 ]
+api = [
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.32,<1",
+]
 
 [project.scripts]
 rag = "rag_engine.container:main"
@@ -47,6 +51,8 @@ dev = [
     "ruff>=0.8",
     "pypdf>=7.1.1",
     "python-docx>=1.2.0",
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.32,<1",
 ]
 
 [build-system]
@@ -96,6 +102,7 @@ markers = [
     "architecture: import-boundary checks (spawns a subprocess)",
     "integration: real SQLite and filesystem, no network",
     "e2e: whole command-line flows against a temporary workspace",
+    "api: the HTTP API through an in-process test client (needs the api extra)",
     "perf: measured budgets (NFR); not part of the pull-request CI, run with `make perf`",
     "chaos: failure injection, including SIGKILL at defined points",
     "integrity: data-model invariants and property-based model checks",

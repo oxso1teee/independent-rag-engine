@@ -8,6 +8,7 @@ provider names the environment variable that holds its key (``api_key_env``).
 
 from __future__ import annotations
 
+import ipaddress
 import re
 import tomllib
 from collections.abc import Mapping
@@ -183,6 +184,40 @@ class AnswerSettings(_Section):
         return self
 
 
+class ApiSettings(_Section):
+    """The HTTP API (``rag serve``)."""
+
+    host: str = Field(default="127.0.0.1", min_length=1, max_length=253)
+    port: int = Field(default=8765, ge=1, le=65535)
+    token_env: EnvVarName | None = "RAG_API_TOKEN"  # noqa: S105 - the name of a variable, not a secret
+    """Name of the environment variable holding the bearer token. When it is set the API requires
+    it; when it is unset the API is open on the loopback address and refuses to start elsewhere.
+    ``None`` switches authentication off, which is only allowed on the loopback address."""
+    max_body_bytes: int = Field(default=8 * 1024 * 1024, ge=1024, le=1024**3)
+    max_question_chars: int = Field(default=4000, ge=1, le=100_000)
+    idempotency_ttl_s: int = Field(default=86_400, ge=1, le=7 * 86_400)
+    cors_origins: tuple[str, ...] = ()
+    """Browser origins allowed by CORS; empty (the default) keeps CORS off."""
+
+    @model_validator(mode="after")
+    def _a_public_bind_needs_a_token(self) -> ApiSettings:
+        if not is_loopback_host(self.host) and self.token_env is None:
+            raise ValueError(
+                "api.token_env cannot be unset when api.host is not a loopback address"
+            )
+        return self
+
+
+def is_loopback_host(host: str) -> bool:
+    """Whether binding to ``host`` keeps the server on this machine."""
+    if host in {"localhost", "::1"}:
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
 class IngestSettings(_Section):
     """Retry and lease behaviour of the ingestion job queue."""
 
@@ -255,6 +290,7 @@ class Settings(BaseSettings):
     context: ContextSettings = Field(default_factory=ContextSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     answer: AnswerSettings = Field(default_factory=AnswerSettings)
+    api: ApiSettings = Field(default_factory=ApiSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
 
     @model_validator(mode="after")

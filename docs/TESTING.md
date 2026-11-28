@@ -143,6 +143,23 @@ by the stub run:
 3. Faithfulness and hallucination rate: not measured; the citation overlap check is a lexical screen.
 4. The evaluation dataset has not been reviewed by the owner; every metric over it is exploratory.
 
+## Phase 9 acceptance: criteria and evidence
+
+| Criterion | Evidence |
+|---|---|
+| `/v1`: health, stats, sources, documents, jobs (P9.1) | `tests/api/test_manage.py` through an in-process client over a real store |
+| `POST /v1/search`, `POST /v1/answers` and the server-sent events sequence (P9.2) | `tests/api/test_query.py`: evidence, delta, citations, final; verified text sent once; provisional drafts and `retract` in live mode; a failed stage is a `final` event of status `error` |
+| problem+json, error codes, cursor pagination, `Idempotency-Key` (P9.3) | `tests/api/test_manage.py` (replay, conflict, no second write, cursors, bad cursors, limits), `tests/api/test_query.py` (engine codes in problems) |
+| Security: token, no non-loopback bind without a token, size limits, CORS off (P9.4) | `tests/api/test_security.py` (401 everywhere but health, wrong scheme and token, token never echoed, public bind refused when serving, weak token refused, 413, question length, CORS), `tests/e2e/test_admin_cli.py` (`rag serve` refuses to start) |
+| OpenAPI snapshot and its diff in CI (P9.5) | `tests/api/test_openapi.py` compares the generated document with `docs/openapi.json`; the CI test job fails on any difference; also checks endpoints, security and error documentation |
+| CLI: `init`, `config`, `index rebuild`, `gc`, `backup`, `serve`, `--json`, exit codes (P9.6) | `tests/e2e/test_admin_cli.py`, `tests/e2e/test_ask_cli.py`; exit codes in [CLI.md](CLI.md) |
+| API and CLI documentation checked against the schemas (P9.7) | `tests/api/test_docs.py`: every endpoint and command is documented, JSON examples parse |
+| Cancellation and concurrency | `tests/e2e/test_pipeline.py` (cancel, concurrency limit); a client disconnect cancels the pipeline through the stream; a real `rag serve` was started on the loopback, answered health, refused anonymous reads when a token was set and created a managed source |
+
+Not covered by an automated test: a real browser client, the `uvicorn` process under load, and the
+effect of client disconnects on a live socket (the in-process client cannot simulate them). The
+idempotency memory is per process by design.
+
 ## Failure injection (`tests/chaos`)
 
 A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test

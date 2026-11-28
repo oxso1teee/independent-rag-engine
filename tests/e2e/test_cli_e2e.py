@@ -54,8 +54,15 @@ class ContainerForTests:
     ) -> AbstractContextManager[SearchServices]:
         return DefaultContainer().search(config, db or self.default_db)
 
-    def ask(self, config: Path | None, db: Path | None) -> AbstractContextManager[AskServices]:
-        return DefaultContainer().ask(config, db or self.default_db)
+    def ask(
+        self, config: Path | None, db: Path | None, *, release_models: bool = True
+    ) -> AbstractContextManager[AskServices]:
+        return DefaultContainer().ask(config, db or self.default_db, release_models=release_models)
+
+    def serve(
+        self, config: Path | None, db: Path | None, *, host: str | None, port: int | None
+    ) -> int:
+        raise NotImplementedError("the test container does not run a server")
 
 
 @dataclass

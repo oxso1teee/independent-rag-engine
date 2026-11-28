@@ -88,6 +88,7 @@ class AskServices:
     pipeline: RagPipeline
     ids: IdFactory
     defaults: SearchDefaults
+    search: SearchServices
 
 
 class Container(Protocol):
@@ -107,6 +108,18 @@ class Container(Protocol):
         """Search services over the published index; nothing is written."""
         ...
 
-    def ask(self, config: Path | None, db: Path | None) -> AbstractContextManager[AskServices]:
-        """The query pipeline over the published index; needs ``[llm]`` and an index."""
+    def ask(
+        self, config: Path | None, db: Path | None, *, release_models: bool = True
+    ) -> AbstractContextManager[AskServices]:
+        """The query pipeline over the published index; needs ``[llm]`` and an index.
+
+        ``release_models`` (one-shot use) hands the in-process models' memory back before a local
+        model is called; a service that stays up passes ``False``.
+        """
+        ...
+
+    def serve(
+        self, config: Path | None, db: Path | None, *, host: str | None, port: int | None
+    ) -> int:
+        """Run the HTTP API until it is stopped; returns the process exit code."""
         ...
