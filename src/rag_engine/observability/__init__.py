@@ -2,6 +2,7 @@
 
 from rag_engine.observability.logging import (
     REDACTED,
+    RotatingStream,
     configure_logging,
     get_logger,
     is_sensitive_key,
@@ -16,6 +17,7 @@ from rag_engine.observability.timing import Timer
 
 __all__ = [
     "REDACTED",
+    "RotatingStream",
     "Timer",
     "configure_logging",
     "get_logger",

@@ -5,6 +5,46 @@ project until a release is cut.
 
 ## [Unreleased]
 
+### Phase 11: production readiness (implemented; a release has not been cut)
+- Docker image (multi-stage, base image pinned by digest, dependencies installed from hashes, runs
+  as an unprivileged user, health check, about 80 MB), a CI job that builds and smoke-tests it, and a
+  packaging smoke test (wheel installs without extras, the API extra is optional).
+- `rag verify BACKUP` and `rag restore BACKUP [--replace]`; the backup, verify, restore and doctor
+  drill is a test. `docs/OPERATIONS.md` is the runbook.
+- Optional Prometheus-format metrics at `GET /v1/metrics` (`[api] metrics`), size-rotated log files
+  (`[logging] file`), `scripts/generate_notices.py` (third-party notices and a CycloneDX SBOM,
+  checked in CI), a Markdown link checker, `SECURITY.md` with a threat model, `PROVENANCE.md`,
+  `CONTRIBUTING.md`, and a rewritten README.
+- `eval/scripts/soak.py`: a one-hour search soak behind a memory gate (result in `docs/TESTING.md`).
+- Not done on purpose: a version tag, a GitHub release, a licence and the decision to publish are
+  the owner's.
+
+### Phase 10: evaluation (implemented; quality criteria are open)
+- Statistics (McNemar, sign test, cluster bootstrap, Holm, kappa), generation metrics and a claim
+  judge with calibration, a run manifest, a guarded and counted test split, `rag eval
+  validate|run|report|compare|gate` and a committed regression baseline.
+- A harder multilingual set (`retrieval-hard@v1`, all labels unreviewed). Held-out gate research:
+  best 73.3 % correct refusals at 8.6 % false refusals against 90 % and 10 % (criterion open). The
+  reranker gains nDCG@10 +0.16 (dense) and +0.37 (hybrid) on its dev split (still off by default);
+  hybrid is worse than dense on this set (ADR 0018).
+
+### Phase 9: HTTP API
+- `rag serve`: FastAPI under `/v1` with health, readiness, statistics, sources, documents (cursor
+  pagination, `Idempotency-Key`), jobs, search and answers (JSON or server-sent events),
+  problem+json, bearer token, refusal to listen beyond the loopback without one, size limits, CORS
+  off, a committed OpenAPI snapshot; `rag init`, `rag config`, `rag backup` (ADR 0017).
+
+### Phase 8: query pipeline (MVP-1 implemented, not quality-accepted)
+- `RagPipeline` with the statuses `answered`, `insufficient_evidence`, `unverified` and `error`,
+  one time budget, verified streaming, cancellation and a measured release of in-process models;
+  `rag ask` (exit codes 10 and 11) (ADR 0016).
+
+### Phase 7: generation
+- Prompt `answer.v1`, citation validation against the evidence of the request, refusal sentinel,
+  degenerate-answer and truncation detection, resilient provider wrapper, Ollama and
+  OpenAI-compatible adapters, a memory-gated smoke test that refused the 4B model on the reference
+  machine (ADR 0015).
+
 ### Phase 6: reranking and context (implemented; the gate target is unmet)
 - Reranker measured with the real `BAAI/bge-reranker-v2-m3-int8` (ADR 0014): on the saturated
   exploratory set it gives no gain (nDCG@10 −0.02 dense, −0.03 hybrid, intervals touching zero), the

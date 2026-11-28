@@ -198,6 +198,8 @@ class ApiSettings(_Section):
     idempotency_ttl_s: int = Field(default=86_400, ge=1, le=7 * 86_400)
     cors_origins: tuple[str, ...] = ()
     """Browser origins allowed by CORS; empty (the default) keeps CORS off."""
+    metrics: bool = False
+    """Serve Prometheus-format metrics at ``GET /v1/metrics`` (authenticated like the rest)."""
 
     @model_validator(mode="after")
     def _a_public_bind_needs_a_token(self) -> ApiSettings:
@@ -268,6 +270,10 @@ class ChunkingSettings(_Section):
 class LoggingSettings(_Section):
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     json_output: bool = True
+    file: Path | None = None
+    """Write the log to this file instead of standard error, rotated by size."""
+    rotate_mb: int = Field(default=10, ge=1, le=1024)
+    backups: int = Field(default=5, ge=1, le=100)
 
 
 class Settings(BaseSettings):

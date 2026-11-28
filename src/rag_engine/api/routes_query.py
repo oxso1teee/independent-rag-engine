@@ -132,6 +132,8 @@ def build_router() -> APIRouter:
                 headers=_SSE_HEADERS,
             )
         answer = await pipeline.ask(query)
+        if state.metrics is not None:
+            state.metrics.answer(answer.status.value)
         if answer.status is AskStatus.ERROR and answer.error is not None:
             error = answer.error
             code = error.code

@@ -10,9 +10,10 @@ from typing import Annotated, Protocol
 import typer
 
 from rag_engine.cli.context import Container
+from rag_engine.cli.exit_codes import ExitCode
 from rag_engine.config import load_settings
 from rag_engine.domain import ErrorCode, RagError
-from rag_engine.storage.backup import backup_database
+from rag_engine.storage.backup import backup_database, restore_backup, verify_backup
 
 STARTER_CONFIG = """\
 # rag.toml: settings of the Independent RAG Engine. Every value is optional; environment variables
@@ -160,6 +161,57 @@ def register_admin(
             emit({"backup": str(made), "bytes": made.stat().st_size})
         else:
             typer.echo(f"backup written to {made} ({made.stat().st_size} bytes)")
+
+    @app.command("verify")
+    def verify(
+        backup_file: Annotated[Path, typer.Argument(help="A backup made by `rag backup`.")],
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """Check a backup without opening it for writing; exit 9 when it is damaged."""
+        try:
+            report = verify_backup(backup_file)
+        except RagError as error:
+            raise fail(error, as_json=json_output) from error
+        data = {
+            "ok": report.ok, "errors": list(report.errors), "warnings": list(report.warnings),
+            "chunks": report.published_chunks, "embeddings": report.embeddings,
+            "index_generation": report.index_generation,
+        }  # fmt: skip
+        if json_output:
+            emit(data)
+        else:
+            typer.echo(
+                f"{'ok' if report.ok else 'DAMAGED'}: {report.published_chunks} chunks, "
+                f"{report.embeddings} embeddings, index generation {report.index_generation}"
+            )
+            for message in (*report.errors, *report.warnings):
+                typer.echo(f"  {message}")
+        if not report.ok:
+            raise typer.Exit(int(ExitCode.INTEGRITY))
+
+    @app.command("restore")
+    def restore(
+        ctx: typer.Context,
+        backup_file: Annotated[Path, typer.Argument(help="A backup made by `rag backup`.")],
+        replace: Annotated[
+            bool, typer.Option("--replace", help="Keep the current database aside and restore.")
+        ] = False,
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ) -> None:
+        """Restore a verified backup as the database; stop the server first."""
+        state = state_of(ctx)
+        try:
+            destination = state.db or load_settings(state.config).storage.db_path
+            kept = restore_backup(backup_file, destination, replace=replace)
+        except RagError as error:
+            raise fail(error, as_json=json_output) from error
+        if json_output:
+            emit({"restored": str(destination), "previous": None if kept is None else str(kept)})
+        else:
+            typer.echo(f"restored {destination}")
+            if kept is not None:
+                typer.echo(f"the previous database is kept as {kept}")
+            typer.echo("next: `rag doctor --integrity` to check it")
 
     @app.command("serve")
     def serve(

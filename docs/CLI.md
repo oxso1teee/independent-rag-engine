@@ -19,6 +19,8 @@ to standard error.
 | `rag index gc`, `rag index rebuild`, `rag index switch-model` | maintain the published indexes |
 | `rag eval validate DATASET`, `rag eval run`, `rag eval report RUN`, `rag eval compare A B`, `rag eval gate RUN BASELINE` | measure retrieval, compare runs pairwise, fail on a regression (see [EVALUATION.md](EVALUATION.md)) |
 | `rag backup DEST` | a verified, consistent copy of the database; refuses to overwrite |
+| `rag verify BACKUP` | check a backup without opening it for writing (exit 9 when damaged) |
+| `rag restore BACKUP [--replace]` | restore a verified backup; the current database is kept aside as `.before-restore` |
 | `rag serve [--host H] [--port P]` | run the HTTP API (see [API.md](API.md)) |
 
 ## Exit codes

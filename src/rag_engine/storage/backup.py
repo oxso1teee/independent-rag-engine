@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import shutil
 import sqlite3
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from rag_engine.domain import ErrorCode, RagError
+
+if TYPE_CHECKING:
+    from rag_engine.storage.integrity import IntegrityReport
 
 
 def backup_database(source: Path, destination: Path) -> Path:
@@ -82,3 +87,72 @@ def _verify(origin: sqlite3.Connection, copy_path: Path) -> None:
                 )
     finally:
         copy.close()
+
+
+def verify_backup(path: Path) -> IntegrityReport:
+    """Check a backup file the way ``doctor --integrity`` checks a live database."""
+    from rag_engine.storage.integrity import check_integrity  # lazy: avoids an import cycle
+
+    if not path.is_file():
+        raise RagError(
+            ErrorCode.E_SOURCE_NOT_FOUND, "the backup does not exist", context={"path": str(path)}
+        )
+    return check_integrity(path)
+
+
+def restore_backup(backup: Path, destination: Path, *, replace: bool = False) -> Path | None:
+    """Put a verified backup in place of ``destination``; return the file it displaced, if any.
+
+    The backup is verified first and copied under a temporary name, so a damaged backup never
+    reaches the destination and a failed copy leaves the old database as it was. An existing
+    destination is refused unless ``replace`` is set, and even then it is kept next to the new one
+    under a ``.before-restore`` name rather than deleted. Write-ahead-log files of the displaced
+    database are moved with it, so the restored file is never opened with a stale log.
+    """
+    from rag_engine.storage.integrity import check_integrity  # lazy: avoids an import cycle
+
+    report = verify_backup(backup)
+    if not report.ok:
+        raise RagError(
+            ErrorCode.E_INTEGRITY,
+            "the backup failed verification and was not restored",
+            context={"errors": list(report.errors)[:5]},
+        )
+    displaced: Path | None = None
+    if destination.exists():
+        if not replace:
+            raise RagError(
+                ErrorCode.E_INTEGRITY,
+                "the destination database exists; pass --replace to keep it aside and restore",
+                context={"destination": str(destination)},
+            )
+        displaced = destination.with_name(destination.name + ".before-restore")
+        if displaced.exists():
+            raise RagError(
+                ErrorCode.E_INTEGRITY,
+                "an earlier displaced database is still there; move it away first",
+                context={"path": str(displaced)},
+            )
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    partial = destination.with_name(destination.name + ".restore-partial")
+    partial.unlink(missing_ok=True)
+    try:
+        shutil.copyfile(backup, partial)
+        partial.chmod(0o600)
+        if not check_integrity(partial).ok:
+            raise RagError(ErrorCode.E_INTEGRITY, "the copy failed verification")
+        if displaced is not None:
+            destination.replace(displaced)
+        for suffix in ("-wal", "-shm"):
+            stale = destination.with_name(destination.name + suffix)
+            if not stale.exists():
+                continue
+            if displaced is not None:
+                stale.replace(displaced.with_name(displaced.name + suffix))
+            else:
+                stale.unlink()
+        partial.replace(destination)
+    except BaseException:
+        partial.unlink(missing_ok=True)
+        raise
+    return displaced

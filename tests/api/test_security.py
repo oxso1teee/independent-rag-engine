@@ -124,3 +124,35 @@ def test_cors_is_off_by_default_and_on_only_for_listed_origins(
         denied = api.client.options("/v1/sources", headers=headers)
         assert allowed.headers["access-control-allow-origin"] == "https://app.example"
         assert "access-control-allow-origin" not in denied.headers
+
+
+# ------------------------------------------------------------------------------- metrics
+
+
+def test_metrics_are_off_by_default(api: Api) -> None:
+    assert api.client.get("/v1/metrics").status_code == 404
+
+
+def test_metrics_count_requests_by_route_template_and_never_by_identifier(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for api in make_api(tmp_path, monkeypatch, api="[api]\nmetrics = true\n"):
+        api.client.get("/v1/health")
+        api.client.get("/v1/documents/01a21dc5-d6ef-7117-af12-1365cf7451a5")
+        api.client.get("/v1/nothing-here")
+        text = api.client.get("/v1/metrics")
+        body = text.text
+        assert text.status_code == 200 and text.headers["content-type"].startswith("text/plain")
+        assert 'rag_http_requests_total{method="GET",route="/v1/health",status="2xx"} 1' in body
+        assert 'route="/v1/documents/{document_id}",status="4xx"' in body
+        assert "01a21dc5" not in body and "nothing-here" not in body  # no ids, no raw paths
+        assert 'route="unmatched"' in body and "rag_uptime_seconds" in body
+
+
+def test_metrics_need_the_token_when_one_is_set(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for api in make_api(tmp_path, monkeypatch, api="[api]\nmetrics = true\n", token=TOKEN):
+        anonymous = api.client.__class__(api.client.app)
+        assert anonymous.get("/v1/metrics").status_code == 401
+        assert api.client.get("/v1/metrics").status_code == 200
