@@ -33,7 +33,7 @@ from rag_engine.evaluation.review_kit import load_source
 from rag_engine.system import SystemClock
 
 GIB = 1024**3
-DEFAULT = ("retrieval_hard_v1", "retrieval_mini_v1")
+DEFAULT = ("retrieval_hard_v2", "retrieval_mini_v2")
 START_MIN_AVAILABLE = int(2.3 * GIB)  # the model's ~1.2 GiB plus the 1 GiB headroom used elsewhere
 STOP_BELOW_AVAILABLE = int(0.45 * GIB)
 

@@ -14,7 +14,7 @@ from rag_engine.evaluation.dataset import accepted_questions, load_dataset, vali
 pytestmark = pytest.mark.unit
 
 ROOT = Path(__file__).resolve().parents[2]
-DATASET = ROOT / "eval" / "datasets" / "retrieval_hard_v1.json"
+DATASET = ROOT / "eval" / "datasets" / "retrieval_hard_v2.json"
 CORPUS = ROOT / "eval" / "corpus" / "hard_v1"
 
 
@@ -29,7 +29,7 @@ def builder() -> object:
 
 
 def test_the_committed_files_are_exactly_what_the_builder_produces() -> None:
-    corpus, dataset = builder().build()  # type: ignore[attr-defined]
+    corpus, dataset, _, _ = builder().produce()  # type: ignore[attr-defined]
     assert json.loads(DATASET.read_text(encoding="utf-8")) == dataset
     for name, text in corpus.items():
         assert (CORPUS / name).read_text(encoding="utf-8") == text

@@ -51,7 +51,12 @@ it agrees with a human-labelled sample at 90 % or more with Cohen's kappa of 0.8
 no language-model judge has been calibrated: that needs a human-labelled sample that does not
 exist yet and a judge model that fits in memory beside the generator.
 
-## The harder set (`retrieval-hard@v1`)
+## The harder set (`retrieval-hard@v1`; corrected in v2)
+
+> The numbers below were measured on version 1. Version 2 (`retrieval_hard_v2.json`) corrects labelling
+> errors found by the question audit and leaves the corpus unchanged; version 1 stays frozen. See
+> [DATASET_REVIEW.md](DATASET_REVIEW.md) for what changed. Results on version 1 are not restated for
+> version 2 until they are re-run.
 
 `eval/corpus/hard_v1` (26 short documents, English and Russian) and `eval/datasets/retrieval_hard_v1.json`
 (141 questions, 68 on dev and 73 on test) are built by `eval/scripts/build_hard_dataset.py` from one

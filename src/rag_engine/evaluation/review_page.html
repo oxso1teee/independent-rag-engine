@@ -101,10 +101,11 @@ function verdictChip(c) {
 }
 function auditDetail(c) {
   if (!c.audit) return '';
-  const flags = c.audit.flags.filter(f => f.severity !== 'info').map(f => '<div class="' + (f.severity === 'hard' ? 'warn' : 'hint') + '"><b>' + esc(f.id) + '</b>: ' + esc(f.message) + '</div>').join('');
+  const flags = c.audit.flags.map(f => '<div class="' + (f.severity === 'hard' ? 'warn' : 'hint') + '"><b>' + esc(f.id) + (f.severity === 'info' ? ' (note)' : '') + '</b>: ' + esc(f.message) + '</div>').join('');
   const passed = c.audit.passed.length ? '<div class="hint">Checks passed: ' + esc(c.audit.passed.join(', ')) + '</div>' : '';
   const m = Object.entries(c.audit.metrics).map(([k, v]) => k + '=' + v).join('  ');
-  return '<div class="lbl">Automatic audit</div>' + (flags || '<div class="hint">No objection found.</div>') + passed + '<div class="small">' + esc(m) + '</div>';
+  const note = c.note ? '<div class="lbl">Deep-audit note (an assistant\'s reading, not a human review)</div><div>' + esc(c.note) + '</div>' : '';
+  return note + '<div class="lbl">Automatic audit</div>' + (flags || '<div class="hint">No objection found.</div>') + passed + '<div class="small">' + esc(m) + '</div>';
 }
 function filtered() {
   const f = {verdict:$('f-verdict').value, flag:$('f-flag').value, dataset:$('f-dataset').value, split:$('f-split').value, type:$('f-type').value, lang:$('f-lang').value, state:$('f-state').value, text:$('f-text').value.toLowerCase()};
@@ -125,7 +126,7 @@ function renderTable(list) {
       '<td><button data-open="' + esc(c.key) + '" title="show the evidence">' + (open ? '▾' : '▸') + '</button>' + (open ? '<div class="seen small">viewed</div>' : '') + '</td>' +
       '<td>' + verdictChip(c) + '<div class="small">' + esc(c.id) + '<br>' + esc(c.type) + ' · ' + esc(c.split) + ' · ' + esc(c.language) + (c.answerable ? '' : ' · no answer') + '</div></td>' +
       '<td class="q">' + esc(c.question) + '</td><td>' + (c.answerable ? esc(c.reference_answer) : '<span class="hint">(no answer expected)</span>') + '</td>' +
-      '<td>' + flags + '</td><td>' + decision + '</td></tr>' +
+      '<td>' + flags + (c.note ? ' <span class="chip" title="a deep-audit note is in the details">note</span>' : '') + '</td><td>' + decision + '</td></tr>' +
       (open ? '<tr class="more"><td></td><td colspan="6">' + '<div class="lbl">Evidence in the documents</div>' + evidence(c) + absent(c) + auditDetail(c) +
         '<div class="hint">Origin: ' + esc(c.provenance) + '. To edit the question or the answer use the card view.</div></td></tr>' : '');
   }).join('') || '<tr><td colspan="7" class="hint">No question matches the filters.</td></tr>';

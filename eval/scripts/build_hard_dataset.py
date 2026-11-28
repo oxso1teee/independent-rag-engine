@@ -20,11 +20,18 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from dataset_revision import record, revise
 
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS = ROOT / "eval" / "corpus" / "hard_v1"
-DATASET = ROOT / "eval" / "datasets" / "retrieval_hard_v1.json"
+PREVIOUS = ROOT / "eval" / "datasets" / "retrieval_hard_v1.json"
+DATASET = ROOT / "eval" / "datasets" / "retrieval_hard_v2.json"
+CHANGES = ROOT / "eval" / "datasets" / "CHANGES_v2.json"
+VERSION = 2
 
 # file: (language, split, title, [(sentence, anchor, question in the document's language,
 #                                  question in the other language)])
@@ -115,7 +122,7 @@ DOCS: dict[str, tuple[str, str, str, list[Fact]]] = {
                 "Travel expenses must be submitted within 14 days of the trip.",
                 "submitted within 14 days of the trip",
                 "How soon after a trip must travel expenses be filed?",
-                "В какой срок после поездки нужно подать отчёт о командировочных расходах?",
+                "Сколько дней после поездки отводится на подачу заявки на возмещение командировочных расходов (Travel expenses)?",
             ),
             (
                 "The hotel limit is 150 euros per night.",
@@ -229,7 +236,7 @@ DOCS: dict[str, tuple[str, str, str, list[Fact]]] = {
                 "Production releases happen every Tuesday at 14:00 UTC.",
                 "every Tuesday at 14:00 UTC",
                 "On which day and time are production releases made?",
-                "В какой день и время выходят релизы в продакшн?",
+                "В какой день и в какое время по UTC выходят релизы в продакшн?",
             ),
             (
                 "A release freeze applies in the last week of December.",
@@ -290,7 +297,7 @@ DOCS: dict[str, tuple[str, str, str, list[Fact]]] = {
             ),
             (
                 "В субботу и воскресенье офис закрыт.",
-                "офис закрыт",
+                "В субботу и воскресенье офис закрыт",
                 "Работает ли офис в выходные?",
                 "Is the office open at the weekend?",
             ),
@@ -305,13 +312,13 @@ DOCS: dict[str, tuple[str, str, str, list[Fact]]] = {
                 "Отчёт о командировке нужно сдать в течение 10 рабочих дней.",
                 "в течение 10 рабочих дней",
                 "В какой срок нужно сдать отчёт о командировке?",
-                "Within what time must a trip report be handed in?",
+                "Within how many working days must a business trip report be submitted?",
             ),
             (
                 "Суточные составляют 1200 рублей в день.",
                 "1200 рублей в день",
                 "Каков размер суточных?",
-                "How much is the daily travel allowance?",
+                "How many roubles of per diem are paid for each day of a business trip?",
             ),
         ],
     ),
@@ -366,7 +373,7 @@ DOCS: dict[str, tuple[str, str, str, list[Fact]]] = {
             ),
             (
                 "Заявку на курс нужно согласовать с руководителем за 14 дней.",
-                "за 14 дней",
+                "согласовать с руководителем за 14 дней",
                 "За сколько дней нужно согласовать заявку на курс?",
                 "How many days ahead must a course request be approved?",
             ),
@@ -438,7 +445,7 @@ DOCS: dict[str, tuple[str, str, str, list[Fact]]] = {
                 "Релизы выходят каждый четверг в 16:00 по московскому времени.",
                 "каждый четверг в 16:00 по московскому времени",
                 "Когда выходят релизы?",
-                "When do releases go out?",
+                "On which day and at what Moscow time do releases go out?",
             ),
             (
                 "Откат релиза допускается в течение 24 часов.",
@@ -482,7 +489,7 @@ DOCS: dict[str, tuple[str, str, str, list[Fact]]] = {
                 "Критичные заявки обрабатываются в течение 15 минут.",
                 "в течение 15 минут",
                 "За какое время обрабатывают критичные заявки?",
-                "How fast are critical requests handled?",
+                "How fast are critical IT support requests handled?",
             ),
         ],
     ),
@@ -544,14 +551,10 @@ GROUP: list[tuple[str, str, str, str, list[tuple[str, str]], str]] = [
     (
         "multi_doc",
         "dev",
-        "Сколько хранятся копии почтового сервера и в какое время их создают?",
+        "Сколько хранятся копии почтового сервера и резервные копии базы данных?",
         "ru",
-        [
-            ("ru_mail_backup.md", "хранятся 21 день"),
-            ("ru_mail_backup.md", "каждую ночь в 03:20 по московскому времени"),
-            ("ru_office_hours.md", "с 9:00 до 18:00"),
-        ],
-        "Копии хранятся 21 день и создаются каждую ночь в 03:20.",
+        [("ru_mail_backup.md", "хранятся 21 день"), ("en_db_backup.md", "kept for 30 days")],
+        "Копии почтового сервера хранятся 21 день, резервные копии базы данных - 30 дней.",
     ),
     (
         "multi_doc",
@@ -567,14 +570,10 @@ GROUP: list[tuple[str, str, str, str, list[tuple[str, str]], str]] = [
     (
         "multi_doc",
         "test",
-        "Когда выходят релизы и в какой срок можно откатить релиз?",
+        "В какой срок допускается откат релиза и за какое время обрабатываются критичные заявки?",
         "ru",
-        [
-            ("ru_release.md", "каждый четверг в 16:00 по московскому времени"),
-            ("ru_release.md", "в течение 24 часов"),
-            ("ru_it.md", "в течение 15 минут"),
-        ],
-        "Релизы выходят по четвергам в 16:00; откат допускается в течение 24 часов.",
+        [("ru_release.md", "в течение 24 часов"), ("ru_it.md", "в течение 15 минут")],
+        "Откат релиза допускается в течение 24 часов; критичные заявки обрабатываются в течение 15 минут.",
     ),
     (
         "conflicting",
@@ -596,7 +595,7 @@ GROUP: list[tuple[str, str, str, str, list[tuple[str, str]], str]] = [
             ("en_vacation_v1.md", "20 days of paid vacation per year"),
             ("en_vacation_v2.md", "25 days of paid vacation per year"),
         ],
-        "Version 1 gave 20 days; version 2 gives 25 days.",
+        "Version 1 gave 20 days; version 2 gives 25 days and replaces version 1 from 1 January 2025.",
     ),
     (
         "conflicting",
@@ -618,41 +617,67 @@ GROUP: list[tuple[str, str, str, str, list[tuple[str, str]], str]] = [
             ("en_remote_2023.md", "work remotely 2 days per week"),
             ("en_remote_2024.md", "work remotely up to 3 days per week"),
         ],
-        "2 days in 2023; up to 3 days in 2024.",
+        "2 days under the 2023 policy; up to 3 days under the 2024 policy, which replaces it.",
     ),
 ]
 
+# Each question is asked in one language; its absence terms cover both languages, because the
+# corpus has documents in both and an answer in the other language would still be an answer.
 UNANSWERABLE: list[tuple[str, str, list[str]]] = [
-    ("en", "What is the dental insurance coverage?", ["dental", "insurance"]),
-    ("en", "What is the policy on working from abroad?", ["abroad"]),
-    ("en", "How much is the monthly gym allowance?", ["gym"]),
-    ("en", "What is the dress code on Fridays?", ["dress code"]),
-    ("en", "How many days of parental leave are granted?", ["parental"]),
-    ("en", "Who is the data protection officer?", ["protection officer"]),
-    ("en", "When is the annual salary review?", ["salary"]),
-    ("en", "How are stock options vested?", ["stock option"]),
-    ("en", "What is the notice period for resignation?", ["resignation"]),
-    ("en", "Where can I store my bicycle?", ["bicycle"]),
-    ("en", "How do I request a standing desk?", ["standing desk"]),
-    ("en", "What is the Wi-Fi password for guests?", ["wi-fi"]),
-    ("en", "Which languages does the language course offer?", ["language course"]),
-    ("en", "How many monitors does each employee get?", ["monitor"]),
-    ("en", "What is the retention period for payroll records?", ["payroll"]),
-    ("ru", "Какая страховка предусмотрена для сотрудников?", ["страховк"]),
-    ("ru", "Сколько дней отпуска даётся при рождении ребёнка?", ["рождении ребёнка"]),
-    ("ru", "Какой размер премии по итогам года?", ["премии"]),
-    ("ru", "Как оформить увольнение?", ["увольнени"]),
-    ("ru", "Где находится стоянка для велосипедов?", ["велосипед"]),
-    ("ru", "Какой пароль от гостевого Wi-Fi?", ["wi-fi"]),
-    ("ru", "Сколько стоит обед в столовой?", ["столов"]),
-    ("ru", "Как получить доступ к бухгалтерской системе?", ["бухгалтерск"]),
-    ("ru", "Какова процедура аттестации сотрудников?", ["аттестаци"]),
-    ("ru", "Кто отвечает за охрану труда?", ["охран"]),
-    ("ru", "Сколько длится испытательный срок?", ["испытательн"]),
-    ("ru", "Какая скидка на корпоративный фитнес?", ["фитнес"]),
-    ("ru", "Как заказать канцелярские товары?", ["канцеляр"]),
-    ("ru", "Как сообщить о конфликте интересов?", ["конфликт"]),
-    ("ru", "Какая политика по работе из дома?", ["из дома"]),
+    (
+        "en",
+        "What is the dental insurance coverage?",
+        ["dental", "insurance", "стоматолог", "страхов"],
+    ),
+    ("en", "What is the policy on working from abroad?", ["abroad", "за границ", "за рубеж"]),
+    ("en", "How much is the monthly gym allowance?", ["gym", "спортзал", "фитнес"]),
+    ("en", "What is the dress code on Fridays?", ["dress code", "дресс-код", "одежд"]),
+    ("en", "How many days of parental leave are granted?", ["parental", "декрет", "родительск"]),
+    (
+        "en",
+        "Who is the data protection officer?",
+        ["protection officer", "защите данных", "уполномоченн"],
+    ),
+    ("en", "When is the annual salary review?", ["salary", "зарплат", "оклад"]),
+    ("en", "How are stock options vested?", ["stock option", "опцион", "акци"]),
+    (
+        "en",
+        "What is the notice period for resignation?",
+        ["resignation", "увольнени", "заявление об уходе"],
+    ),
+    ("en", "Where can I store my bicycle?", ["bicycle", "велосипед", "велопарков"]),
+    ("en", "How do I request a standing desk?", ["standing desk", "стол с регулировк"]),
+    ("en", "What is the Wi-Fi password for guests?", ["wi-fi", "гостев"]),
+    (
+        "en",
+        "Which languages does the language course offer?",
+        ["language course", "языковые курсы", "иностранн"],
+    ),
+    ("en", "How many monitors does each employee get?", ["monitor", "монитор"]),
+    ("en", "What is the retention period for payroll records?", ["payroll", "расчётн", "зарплатн"]),
+    ("ru", "Какая страховка предусмотрена для сотрудников?", ["страховк", "insurance", "medical"]),
+    (
+        "ru",
+        "Сколько дней отпуска даётся при рождении ребёнка?",
+        ["рождении ребёнка", "childbirth", "birth", "maternity"],
+    ),
+    ("ru", "Какой размер премии по итогам года?", ["премии", "bonus"]),
+    ("ru", "Как оформить увольнение?", ["увольнени", "resign", "dismissal", "termination"]),
+    ("ru", "Где находится стоянка для велосипедов?", ["велосипед", "bicycle", "bike"]),
+    ("ru", "Какой пароль от гостевого Wi-Fi?", ["wi-fi", "гостев", "guest network"]),
+    ("ru", "Сколько стоит обед в столовой?", ["столов", "canteen", "cafeteria", "lunch"]),
+    ("ru", "Как получить доступ к бухгалтерской системе?", ["бухгалтерск", "accounting"]),
+    (
+        "ru",
+        "Какова процедура аттестации сотрудников?",
+        ["аттестаци", "appraisal", "performance review"],
+    ),
+    ("ru", "Кто отвечает за охрану труда?", ["охран", "occupational safety", "safety officer"]),
+    ("ru", "Сколько длится испытательный срок?", ["испытательн", "probation"]),
+    ("ru", "Какая скидка на корпоративный фитнес?", ["фитнес", "fitness", "gym"]),
+    ("ru", "Как заказать канцелярские товары?", ["канцеляр", "stationery", "office supplies"]),
+    ("ru", "Как сообщить о конфликте интересов?", ["конфликт", "conflict of interest"]),
+    ("ru", "Какая политика по работе из дома?", ["из дома", "work from home", "working from home"]),
 ]
 
 PROVENANCE = {
@@ -662,6 +687,73 @@ PROVENANCE = {
     "created": "2026-11-28",
 }
 REVIEW = {"status": "unreviewed", "reviewer": None, "date": None, "notes": ""}
+
+
+# Why each question differs from version 1. ``revise`` refuses a change that is not listed here and
+# a line here for a question that did not change, so this table is the history.
+REASONS: dict[str, tuple[str, str]] = {
+    "multi_doc-3": (
+        "gold",
+        "the third gold quote (office hours) had nothing to do with the question; it was added only to satisfy 'two documents'. The question now needs two real documents",
+    ),
+    "multi_doc-5": (
+        "gold",
+        "the third gold quote (critical requests) was unrelated to the release question; the question now asks about rollback and critical requests, one document each",
+    ),
+    "ru_office_hours-2-same": (
+        "anchor",
+        "the quote 'офис закрыт' was too short to identify the evidence",
+    ),
+    "ru_office_hours-2-cross": (
+        "anchor",
+        "the quote 'офис закрыт' was too short to identify the evidence",
+    ),
+    "ru_training-2-same": (
+        "anchor",
+        "the quote 'за 14 дней' was too short to identify the evidence; the question type is recomputed from the longer quote",
+    ),
+    "ru_training-2-cross": (
+        "anchor",
+        "the quote 'за 14 дней' was too short to identify the evidence; the question type is recomputed from the longer quote",
+    ),
+    "en_travel-1-cross": (
+        "ambiguity",
+        "'отчёт о командировочных расходах' also matched the trip report of ru_travel (10 working days); it now asks for the filing of expenses and names the policy's own term, Travel expenses",
+    ),
+    "conflicting-7": (
+        "completeness",
+        "the expected answer left out that version 2 replaces version 1 (the English twin conflicting-6 has it), so the current rule was missing",
+    ),
+    "conflicting-9": (
+        "completeness",
+        "the expected answer left out that the 2024 policy replaces the 2023 one (the English twin conflicting-8 has it)",
+    ),
+    "ru_travel-1-cross": (
+        "ambiguity",
+        "'trip report' also matched the expense filing of en_travel (14 days); it now says working days and a business trip report",
+    ),
+    "ru_travel-2-cross": (
+        "ambiguity",
+        "'daily travel allowance' also matched the meal limit per day of en_meals; it now asks for the per diem in roubles",
+    ),
+    "en_release-1-cross": (
+        "ambiguity",
+        "the Russian question also matched the Thursday schedule of ru_release; it now names UTC, which only en_release uses",
+    ),
+    "ru_release-1-cross": (
+        "ambiguity",
+        "the English question also matched the Tuesday schedule of en_release; it now names Moscow time, which only ru_release uses",
+    ),
+    "ru_it-2-cross": (
+        "ambiguity",
+        "'critical requests' could be taken for the severity 1 incidents of en_incident; it now says IT support requests",
+    ),
+}
+for _n in range(1, 31):  # every unanswerable question gets terms in both languages
+    REASONS[f"no-answer-{_n}"] = (
+        "absence",
+        "absence terms now cover both languages, because the corpus has documents in both",
+    )
 
 
 def _words(text: str) -> set[str]:
@@ -708,17 +800,53 @@ def build() -> tuple[dict[str, str], dict[str, object]]:
                 "provenance": PROVENANCE, "review": REVIEW,
             }
         )  # fmt: skip
-    dataset = {"name": "retrieval-hard", "version": 1, "corpus": "eval/corpus/hard_v1",
+    dataset = {"name": "retrieval-hard", "version": VERSION, "corpus": "eval/corpus/hard_v1",
                "questions": questions}  # fmt: skip
     return corpus, dataset
 
 
-def main() -> None:
+def check(dataset: dict[str, object], corpus: dict[str, str]) -> None:
+    """Refuse to write a dataset the audit finds wrong on its face (the root-cause guard).
+
+    The first version carried two multi-document questions with a gold quote that had nothing to do
+    with them. The generator now runs the audit's structural and evidence checks on its own output.
+    """
+    from rag_engine.evaluation.dataset import parse_dataset, validate_dataset
+    from rag_engine.evaluation.question_audit import Verdict, audit_source
+    from rag_engine.evaluation.review_kit import SourceDataset
+
+    parsed = parse_dataset(dataset)
+    report = validate_dataset(parsed, corpus)
+    if not report.ok:
+        raise SystemExit("the dataset does not validate:\n" + "\n".join(report.errors))
+    audits = audit_source(SourceDataset("retrieval_hard_v2", dataset, parsed, corpus))
+    wrong = [a for a in audits if a.verdict is Verdict.INCORRECT]
+    if wrong:
+        raise SystemExit(
+            "the audit finds questions wrong on their face:\n"
+            + "\n".join(f"{a.key}: {a.hint}" for a in wrong)
+        )
+
+
+def produce() -> tuple[dict[str, str], dict[str, object], list[dict[str, object]], int]:
+    """The corpus, the new dataset version with its provenance, its changes and the previous version.
+
+    Nothing is written; the guard runs here, so a test sees exactly what ``main`` would write.
+    """
     corpus, dataset = build()
+    check(dataset, corpus)
+    previous = json.loads(PREVIOUS.read_text(encoding="utf-8"))
+    changes = revise(previous, dataset, REASONS)
+    return corpus, dataset, changes, int(previous["version"])
+
+
+def main() -> None:
+    corpus, dataset, changes, previous_version = produce()
     CORPUS.mkdir(parents=True, exist_ok=True)
     for name, text in corpus.items():
         (CORPUS / name).write_text(text, encoding="utf-8")
     DATASET.write_text(json.dumps(dataset, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    record(CHANGES, "retrieval-hard", previous_version, VERSION, "2026-11-28", changes)
     print(f"{len(corpus)} documents, {len(dataset['questions'])} questions")  # type: ignore[arg-type]
 
 

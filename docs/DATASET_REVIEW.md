@@ -5,6 +5,45 @@ checked a question, it is a draft: metrics are computed only from questions mark
 `edited`, and a reviewer name that looks like a program is refused. This page describes how to
 review `eval/datasets/retrieval_mini_v1.json` (44 questions over `eval/corpus/mini_v1`).
 
+## Version 2 of the datasets (review this one)
+
+The audit found real labelling errors in the first versions, so corrections were made as **new
+versions**: `eval/datasets/retrieval_hard_v2.json` and `retrieval_mini_v2.json`. Version 1 stays as it
+was (a test pins its bytes); every question of version 2 is still `unreviewed`, and the corpora are
+unchanged. The complete history, with the old and new value of every changed field and the reason, is
+in [`eval/datasets/CHANGES_v2.json`](../eval/datasets/CHANGES_v2.json); a test checks that it is exactly
+what differs between the versions.
+
+| What | Questions | Why |
+|---|---|---|
+| a gold quote with nothing to do with the question (the root cause: a filler added to satisfy "two documents") | `multi_doc-3`, `multi_doc-5` | rewritten as questions that really need two documents; the generator now runs the audit's checks on its own output and refuses to write a dataset the audit finds wrong on its face |
+| cross-language questions that a document in the question's own language also answered (trip report, per diem, release time, critical requests, expense filing) | 6 | reworded with a cue only the gold document has (UTC / Moscow time, working days, per diem in roubles, the policy's own term) |
+| expected answer without the replacing version | `conflicting-7`, `conflicting-9` | now say, like their English twins, which version replaces which |
+| quote too short to identify the evidence | 4 | the quote was extended (the question type is recomputed from it) |
+| a multi-document answer checked as one fact | 6 (mini) | one fact per evidence quote |
+| absence terms in one language | 38 | the corpus has documents in both languages, so "absent" must hold in both |
+
+After the corrections the audit (lexical and semantic, both layers) gives **170 correct, 15 doubtful,
+0 incorrect** over the 185 questions. The 15 are designed hard negatives (policy versions), two
+look-alike questions that ask different things, and a few where the model ranks a passage close; each
+has a note written after reading the passages. The notes (and, for every changed question, what
+changed and why) are shown in the page under *Deep-audit note*; they are an assistant's reading, not
+a review. Some limits remain: the audit never understands a question, the unanswerable questions
+that are near misses of real topics cannot be shown absent by any automatic means beyond the term
+lists and a reading of the nearest passages, and a person still has to decide every question.
+
+Open the page for version 2 (it needs the audit report, produced by `audit_questions.py`, and the notes
+file):
+
+```bash
+uv run python eval/scripts/review_kit.py build \
+    --audit eval_runs/question_audit_v2_semantic.json --notes eval/datasets/audit_notes_v2.json
+xdg-open eval_runs/review_kit/review_kit.html
+```
+
+After you decide, `review_kit.py apply --sheet <exported.csv> --reviewer "Your Name"` writes version
+**3** files next to these (a reviewed version is a new version again); version 2 is not overwritten.
+
 ## Batch review with the automatic audit (a table, not 185 cards)
 
 `audit_questions.py` screens every question against its own documents and sorts them into three
@@ -47,7 +86,7 @@ answer) are made in the card view; a wrong gold quote cannot be edited, so rejec
 ## Reviewing all questions in one page (review kit)
 
 `review_kit.py` builds one self-contained HTML page for every question of the hard set (141) and
-the mini set (44): 185 cards, each with the question, the source document with the gold quote
+the mini set (44) (version 2 by default): 185 cards, each with the question, the source document with the gold quote
 highlighted, the reference answer and facts, and for questions without an answer the terms that
 must not occur. Nothing is sent anywhere and nothing in a dataset changes while you work.
 

@@ -227,6 +227,20 @@ def test_an_unanswerable_question_scoring_like_answerable_ones_is_doubtful_with_
     assert "dense-no-close-passage" in results["far"].passed
 
 
+def test_a_near_miss_with_absence_terms_in_both_languages_is_a_note_not_a_doubt() -> None:
+    baseline = [question(f"q{i}") for i in range(12)]
+    echo = unanswerable(
+        "echo",
+        "At what UTC time do production database backups run each night?",
+        ["dental", "стоматолог"],
+    )
+    results = audit(*baseline, echo, encoder=HashingEncoder())
+    assert "dense-near-miss" in flags(results["echo"], "info")
+    assert "dense-looks-answerable" not in flags(results["echo"])
+    assert "absence-terms-in-both-languages" in results["echo"].passed
+    assert results["echo"].verdict is Verdict.CORRECT
+
+
 def test_a_cross_language_pair_is_ranked_among_passages_of_the_evidence_language() -> None:
     text = "Within what time must the production database backups run every night?"
     q = question("cross", language="en", question=text)
@@ -261,6 +275,8 @@ def test_the_page_carries_audits_as_hints_and_no_prefilled_decision() -> None:
     for control in ("b-accept", "b-sel-visible", "b-open", "view-table"):
         assert f'id="{control}"' in page
     assert "Type the number" in page  # a bulk accept asks for the count
+    noted = build_kit([src], audits=audits, notes={"t_v1:a": "read by hand"})
+    assert '"note": "read by hand"' in noted and "Deep-audit note" in noted
 
 
 # ----------------------------------------------------------------- the shipped datasets

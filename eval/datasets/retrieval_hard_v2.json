@@ -1,0 +1,4309 @@
+{
+  "name": "retrieval-hard",
+  "version": 2,
+  "corpus": "eval/corpus/hard_v1",
+  "questions": [
+    {
+      "id": "en_db_backup-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When do the production database backups run?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_db_backup.md",
+          "anchor": "every night at 01:15 UTC",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Production database backups run every night at 01:15 UTC.",
+      "reference_facts": [
+        "every night at 01:15 UTC"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_db_backup-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какое время создаются резервные копии производственной базы данных?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_db_backup.md",
+          "anchor": "every night at 01:15 UTC",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Production database backups run every night at 01:15 UTC.",
+      "reference_facts": [
+        "every night at 01:15 UTC"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_db_backup-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long are database backups kept?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_db_backup.md",
+          "anchor": "kept for 30 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Database backups are encrypted and kept for 30 days.",
+      "reference_facts": [
+        "kept for 30 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_db_backup-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как долго хранятся резервные копии базы данных?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_db_backup.md",
+          "anchor": "kept for 30 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Database backups are encrypted and kept for 30 days.",
+      "reference_facts": [
+        "kept for 30 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_laptop_backup-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When are employee laptops backed up?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_laptop_backup.md",
+          "anchor": "every Friday at 18:00 local time",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Employee laptops are backed up every Friday at 18:00 local time.",
+      "reference_facts": [
+        "every Friday at 18:00 local time"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_laptop_backup-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда создаются резервные копии ноутбуков сотрудников?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_laptop_backup.md",
+          "anchor": "every Friday at 18:00 local time",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Employee laptops are backed up every Friday at 18:00 local time.",
+      "reference_facts": [
+        "every Friday at 18:00 local time"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_laptop_backup-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long are laptop backups kept?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_laptop_backup.md",
+          "anchor": "kept for 7 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Laptop backups are kept for 7 days.",
+      "reference_facts": [
+        "kept for 7 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_laptop_backup-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как долго хранятся резервные копии ноутбуков?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_laptop_backup.md",
+          "anchor": "kept for 7 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Laptop backups are kept for 7 days.",
+      "reference_facts": [
+        "kept for 7 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vacation_v1-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many vacation days did version 1 of the policy give?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v1.md",
+          "anchor": "20 days of paid vacation per year",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "In version 1 of the vacation policy, employees receive 20 days of paid vacation per year.",
+      "reference_facts": [
+        "20 days of paid vacation per year"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vacation_v1-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько дней отпуска давала первая версия политики отпусков?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v1.md",
+          "anchor": "20 days of paid vacation per year",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "In version 1 of the vacation policy, employees receive 20 days of paid vacation per year.",
+      "reference_facts": [
+        "20 days of paid vacation per year"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vacation_v1-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When do unused vacation days expire under version 1?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v1.md",
+          "anchor": "expire on 31 March",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Unused vacation days under version 1 expire on 31 March.",
+      "reference_facts": [
+        "expire on 31 March"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vacation_v1-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда сгорают неиспользованные дни отпуска по первой версии?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v1.md",
+          "anchor": "expire on 31 March",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Unused vacation days under version 1 expire on 31 March.",
+      "reference_facts": [
+        "expire on 31 March"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vacation_v2-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many vacation days does version 2 of the policy give?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v2.md",
+          "anchor": "25 days of paid vacation per year",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "In version 2 of the vacation policy, employees receive 25 days of paid vacation per year.",
+      "reference_facts": [
+        "25 days of paid vacation per year"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vacation_v2-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько дней отпуска даёт вторая версия политики отпусков?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v2.md",
+          "anchor": "25 days of paid vacation per year",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "In version 2 of the vacation policy, employees receive 25 days of paid vacation per year.",
+      "reference_facts": [
+        "25 days of paid vacation per year"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vacation_v2-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "From when does version 2 of the vacation policy replace version 1?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v2.md",
+          "anchor": "replaces version 1 from 1 January 2025",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Version 2 replaces version 1 from 1 January 2025.",
+      "reference_facts": [
+        "replaces version 1 from 1 January 2025"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vacation_v2-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "С какой даты вторая версия политики отпусков заменяет первую?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v2.md",
+          "anchor": "replaces version 1 from 1 January 2025",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Version 2 replaces version 1 from 1 January 2025.",
+      "reference_facts": [
+        "replaces version 1 from 1 January 2025"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_travel-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How soon after a trip must travel expenses be filed?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_travel.md",
+          "anchor": "submitted within 14 days of the trip",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Travel expenses must be submitted within 14 days of the trip.",
+      "reference_facts": [
+        "submitted within 14 days of the trip"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_travel-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько дней после поездки отводится на подачу заявки на возмещение командировочных расходов (Travel expenses)?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_travel.md",
+          "anchor": "submitted within 14 days of the trip",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Travel expenses must be submitted within 14 days of the trip.",
+      "reference_facts": [
+        "submitted within 14 days of the trip"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (ambiguity): 'отчёт о командировочных расходах' also matched the trip report of ru_travel (10 working days); it now asks for the filing of expenses and names the policy's own term, Travel expenses; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_travel-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What is the nightly hotel limit?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_travel.md",
+          "anchor": "150 euros per night",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The hotel limit is 150 euros per night.",
+      "reference_facts": [
+        "150 euros per night"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_travel-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Каков лимит на проживание в гостинице за ночь?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_travel.md",
+          "anchor": "150 euros per night",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The hotel limit is 150 euros per night.",
+      "reference_facts": [
+        "150 euros per night"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_meals-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How soon after buying a meal must the expense be filed?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_meals.md",
+          "anchor": "within 30 days of the purchase",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Meal expenses must be submitted within 30 days of the purchase.",
+      "reference_facts": [
+        "within 30 days of the purchase"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_meals-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой срок после покупки обеда нужно подать расход на питание?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_meals.md",
+          "anchor": "within 30 days of the purchase",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Meal expenses must be submitted within 30 days of the purchase.",
+      "reference_facts": [
+        "within 30 days of the purchase"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_meals-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What is the daily meal limit?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_meals.md",
+          "anchor": "40 euros per day",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The meal limit is 40 euros per day.",
+      "reference_facts": [
+        "40 euros per day"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_meals-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Каков дневной лимит на питание?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_meals.md",
+          "anchor": "40 euros per day",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The meal limit is 40 euros per day.",
+      "reference_facts": [
+        "40 euros per day"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vpn-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What do I need to get VPN access?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vpn.md",
+          "anchor": "hardware token issued by the IT desk",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "VPN access requires a hardware token issued by the IT desk.",
+      "reference_facts": [
+        "hardware token issued by the IT desk"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vpn-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Что нужно для получения доступа к VPN?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vpn.md",
+          "anchor": "hardware token issued by the IT desk",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "VPN access requires a hardware token issued by the IT desk.",
+      "reference_facts": [
+        "hardware token issued by the IT desk"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vpn-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How quickly must a lost VPN token be reported?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vpn.md",
+          "anchor": "reported within 2 hours",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "A lost token must be reported within 2 hours.",
+      "reference_facts": [
+        "reported within 2 hours"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_vpn-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как быстро нужно сообщить об утере токена VPN?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vpn.md",
+          "anchor": "reported within 2 hours",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "A lost token must be reported within 2 hours.",
+      "reference_facts": [
+        "reported within 2 hours"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_password-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long must a password be?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_password.md",
+          "anchor": "at least 14 characters",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Passwords must contain at least 14 characters.",
+      "reference_facts": [
+        "at least 14 characters"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_password-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Какой минимальной длины должен быть пароль?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_password.md",
+          "anchor": "at least 14 characters",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Passwords must contain at least 14 characters.",
+      "reference_facts": [
+        "at least 14 characters"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_password-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How often do passwords have to be changed?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_password.md",
+          "anchor": "expire every 180 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Passwords expire every 180 days and the last 10 passwords cannot be reused.",
+      "reference_facts": [
+        "expire every 180 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_password-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как часто нужно менять пароль?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_password.md",
+          "anchor": "expire every 180 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Passwords expire every 180 days and the last 10 passwords cannot be reused.",
+      "reference_facts": [
+        "expire every 180 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_incident-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How fast must a severity 1 incident be acknowledged?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_incident.md",
+          "anchor": "acknowledged within 5 minutes",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Severity 1 incidents must be acknowledged within 5 minutes.",
+      "reference_facts": [
+        "acknowledged within 5 minutes"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_incident-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "За какое время нужно подтвердить инцидент первой степени серьёзности?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_incident.md",
+          "anchor": "acknowledged within 5 minutes",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Severity 1 incidents must be acknowledged within 5 minutes.",
+      "reference_facts": [
+        "acknowledged within 5 minutes"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_incident-2-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "Who acts as incident commander?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_incident.md",
+          "anchor": "incident commander is the on-call lead",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The incident commander is the on-call lead.",
+      "reference_facts": [
+        "incident commander is the on-call lead"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_incident-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Кто выступает руководителем инцидента?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_incident.md",
+          "anchor": "incident commander is the on-call lead",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The incident commander is the on-call lead.",
+      "reference_facts": [
+        "incident commander is the on-call lead"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_onboarding-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When does a new employee get a laptop?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_onboarding.md",
+          "anchor": "receive a laptop on their first day",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "New employees receive a laptop on their first day.",
+      "reference_facts": [
+        "receive a laptop on their first day"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_onboarding-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда новый сотрудник получает ноутбук?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_onboarding.md",
+          "anchor": "receive a laptop on their first day",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "New employees receive a laptop on their first day.",
+      "reference_facts": [
+        "receive a laptop on their first day"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_onboarding-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long does the buddy program run?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_onboarding.md",
+          "anchor": "buddy program lasts 90 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The buddy program lasts 90 days.",
+      "reference_facts": [
+        "buddy program lasts 90 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_onboarding-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько длится программа наставничества?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_onboarding.md",
+          "anchor": "buddy program lasts 90 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The buddy program lasts 90 days.",
+      "reference_facts": [
+        "buddy program lasts 90 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_release-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "On which day and time are production releases made?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_release.md",
+          "anchor": "every Tuesday at 14:00 UTC",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Production releases happen every Tuesday at 14:00 UTC.",
+      "reference_facts": [
+        "every Tuesday at 14:00 UTC"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_release-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой день и в какое время по UTC выходят релизы в продакшн?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_release.md",
+          "anchor": "every Tuesday at 14:00 UTC",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Production releases happen every Tuesday at 14:00 UTC.",
+      "reference_facts": [
+        "every Tuesday at 14:00 UTC"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (ambiguity): the Russian question also matched the Thursday schedule of ru_release; it now names UTC, which only en_release uses; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_release-2-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "When is the release freeze?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_release.md",
+          "anchor": "release freeze applies in the last week of December",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "A release freeze applies in the last week of December.",
+      "reference_facts": [
+        "release freeze applies in the last week of December"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_release-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда действует заморозка релизов?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_release.md",
+          "anchor": "release freeze applies in the last week of December",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "A release freeze applies in the last week of December.",
+      "reference_facts": [
+        "release freeze applies in the last week of December"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_parking-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Where and for how long may visitors park?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_parking.md",
+          "anchor": "zone C for up to 4 hours",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Visitors park in zone C for up to 4 hours.",
+      "reference_facts": [
+        "zone C for up to 4 hours"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_parking-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Где и на какое время могут парковаться гости?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_parking.md",
+          "anchor": "zone C for up to 4 hours",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Visitors park in zone C for up to 4 hours.",
+      "reference_facts": [
+        "zone C for up to 4 hours"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_parking-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Who issues parking passes?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_parking.md",
+          "anchor": "issued by the facilities team",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Parking passes are issued by the facilities team.",
+      "reference_facts": [
+        "issued by the facilities team"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_parking-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Кто выдаёт парковочные пропуска?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_parking.md",
+          "anchor": "issued by the facilities team",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Parking passes are issued by the facilities team.",
+      "reference_facts": [
+        "issued by the facilities team"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_mail_backup-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда создаются резервные копии почтового сервера?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_mail_backup.md",
+          "anchor": "каждую ночь в 03:20 по московскому времени",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Резервные копии почтового сервера создаются каждую ночь в 03:20 по московскому времени.",
+      "reference_facts": [
+        "каждую ночь в 03:20 по московскому времени"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_mail_backup-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When are the mail server backups created?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_mail_backup.md",
+          "anchor": "каждую ночь в 03:20 по московскому времени",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Резервные копии почтового сервера создаются каждую ночь в 03:20 по московскому времени.",
+      "reference_facts": [
+        "каждую ночь в 03:20 по московскому времени"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_mail_backup-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько хранятся копии почтового сервера?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_mail_backup.md",
+          "anchor": "хранятся 21 день",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Копии почтового сервера хранятся 21 день.",
+      "reference_facts": [
+        "хранятся 21 день"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_mail_backup-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long are the mail server backups kept?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_mail_backup.md",
+          "anchor": "хранятся 21 день",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Копии почтового сервера хранятся 21 день.",
+      "reference_facts": [
+        "хранятся 21 день"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_office_hours-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какие часы работает офис?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_office_hours.md",
+          "anchor": "с 9:00 до 18:00",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Офис открыт с понедельника по пятницу с 9:00 до 18:00.",
+      "reference_facts": [
+        "с 9:00 до 18:00"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_office_hours-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "During which hours is the office open?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_office_hours.md",
+          "anchor": "с 9:00 до 18:00",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Офис открыт с понедельника по пятницу с 9:00 до 18:00.",
+      "reference_facts": [
+        "с 9:00 до 18:00"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_office_hours-2-same",
+      "split": "dev",
+      "type": "keyword",
+      "language": "ru",
+      "question": "Работает ли офис в выходные?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_office_hours.md",
+          "anchor": "В субботу и воскресенье офис закрыт",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "В субботу и воскресенье офис закрыт.",
+      "reference_facts": [
+        "В субботу и воскресенье офис закрыт"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (anchor): the quote 'офис закрыт' was too short to identify the evidence; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_office_hours-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Is the office open at the weekend?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_office_hours.md",
+          "anchor": "В субботу и воскресенье офис закрыт",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "В субботу и воскресенье офис закрыт.",
+      "reference_facts": [
+        "В субботу и воскресенье офис закрыт"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (anchor): the quote 'офис закрыт' was too short to identify the evidence; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_travel-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой срок нужно сдать отчёт о командировке?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_travel.md",
+          "anchor": "в течение 10 рабочих дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Отчёт о командировке нужно сдать в течение 10 рабочих дней.",
+      "reference_facts": [
+        "в течение 10 рабочих дней"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_travel-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Within how many working days must a business trip report be submitted?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_travel.md",
+          "anchor": "в течение 10 рабочих дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Отчёт о командировке нужно сдать в течение 10 рабочих дней.",
+      "reference_facts": [
+        "в течение 10 рабочих дней"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (ambiguity): 'trip report' also matched the expense filing of en_travel (14 days); it now says working days and a business trip report; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_travel-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Каков размер суточных?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_travel.md",
+          "anchor": "1200 рублей в день",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Суточные составляют 1200 рублей в день.",
+      "reference_facts": [
+        "1200 рублей в день"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_travel-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many roubles of per diem are paid for each day of a business trip?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_travel.md",
+          "anchor": "1200 рублей в день",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Суточные составляют 1200 рублей в день.",
+      "reference_facts": [
+        "1200 рублей в день"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (ambiguity): 'daily travel allowance' also matched the meal limit per day of en_meals; it now asks for the per diem in roubles; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sick-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда нужно передать больничный лист в отдел кадров?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sick.md",
+          "anchor": "в течение 3 дней после выхода на работу",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Больничный лист нужно передать в отдел кадров в течение 3 дней после выхода на работу.",
+      "reference_facts": [
+        "в течение 3 дней после выхода на работу"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sick-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When must a sick note be handed to HR?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sick.md",
+          "anchor": "в течение 3 дней после выхода на работу",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Больничный лист нужно передать в отдел кадров в течение 3 дней после выхода на работу.",
+      "reference_facts": [
+        "в течение 3 дней после выхода на работу"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sick-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Кто оплачивает первые дни болезни?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sick.md",
+          "anchor": "оплачивает работодатель",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Первые 3 дня болезни оплачивает работодатель.",
+      "reference_facts": [
+        "оплачивает работодатель"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_sick-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Who pays for the first days of illness?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_sick.md",
+          "anchor": "оплачивает работодатель",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Первые 3 дня болезни оплачивает работодатель.",
+      "reference_facts": [
+        "оплачивает работодатель"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_remote-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Какая аутентификация нужна для удалённого доступа?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_remote.md",
+          "anchor": "двухфакторная аутентификация",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Для удалённого доступа используется двухфакторная аутентификация.",
+      "reference_facts": [
+        "двухфакторная аутентификация"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_remote-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What authentication does remote access need?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_remote.md",
+          "anchor": "двухфакторная аутентификация",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Для удалённого доступа используется двухфакторная аутентификация.",
+      "reference_facts": [
+        "двухфакторная аутентификация"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_remote-2-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда завершается сессия удалённого доступа?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_remote.md",
+          "anchor": "после 30 минут бездействия",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Сессия удалённого доступа завершается после 30 минут бездействия.",
+      "reference_facts": [
+        "после 30 минут бездействия"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_remote-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "When does a remote access session end?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_remote.md",
+          "anchor": "после 30 минут бездействия",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Сессия удалённого доступа завершается после 30 минут бездействия.",
+      "reference_facts": [
+        "после 30 минут бездействия"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_training-1-same",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Какой бюджет на обучение выделяется сотруднику?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_training.md",
+          "anchor": "80000 рублей в год на сотрудника",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Бюджет на обучение составляет 80000 рублей в год на сотрудника.",
+      "reference_facts": [
+        "80000 рублей в год на сотрудника"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_training-1-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "What training budget does an employee get?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_training.md",
+          "anchor": "80000 рублей в год на сотрудника",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Бюджет на обучение составляет 80000 рублей в год на сотрудника.",
+      "reference_facts": [
+        "80000 рублей в год на сотрудника"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_training-2-same",
+      "split": "dev",
+      "type": "keyword",
+      "language": "ru",
+      "question": "За сколько дней нужно согласовать заявку на курс?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_training.md",
+          "anchor": "согласовать с руководителем за 14 дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Заявку на курс нужно согласовать с руководителем за 14 дней.",
+      "reference_facts": [
+        "согласовать с руководителем за 14 дней"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (anchor): the quote 'за 14 дней' was too short to identify the evidence; the question type is recomputed from the longer quote; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_training-2-cross",
+      "split": "dev",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How many days ahead must a course request be approved?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_training.md",
+          "anchor": "согласовать с руководителем за 14 дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Заявку на курс нужно согласовать с руководителем за 14 дней.",
+      "reference_facts": [
+        "согласовать с руководителем за 14 дней"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (anchor): the quote 'за 14 дней' was too short to identify the evidence; the question type is recomputed from the longer quote; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_purchase-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Кто согласовывает крупные закупки?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_purchase.md",
+          "anchor": "свыше 100000 рублей согласовывает финансовый директор",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Закупки свыше 100000 рублей согласовывает финансовый директор.",
+      "reference_facts": [
+        "свыше 100000 рублей согласовывает финансовый директор"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_purchase-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Who approves large purchases?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_purchase.md",
+          "anchor": "свыше 100000 рублей согласовывает финансовый директор",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Закупки свыше 100000 рублей согласовывает финансовый директор.",
+      "reference_facts": [
+        "свыше 100000 рублей согласовывает финансовый директор"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_purchase-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Для каких закупок нужны три коммерческих предложения?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_purchase.md",
+          "anchor": "свыше 500000 рублей",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Три коммерческих предложения требуются для закупок свыше 500000 рублей.",
+      "reference_facts": [
+        "свыше 500000 рублей"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_purchase-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Which purchases need three quotations?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_purchase.md",
+          "anchor": "свыше 500000 рублей",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Три коммерческих предложения требуются для закупок свыше 500000 рублей.",
+      "reference_facts": [
+        "свыше 500000 рублей"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_pass-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "За сколько дней выдают постоянный пропуск?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_pass.md",
+          "anchor": "в течение 2 рабочих дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Постоянный пропуск выдаёт служба безопасности в течение 2 рабочих дней.",
+      "reference_facts": [
+        "в течение 2 рабочих дней"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_pass-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long does it take to get a permanent pass?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_pass.md",
+          "anchor": "в течение 2 рабочих дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Постоянный пропуск выдаёт служба безопасности в течение 2 рабочих дней.",
+      "reference_facts": [
+        "в течение 2 рабочих дней"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_pass-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой срок блокируют утерянный пропуск?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_pass.md",
+          "anchor": "в течение 1 часа",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Утерянный пропуск нужно заблокировать в течение 1 часа.",
+      "reference_facts": [
+        "в течение 1 часа"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_pass-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How soon must a lost pass be blocked?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_pass.md",
+          "anchor": "в течение 1 часа",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Утерянный пропуск нужно заблокировать в течение 1 часа.",
+      "reference_facts": [
+        "в течение 1 часа"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_kitchen-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "На какое время можно забронировать переговорную?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_kitchen.md",
+          "anchor": "не более чем на 2 часа",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Переговорные комнаты бронируются через календарь не более чем на 2 часа.",
+      "reference_facts": [
+        "не более чем на 2 часа"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_kitchen-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "For how long can a meeting room be booked?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_kitchen.md",
+          "anchor": "не более чем на 2 часа",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Переговорные комнаты бронируются через календарь не более чем на 2 часа.",
+      "reference_facts": [
+        "не более чем на 2 часа"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_kitchen-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Где находится кухня?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_kitchen.md",
+          "anchor": "на втором этаже рядом с лифтом",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Кухня находится на втором этаже рядом с лифтом.",
+      "reference_facts": [
+        "на втором этаже рядом с лифтом"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_kitchen-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "Where is the kitchen?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_kitchen.md",
+          "anchor": "на втором этаже рядом с лифтом",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Кухня находится на втором этаже рядом с лифтом.",
+      "reference_facts": [
+        "на втором этаже рядом с лифтом"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_release-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Когда выходят релизы?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_release.md",
+          "anchor": "каждый четверг в 16:00 по московскому времени",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Релизы выходят каждый четверг в 16:00 по московскому времени.",
+      "reference_facts": [
+        "каждый четверг в 16:00 по московскому времени"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_release-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "On which day and at what Moscow time do releases go out?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_release.md",
+          "anchor": "каждый четверг в 16:00 по московскому времени",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Релизы выходят каждый четверг в 16:00 по московскому времени.",
+      "reference_facts": [
+        "каждый четверг в 16:00 по московскому времени"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (ambiguity): the English question also matched the Tuesday schedule of en_release; it now names Moscow time, which only ru_release uses; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_release-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой срок допускается откат релиза?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_release.md",
+          "anchor": "в течение 24 часов",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Откат релиза допускается в течение 24 часов.",
+      "reference_facts": [
+        "в течение 24 часов"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_release-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long is a release rollback allowed?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_release.md",
+          "anchor": "в течение 24 часов",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Откат релиза допускается в течение 24 часов.",
+      "reference_facts": [
+        "в течение 24 часов"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_data-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как долго хранятся журналы доступа?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_data.md",
+          "anchor": "хранятся 12 месяцев",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Журналы доступа хранятся 12 месяцев.",
+      "reference_facts": [
+        "хранятся 12 месяцев"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_data-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How long are access logs kept?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_data.md",
+          "anchor": "хранятся 12 месяцев",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Журналы доступа хранятся 12 месяцев.",
+      "reference_facts": [
+        "хранятся 12 месяцев"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_data-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "В какой срок удаляют персональные данные по запросу?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_data.md",
+          "anchor": "в течение 30 дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Персональные данные удаляются по запросу в течение 30 дней.",
+      "reference_facts": [
+        "в течение 30 дней"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_data-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How fast is personal data deleted on request?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_data.md",
+          "anchor": "в течение 30 дней",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Персональные данные удаляются по запросу в течение 30 дней.",
+      "reference_facts": [
+        "в течение 30 дней"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_it-1-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Как подать заявку в ИТ-поддержку?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_it.md",
+          "anchor": "через портал круглосуточно",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Заявки в ИТ-поддержку принимаются через портал круглосуточно.",
+      "reference_facts": [
+        "через портал круглосуточно"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_it-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How do I submit an IT support request?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_it.md",
+          "anchor": "через портал круглосуточно",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Заявки в ИТ-поддержку принимаются через портал круглосуточно.",
+      "reference_facts": [
+        "через портал круглосуточно"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_it-2-same",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "За какое время обрабатывают критичные заявки?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_it.md",
+          "anchor": "в течение 15 минут",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Критичные заявки обрабатываются в течение 15 минут.",
+      "reference_facts": [
+        "в течение 15 минут"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "ru_it-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "en",
+      "question": "How fast are critical IT support requests handled?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_it.md",
+          "anchor": "в течение 15 минут",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Критичные заявки обрабатываются в течение 15 минут.",
+      "reference_facts": [
+        "в течение 15 минут"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (ambiguity): 'critical requests' could be taken for the severity 1 incidents of en_incident; it now says IT support requests; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_remote_2023-1-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "How many days per week could employees work remotely in 2023?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_remote_2023.md",
+          "anchor": "work remotely 2 days per week",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Under the 2023 remote work policy, employees may work remotely 2 days per week.",
+      "reference_facts": [
+        "work remotely 2 days per week"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_remote_2023-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько дней в неделю сотрудники могли работать удалённо в 2023 году?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_remote_2023.md",
+          "anchor": "work remotely 2 days per week",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Under the 2023 remote work policy, employees may work remotely 2 days per week.",
+      "reference_facts": [
+        "work remotely 2 days per week"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_remote_2024-1-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "How many days per week may employees work remotely in 2024?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_remote_2024.md",
+          "anchor": "work remotely up to 3 days per week",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Under the 2024 remote work policy, employees may work remotely up to 3 days per week.",
+      "reference_facts": [
+        "work remotely up to 3 days per week"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_remote_2024-1-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Сколько дней в неделю сотрудники могут работать удалённо в 2024 году?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_remote_2024.md",
+          "anchor": "work remotely up to 3 days per week",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Under the 2024 remote work policy, employees may work remotely up to 3 days per week.",
+      "reference_facts": [
+        "work remotely up to 3 days per week"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_remote_2024-2-same",
+      "split": "test",
+      "type": "keyword",
+      "language": "en",
+      "question": "Which remote work policy replaces the 2023 one?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_remote_2024.md",
+          "anchor": "replaces the 2023 policy",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The 2024 policy replaces the 2023 policy.",
+      "reference_facts": [
+        "replaces the 2023 policy"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "en_remote_2024-2-cross",
+      "split": "test",
+      "type": "paraphrase",
+      "language": "ru",
+      "question": "Какая политика удалённой работы заменяет политику 2023 года?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_remote_2024.md",
+          "anchor": "replaces the 2023 policy",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "The 2024 policy replaces the 2023 policy.",
+      "reference_facts": [
+        "replaces the 2023 policy"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "multi_doc-1",
+      "split": "dev",
+      "type": "multi_doc",
+      "language": "en",
+      "question": "Compare how long database backups and laptop backups are kept.",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_db_backup.md",
+          "anchor": "kept for 30 days",
+          "min_support": 1
+        },
+        {
+          "doc": "en_laptop_backup.md",
+          "anchor": "kept for 7 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Database backups are kept for 30 days and laptop backups for 7 days.",
+      "reference_facts": [
+        "kept for 30 days",
+        "kept for 7 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "multi_doc-2",
+      "split": "dev",
+      "type": "multi_doc",
+      "language": "ru",
+      "question": "Какие сроки подачи расходов установлены для командировок и для питания?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_travel.md",
+          "anchor": "submitted within 14 days of the trip",
+          "min_support": 1
+        },
+        {
+          "doc": "en_meals.md",
+          "anchor": "within 30 days of the purchase",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Travel expenses within 14 days, meal expenses within 30 days.",
+      "reference_facts": [
+        "submitted within 14 days of the trip",
+        "within 30 days of the purchase"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "multi_doc-3",
+      "split": "dev",
+      "type": "multi_doc",
+      "language": "ru",
+      "question": "Сколько хранятся копии почтового сервера и резервные копии базы данных?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_mail_backup.md",
+          "anchor": "хранятся 21 день",
+          "min_support": 1
+        },
+        {
+          "doc": "en_db_backup.md",
+          "anchor": "kept for 30 days",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Копии почтового сервера хранятся 21 день, резервные копии базы данных - 30 дней.",
+      "reference_facts": [
+        "хранятся 21 день",
+        "kept for 30 days"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (gold): the third gold quote (office hours) had nothing to do with the question; it was added only to satisfy 'two documents'. The question now needs two real documents; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "multi_doc-4",
+      "split": "test",
+      "type": "multi_doc",
+      "language": "en",
+      "question": "What are the password length rule and the VPN token rule?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_password.md",
+          "anchor": "at least 14 characters",
+          "min_support": 1
+        },
+        {
+          "doc": "en_vpn.md",
+          "anchor": "hardware token issued by the IT desk",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Passwords need at least 14 characters; VPN access needs a hardware token.",
+      "reference_facts": [
+        "at least 14 characters",
+        "hardware token issued by the IT desk"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "multi_doc-5",
+      "split": "test",
+      "type": "multi_doc",
+      "language": "ru",
+      "question": "В какой срок допускается откат релиза и за какое время обрабатываются критичные заявки?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "ru_release.md",
+          "anchor": "в течение 24 часов",
+          "min_support": 1
+        },
+        {
+          "doc": "ru_it.md",
+          "anchor": "в течение 15 минут",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Откат релиза допускается в течение 24 часов; критичные заявки обрабатываются в течение 15 минут.",
+      "reference_facts": [
+        "в течение 24 часов",
+        "в течение 15 минут"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (gold): the third gold quote (critical requests) was unrelated to the release question; the question now asks about rollback and critical requests, one document each; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "conflicting-6",
+      "split": "dev",
+      "type": "conflicting",
+      "language": "en",
+      "question": "How many vacation days do employees get per year?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v1.md",
+          "anchor": "20 days of paid vacation per year",
+          "min_support": 1
+        },
+        {
+          "doc": "en_vacation_v2.md",
+          "anchor": "25 days of paid vacation per year",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Version 1 gave 20 days; version 2 gives 25 days and replaces version 1 from 1 January 2025.",
+      "reference_facts": [
+        "20 days of paid vacation per year",
+        "25 days of paid vacation per year"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "conflicting-7",
+      "split": "dev",
+      "type": "conflicting",
+      "language": "ru",
+      "question": "Сколько дней оплачиваемого отпуска положено в год?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_vacation_v1.md",
+          "anchor": "20 days of paid vacation per year",
+          "min_support": 1
+        },
+        {
+          "doc": "en_vacation_v2.md",
+          "anchor": "25 days of paid vacation per year",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "Version 1 gave 20 days; version 2 gives 25 days and replaces version 1 from 1 January 2025.",
+      "reference_facts": [
+        "20 days of paid vacation per year",
+        "25 days of paid vacation per year"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (completeness): the expected answer left out that version 2 replaces version 1 (the English twin conflicting-6 has it), so the current rule was missing; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "conflicting-8",
+      "split": "test",
+      "type": "conflicting",
+      "language": "en",
+      "question": "How many days per week may employees work remotely?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_remote_2023.md",
+          "anchor": "work remotely 2 days per week",
+          "min_support": 1
+        },
+        {
+          "doc": "en_remote_2024.md",
+          "anchor": "work remotely up to 3 days per week",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "2 days under the 2023 policy; up to 3 days under the 2024 policy, which replaces it.",
+      "reference_facts": [
+        "work remotely 2 days per week",
+        "work remotely up to 3 days per week"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "generated from the fact table of eval/scripts/build_hard_dataset.py; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "conflicting-9",
+      "split": "test",
+      "type": "conflicting",
+      "language": "ru",
+      "question": "Сколько дней в неделю разрешена удалённая работа?",
+      "answerable": true,
+      "gold": [
+        {
+          "doc": "en_remote_2023.md",
+          "anchor": "work remotely 2 days per week",
+          "min_support": 1
+        },
+        {
+          "doc": "en_remote_2024.md",
+          "anchor": "work remotely up to 3 days per week",
+          "min_support": 1
+        }
+      ],
+      "reference_answer": "2 days under the 2023 policy; up to 3 days under the 2024 policy, which replaces it.",
+      "reference_facts": [
+        "work remotely 2 days per week",
+        "work remotely up to 3 days per week"
+      ],
+      "absence_terms": [],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (completeness): the expected answer left out that the 2024 policy replaces the 2023 one (the English twin conflicting-8 has it); awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-1",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the dental insurance coverage?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "dental",
+        "insurance",
+        "стоматолог",
+        "страхов"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-2",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the policy on working from abroad?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "abroad",
+        "за границ",
+        "за рубеж"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-3",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How much is the monthly gym allowance?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "gym",
+        "спортзал",
+        "фитнес"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-4",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the dress code on Fridays?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "dress code",
+        "дресс-код",
+        "одежд"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-5",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How many days of parental leave are granted?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "parental",
+        "декрет",
+        "родительск"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-6",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Who is the data protection officer?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "protection officer",
+        "защите данных",
+        "уполномоченн"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-7",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "When is the annual salary review?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "salary",
+        "зарплат",
+        "оклад"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-8",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How are stock options vested?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "stock option",
+        "опцион",
+        "акци"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-9",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the notice period for resignation?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "resignation",
+        "увольнени",
+        "заявление об уходе"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-10",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Where can I store my bicycle?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "bicycle",
+        "велосипед",
+        "велопарков"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-11",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How do I request a standing desk?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "standing desk",
+        "стол с регулировк"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-12",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the Wi-Fi password for guests?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "wi-fi",
+        "гостев"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-13",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "Which languages does the language course offer?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "language course",
+        "языковые курсы",
+        "иностранн"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-14",
+      "split": "test",
+      "type": "no_answer",
+      "language": "en",
+      "question": "How many monitors does each employee get?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "monitor",
+        "монитор"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-15",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "en",
+      "question": "What is the retention period for payroll records?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "payroll",
+        "расчётн",
+        "зарплатн"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-16",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какая страховка предусмотрена для сотрудников?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "страховк",
+        "insurance",
+        "medical"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-17",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Сколько дней отпуска даётся при рождении ребёнка?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "рождении ребёнка",
+        "childbirth",
+        "birth",
+        "maternity"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-18",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какой размер премии по итогам года?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "премии",
+        "bonus"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-19",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Как оформить увольнение?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "увольнени",
+        "resign",
+        "dismissal",
+        "termination"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-20",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Где находится стоянка для велосипедов?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "велосипед",
+        "bicycle",
+        "bike"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-21",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какой пароль от гостевого Wi-Fi?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "wi-fi",
+        "гостев",
+        "guest network"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-22",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Сколько стоит обед в столовой?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "столов",
+        "canteen",
+        "cafeteria",
+        "lunch"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-23",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Как получить доступ к бухгалтерской системе?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "бухгалтерск",
+        "accounting"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-24",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какова процедура аттестации сотрудников?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "аттестаци",
+        "appraisal",
+        "performance review"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-25",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Кто отвечает за охрану труда?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "охран",
+        "occupational safety",
+        "safety officer"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-26",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Сколько длится испытательный срок?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "испытательн",
+        "probation"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-27",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какая скидка на корпоративный фитнес?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "фитнес",
+        "fitness",
+        "gym"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-28",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Как заказать канцелярские товары?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "канцеляр",
+        "stationery",
+        "office supplies"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-29",
+      "split": "dev",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Как сообщить о конфликте интересов?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "конфликт",
+        "conflict of interest"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    },
+    {
+      "id": "no-answer-30",
+      "split": "test",
+      "type": "no_answer",
+      "language": "ru",
+      "question": "Какая политика по работе из дома?",
+      "answerable": false,
+      "gold": [],
+      "reference_answer": null,
+      "reference_facts": [],
+      "absence_terms": [
+        "из дома",
+        "work from home",
+        "working from home"
+      ],
+      "provenance": {
+        "created_by": "llm-assisted",
+        "method": "revised in v2 (absence): absence terms now cover both languages, because the corpus has documents in both; awaiting human review",
+        "created": "2026-11-28"
+      },
+      "review": {
+        "status": "unreviewed",
+        "reviewer": null,
+        "date": null,
+        "notes": ""
+      }
+    }
+  ]
+}
