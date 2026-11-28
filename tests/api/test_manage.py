@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from typing import Any
 
 import pytest
 
@@ -13,16 +14,16 @@ pytestmark = pytest.mark.api
 NOTE = "Backups run every night at 02:30 UTC and are kept for 14 days.\n"
 
 
-def problem_code(response) -> str:  # type: ignore[no-untyped-def]
+def problem_code(response: Any) -> str:
     assert response.headers["content-type"].startswith("application/problem+json")
     return str(response.json()["code"])
 
 
-def add_note(api: Api, key: str = "ops/backups.md", text: str = NOTE, **extra: object):  # type: ignore[no-untyped-def]
+def add_note(api: Api, key: str = "ops/backups.md", text: str = NOTE, **extra: Any) -> Any:
     return api.client.post(
         "/v1/documents",
         json={"source": "uploads", "key": key, "text": text},
-        **extra,  # type: ignore[arg-type]
+        **extra,
     )
 
 

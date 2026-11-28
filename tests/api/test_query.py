@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any, cast
 
 import httpx
 import pytest
@@ -217,7 +218,7 @@ def test_requests_are_independent_across_a_burst(seeded: Api) -> None:
 
 def test_the_query_services_are_opened_once_and_reused(seeded: Api) -> None:
     seeded.chat.replies.extend([GOOD, GOOD])
-    state = seeded.client.app.state.api  # type: ignore[attr-defined]
+    state = cast(Any, seeded.client.app).state.api
     seeded.client.post("/v1/answers", json={"question": QUESTION, "mode": "dense"})
     first = state._backend
     seeded.client.post("/v1/answers", json={"question": QUESTION, "mode": "dense"})
