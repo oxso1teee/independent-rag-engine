@@ -11,7 +11,7 @@ project itself is MIT; see `LICENSE`.
 | annotated-types | 0.8.0 | MIT |
 | anyio | 4.16.0 | MIT |
 | certifi | 2026.11.20 | Mozilla Public License 2.0 (MPL 2.0) |
-| charset-normalizer | 3.5.2 | MIT |
+| charset-normalizer | 3.5.3 | MIT |
 | click | 8.5.1 | BSD-3-Clause |
 | colorama | 0.4.6 | BSD-3-Clause (declared by the project; Windows only, not installed here) |
 | fastapi | 0.165.0 | MIT |
