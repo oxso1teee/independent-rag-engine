@@ -264,7 +264,8 @@ def test_doctor_warns_when_the_calibration_belongs_to_another_model(
     import json as jsonlib
 
     healthy = check_integrity(valid_database)
-    assert healthy.ok and healthy.warnings == ()
+    assert healthy.ok
+    assert len(healthy.warnings) == 1 and "not calibrated" in healthy.warnings[0]
     stale = copy_of(valid_database, tmp_path)
     with closing(sqlite3.connect(stale)) as connection:
         stored = jsonlib.dumps({"sufficiency": {"model_id": "another/model", "dense": 0.5}})
@@ -272,4 +273,5 @@ def test_doctor_warns_when_the_calibration_belongs_to_another_model(
         connection.commit()
     report = check_integrity(stale)
     assert report.ok  # a stale calibration is a warning, not corruption
-    assert any("recalibrate" in item for item in report.warnings)
+    assert any("another embedding model" in item for item in report.warnings)
+    assert any("older decision rule" in item for item in report.warnings)  # no algorithm stored

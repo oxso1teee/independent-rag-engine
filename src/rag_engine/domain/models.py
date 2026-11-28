@@ -33,6 +33,8 @@ from rag_engine.domain.ids import (
 
 _SOURCE_NAME_RE = re.compile(r"[a-z0-9-]{1,64}")
 MAX_TOP_K = 100
+SUFFICIENCY_ALGORITHM = 2
+"""Version of the sufficiency gate's decision rule; a stored calibration carries it."""
 MAX_CANDIDATE_K = 500
 
 

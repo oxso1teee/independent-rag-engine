@@ -68,6 +68,15 @@ carries `X-Request-ID`, the same id the logs use.
 | `POST /v1/search` | retrieval only: ranked passages with provenance |
 | `POST /v1/answers` | an answer with citations, or an honest refusal; JSON or server-sent events |
 
+### The gate in an answer
+
+`diagnostics.gate` says whether the sufficiency gate judged the question (`calibrated`), what it
+decided and why (`reasons`: `uncalibrated`, `calibration_invalid`, `calibration_outdated`,
+`calibration_stale`, `no_signal`, or `dense_below_threshold` / `rerank_below_threshold` when it
+refused), and `diagnostics.warnings` carries a sentence for each open or below-target gate. The API
+only reads the calibration; it is written by `rag calibrate` ([CALIBRATION.md](CALIBRATION.md)) and
+applies to requests that use the same retrieval settings as the calibration.
+
 ### Idempotency
 
 `POST /v1/documents` accepts `Idempotency-Key` (1 to 128 characters). A retry with the same key and

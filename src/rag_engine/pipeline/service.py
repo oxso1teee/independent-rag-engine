@@ -52,7 +52,13 @@ from rag_engine.observability import get_logger, request_scope
 from rag_engine.pipeline.budget import StageShares, TimeBudget
 from rag_engine.ports import Clock, TokenCounter, TokenUsage
 from rag_engine.retrieval.service import RetrievalDiagnostics, RetrievalService, SearchOutcome
-from rag_engine.retrieval.sufficiency import GateDecision, SufficiencyGate, signals_from
+from rag_engine.retrieval.sufficiency import (
+    GateDecision,
+    RetrievalShape,
+    SufficiencyGate,
+    gate_warnings,
+    signals_from,
+)
 
 _log = get_logger("rag_engine.pipeline")
 _MIN_ANSWER_CHARS = 2
@@ -313,8 +319,14 @@ class RagPipeline:
         self._log_context(context)
         if not context.evidence:
             return self._insufficient(query, budget, ("no_evidence",), outcome, context)
+        shape = RetrievalShape(
+            query.mode.value,
+            query.top_k,
+            query.candidate_k,
+            any(hit.scores.rerank is not None for hit in hits),
+        )
         signals = signals_from(
-            hits, query.text, context.evidence[0].text, outcome.diagnostics.language
+            hits, query.text, context.evidence[0].text, outcome.diagnostics.language, shape
         )
         decision = self._gate().decide(signals)
         _log.info(
@@ -503,7 +515,7 @@ class RagPipeline:
             prompt_sha256=prompt_sha256,
             template_id=template_id,
             attempts=attempts,
-            warnings=warnings,
+            warnings=(*gate_warnings(gate), *warnings),
         )
 
     @staticmethod

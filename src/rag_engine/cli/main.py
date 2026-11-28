@@ -23,6 +23,7 @@ import typer
 from rag_engine import __version__
 from rag_engine.cli.admin import register_admin
 from rag_engine.cli.ask import register_ask
+from rag_engine.cli.calibratecmd import register_calibrate
 from rag_engine.cli.context import Container, Processing, Services
 from rag_engine.cli.evalcmd import register_eval
 from rag_engine.cli.exit_codes import ExitCode, exit_code_for
@@ -775,6 +776,7 @@ def build_app(container: Container) -> typer.Typer:
     register_ask(app, state_of=_state, fail=_fail, emit=_emit)
     register_admin(app, state_of=_state, fail=_fail, emit=_emit)
     register_eval(app, state_of=_state, fail=_fail, emit=_emit)
+    register_calibrate(app, state_of=_state, fail=_fail, emit=_emit)
 
     # ---------------------------------------------------------------------- status
 

@@ -18,6 +18,7 @@ to standard error.
 | `rag ask QUESTION` | answer with sources, or refuse (`--stream`, `--live`, `--sources`, `--show-unverified`) |
 | `rag index gc`, `rag index rebuild`, `rag index switch-model` | maintain the published indexes |
 | `rag eval validate DATASET`, `rag eval run`, `rag eval report RUN`, `rag eval compare A B`, `rag eval gate RUN BASELINE` | measure retrieval, compare runs pairwise, fail on a regression (see [EVALUATION.md](EVALUATION.md)) |
+| `rag calibrate run QUESTIONS`, `rag calibrate show`, `rag calibrate clear` | fit, inspect or remove the sufficiency gate's calibration on this index (see [CALIBRATION.md](CALIBRATION.md)); `run` takes `--holdout FILE`, `--max-false-refusal`, `--folds`, `--dry-run`, `--require-target` (exit 12 when the estimate misses the targets) |
 | `rag backup DEST` | a verified, consistent copy of the database; refuses to overwrite |
 | `rag verify BACKUP` | check a backup without opening it for writing (exit 9 when damaged) |
 | `rag restore BACKUP [--replace]` | restore a verified backup; the current database is kept aside as `.before-restore` |
