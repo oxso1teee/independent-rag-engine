@@ -78,7 +78,7 @@ Docker image 80 MB, non-root, healthy, refuses to start without a token; `make p
 
 | # | Finding | Why not, and what is needed |
 |---|---|---|
-| F-1 | **No command writes the gate calibration.** `index_state.calibration` is read but only the research scripts compute thresholds, so a user's gate is always open and says `uncalibrated` | needs a design decision: a `rag calibrate` over the user's own questions, or shipped thresholds per embedding model. Recommended before any claim about refusing weak evidence |
+| F-1 | **No command writes the gate calibration.** `index_state.calibration` is read but only the research scripts compute thresholds, so a user's gate is always open and says `uncalibrated` | designed in [ADR 0021](adr/0021-rag-calibrate.md) (`rag calibrate` over the user's own questions, cross-validated estimate); not implemented yet. Recommended before any claim about refusing weak evidence |
 | F-2 | Database about 7–9× the source text, target about 3× | a schema change (vector encoding or full-text options) is too risky for a hardening release; owner decision whether to relax the clause or schedule the work |
 | F-3 | Coverage gaps: the parser worker subprocess (0 % in-process, covered by e2e through the worker), `cli/ask_render.py` 72 % | acceptable for the release, listed here |
 | F-4 | The memory gate refuses the 4B model on this machine | by design; see L-1 |

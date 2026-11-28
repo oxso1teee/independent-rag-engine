@@ -25,3 +25,4 @@ supersedes the old one.
 | [0018](0018-hard-set-gate-and-reranker.md) | What the harder set showed about the gate, the reranker and hybrid retrieval | Accepted (provisional) |
 | [0019](0019-packaging-and-operations.md) | Packaging and operations: small, pinned, unprivileged, verifiable | Accepted |
 | [0020](0020-gate-signal-precedence.md) | The sufficiency gate trusts the strongest signal alone | Accepted (provisional) |
+| [0021](0021-rag-calibrate.md) | `rag calibrate`: the gate is calibrated on the user's own index | Proposed |
