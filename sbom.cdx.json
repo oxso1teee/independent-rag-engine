@@ -58,7 +58,7 @@
       "version": "2026.11.20"
     },
     {
-      "bom-ref": "pkg:pypi/charset-normalizer@3.5.2",
+      "bom-ref": "pkg:pypi/charset-normalizer@3.5.3",
       "licenses": [
         {
           "license": {
@@ -67,9 +67,9 @@
         }
       ],
       "name": "charset-normalizer",
-      "purl": "pkg:pypi/charset-normalizer@3.5.2",
+      "purl": "pkg:pypi/charset-normalizer@3.5.3",
       "type": "library",
-      "version": "3.5.2"
+      "version": "3.5.3"
     },
     {
       "bom-ref": "pkg:pypi/click@8.5.1",
@@ -773,7 +773,7 @@
       ]
     }
   },
-  "serialNumber": "urn:uuid:a5164707-fa55-6880-692d-29e52631970f",
+  "serialNumber": "urn:uuid:f94956d1-3b5e-9f6f-23f3-0cfc87e8605a",
   "specVersion": "1.5",
   "version": 1
 }
