@@ -110,7 +110,7 @@ def create_app(
         lifespan=lifespan,
         docs_url=None,
         redoc_url=None,
-        openapi_url="/v1/openapi.json",
+        openapi_url=None,  # served below, behind the same token as the rest
     )
     app.state.api = state
     problems.install(app)
@@ -151,6 +151,11 @@ def create_app(
         # Health stays open for supervisors; everything else needs the token when one is set.
         if getattr(route, "path", "") != "/health":
             route.dependencies.append(protected)  # type: ignore[attr-defined]
+
+    @app.get("/v1/openapi.json", include_in_schema=False, dependencies=[protected])
+    def openapi_document() -> dict[str, Any]:
+        return app.openapi()
+
     if app_metrics_enabled:
 
         @app.get("/v1/metrics", include_in_schema=False, dependencies=[protected])

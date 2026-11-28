@@ -2,11 +2,13 @@
 
 Retrieval scores are not probabilities, so the gate compares signals with thresholds that were
 calibrated on questions that have an answer and questions that do not, for one embedding model.
-Policy: the best dense cosine (A) or the best reranker logit (B) must reach its threshold, either
-one is enough; with neither available the lexical coverage of the top passage (C) decides. The
-gate never blocks on what it cannot judge: with no calibration, a calibration made for another
-model, or no signal, it lets the question through and says why, and ``doctor`` warns about a stale
-calibration. Fusion scores are deliberately not a signal: they are not comparable between queries.
+Policy: the best reranker logit decides when the reranker ran and has a threshold: on an
+independent held-out set it refused 72.5 % of the unanswerable questions against 32.5 % for the
+best dense cosine, at similar false refusals. Without it the best dense cosine decides, and
+without either the lexical coverage of the top passage. The gate never blocks on what it cannot
+judge: with no calibration, a calibration made for another model, or no signal, it lets the
+question through and says why, and ``doctor`` warns about a stale calibration. Fusion scores are
+deliberately not a signal: they are not comparable between queries.
 """
 
 from __future__ import annotations
@@ -58,18 +60,18 @@ class SufficiencyGate:
             return GateDecision(True, False, ("uncalibrated",))
         if limits.model_id != self._active:
             return GateDecision(True, False, ("calibration_invalid",))
-        checks: list[tuple[str, bool]] = []
-        if limits.dense is not None and signals.dense is not None:
-            checks.append(("dense_below_threshold", signals.dense >= limits.dense))
+        # the first signal that has both a score and a threshold decides; a weaker signal never
+        # overrules a stronger one (a lenient dense score used to rescue a poor rerank logit)
         if limits.rerank is not None and signals.rerank is not None:
-            checks.append(("rerank_below_threshold", signals.rerank >= limits.rerank))
-        if not checks and limits.lexical is not None and signals.lexical_coverage is not None:
-            checks.append(("lexical_below_threshold", signals.lexical_coverage >= limits.lexical))
-        if not checks:
+            check = ("rerank_below_threshold", signals.rerank >= limits.rerank)
+        elif limits.dense is not None and signals.dense is not None:
+            check = ("dense_below_threshold", signals.dense >= limits.dense)
+        elif limits.lexical is not None and signals.lexical_coverage is not None:
+            check = ("lexical_below_threshold", signals.lexical_coverage >= limits.lexical)
+        else:
             return GateDecision(True, False, ("no_signal",))
-        if any(passed for _, passed in checks):
-            return GateDecision(True, True)
-        return GateDecision(False, True, tuple(name for name, _ in checks))
+        name, passed = check
+        return GateDecision(True, True) if passed else GateDecision(False, True, (name,))
 
 
 def lexical_coverage(query: str, text: str, language: Language) -> float | None:

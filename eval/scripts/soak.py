@@ -2,7 +2,7 @@
 
 It builds an index of the hard corpus with the real embedding model, starts ``rag serve`` as a
 separate process, sends one search every ``--interval`` seconds for ``--minutes`` minutes and
-reads the server's resident memory from ``/proc``. Pass criteria of the specification: resident
+reads the server's resident memory from ``/proc``. Pass criteria: resident
 memory grows by less than 10 % (from the third request to the last), fewer than 2 % of requests
 fail, and the server never dies (no out-of-memory kill). The run is refused when the machine does
 not have the memory to hold the model.

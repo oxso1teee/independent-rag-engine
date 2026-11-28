@@ -11,7 +11,7 @@ variants, decide the reranker, or calibrate the sufficiency gate (83.3 % correct
 ## Evidence
 
 `retrieval-hard@v1` (26 documents, 141 questions, hard negatives, contradictory versions, questions
-across languages, near-miss unanswerable questions), drafted by the assistant and unreviewed. Results
+across languages, near-miss unanswerable questions), drafted with an AI language model and unreviewed. Results
 and method are in [EVALUATION.md](../EVALUATION.md). In short:
 
 - No gate rule reached 90 % correct refusals on the held-out split; the best simple rule (dense

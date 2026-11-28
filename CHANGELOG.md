@@ -5,6 +5,20 @@ project until a release is cut.
 
 ## [Unreleased]
 
+### Final audit and release hardening
+- `docs/AUDIT.md` (every requirement and phase with a verdict and its evidence) and
+  `docs/REQUIREMENTS.md`; `docs/LLM_VERIFICATION.md` (how to measure a real model).
+- Security: the OpenAPI document is served behind the token like every other route.
+- Gate: the reranker logit decides alone when it ran (ADR 0020). On a new independent held-out set
+  it refuses 72.5 % of unanswerable questions at 4.2 % false refusals; dense alone 32.5 %. The 90 %
+  target is still not met.
+- Evaluation: `evaluation/llm_run.py` and `generation_eval.py` now report answer correctness,
+  faithfulness, hallucination rate, citation precision and recall, the refusal matrix, latency and
+  tokens, also for an OpenAI-compatible endpoint; a review kit (`eval/scripts/review_kit.py`) puts
+  all 185 questions of the hard and mini sets on one page for the owner to decide on.
+- Tooling: `rag.example.toml` documents every setting (a test checks it); CI actions are pinned by
+  commit and Dependabot is configured; public text says "requirements" and "an AI language model".
+
 ### Phase 11: production readiness (implemented; a release has not been cut)
 - Docker image (multi-stage, base image pinned by digest, dependencies installed from hashes, runs
   as an unprivileged user, health check, about 80 MB), a CI job that builds and smoke-tests it, and a

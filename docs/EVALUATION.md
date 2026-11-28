@@ -60,7 +60,7 @@ structure and other numbers: database and laptop backups, travel and meal expens
 contradictory policy versions (`conflicting`), every fact asked in its own language and in the other
 one (97 paraphrases, most of them across languages), five multi-document questions and 30
 unanswerable questions about topics next to the corpus. **Every record is `unreviewed`** (drafted by
-the assistant, not by a person), so everything measured on it is exploratory.
+an AI language model, not by a person), so everything measured on it is exploratory.
 
 ### Sufficiency gate research (`eval/scripts/gate_research.py`)
 
@@ -115,3 +115,17 @@ question to a document in the other language and its noise enters the fusion.
   faithfulness, hallucination rate or generation latency is measured.
 - The sufficiency gate does not meet its target: best held-out result 73.3 % correct refusals at 8.6 % false refusals on an unreviewed set of 15 unanswerable test questions (above).
 - The reranker's gain on the harder set is on dev only and on unreviewed labels; it was not confirmed on test (reading the test split again would end its held-out status).
+
+## Independent gate check (2026-11-28)
+
+`eval/scripts/gate_research_v2.py` with the set built by `eval/scripts/build_gate_set.py`
+(`gate-heldout@v2`: 136 questions, 40 unanswerable, unreviewed). The rule (reranker logit alone) was
+fixed on the calibration data before the set was read, once, through the counted guard.
+
+| Signal | Correct refusals | False refusals |
+|---|---|---|
+| reranker logit | 72.5 % (29/40) | 4.2 % (4/96) |
+| best dense cosine | 32.5 % (13/40) | 6.3 % (6/96) |
+
+The target (90 % / 10 %) is not met; see [ADR 0020](adr/0020-gate-signal-precedence.md) and
+[AUDIT.md](AUDIT.md). The set must not be used for tuning again.

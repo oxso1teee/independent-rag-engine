@@ -4,7 +4,7 @@ Status: Accepted (2026-11-28).
 
 ## Context
 
-The specification asks for a REST API with OpenAPI, stable error codes and a safe default. The
+The requirements ask for a REST API with OpenAPI, stable error codes and a safe default. The
 engine's services are synchronous and its query services are heavy to open; the machine is small.
 
 ## Decisions

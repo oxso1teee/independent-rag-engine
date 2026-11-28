@@ -3,7 +3,7 @@
 Publishes ``N`` chunks (with FTS rows and fp16 embeddings) through the production writer, then
 times ``RetrievalService.search`` in dense, lexical and hybrid mode in a fresh process. The query
 embedding is a precomputed random unit vector, so the numbers exclude the embedding model, as the
-specification's NFR-03 does. Run: ``uv run python eval/scripts/benchmark_search.py 10000``.
+requirements' NFR-03 does. Run: ``uv run python eval/scripts/benchmark_search.py 10000``.
 """
 
 from __future__ import annotations

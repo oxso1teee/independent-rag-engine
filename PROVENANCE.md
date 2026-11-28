@@ -7,12 +7,12 @@ Where the parts of this repository come from, so that nothing is mistaken for so
 All code and the system prompt (`answer.v1`) were written for this project, in this repository's
 history. No code or prompt text was copied from another project. Design ideas are standard in the
 field (reciprocal rank fusion, cross-encoder reranking, hexagonal architecture) and are credited in
-the ADRs where they matter. The project specification in `docs/` was written for this project.
+the ADRs where they matter. The requirements in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) were written for this project.
 
 ## Evaluation data
 
 - `eval/corpus/mini_v1` and `eval/datasets/retrieval_mini_v1.json`: invented documents and 44
-  questions drafted by an AI assistant from them; **all unreviewed by a person**.
+  questions drafted with the help of an AI language model from them; **all unreviewed by a person**.
 - `eval/corpus/hard_v1` and `eval/datasets/retrieval_hard_v1.json`: 26 invented documents and 141
   questions generated from one table by `eval/scripts/build_hard_dataset.py`; **all unreviewed**.
 - `eval/datasets/embedding_probe_v1.json`: a small probe set used in the embedding bake-off.

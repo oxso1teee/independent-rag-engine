@@ -22,10 +22,13 @@ that belong to the owner. Nothing here tags, publishes or licenses anything.
 
 These are not packaging problems; they are the project's open criteria and none is closed:
 
-1. **Sufficiency gate:** 73.3 % correct refusals at 8.6 % false refusals on a held-out, unreviewed
-   split against targets of 90 % and 10 % ([EVALUATION.md](EVALUATION.md)).
+1. **Sufficiency gate:** 72.5 % correct refusals at 4.2 % false refusals on an independent held-out,
+   unreviewed set with the reranker, 32.5 % with dense alone, against targets of 90 % and 10 %
+   ([EVALUATION.md](EVALUATION.md), [AUDIT.md](AUDIT.md)); and no command calibrates the gate for a
+   user's own index yet.
 2. **No real language model has run through the pipeline**, so answer latency, faithfulness and
-   hallucination rate are unmeasured; the memory gate refused the 4B model on the reference machine.
+   hallucination rate are unmeasured; the memory gate refused the 4B model on the reference machine
+   ([LLM_VERIFICATION.md](LLM_VERIFICATION.md) says how to run it elsewhere).
 3. **No evaluation label has been reviewed by a person**; the criterion of 100 reviewed questions is
    unmet and no judge is calibrated.
 4. **The one-hour soak** covers search only; see [TESTING.md](TESTING.md) for its result.
@@ -40,6 +43,15 @@ These are not packaging problems; they are the project's open criteria and none 
   repository's description and topics.
 - **Review of the datasets** (`docs/DATASET_REVIEW.md`), which is what would make the evaluation
   numbers more than exploratory.
+
+### Options for the two decisions (a recommendation, not a choice)
+
+- **Licence.** Dependencies are permissive plus MPL-2.0 (file-level copyleft), so any of these is
+  compatible: MIT or Apache-2.0 (permissive; Apache-2.0 adds an explicit patent grant and requires
+  keeping notices), or a copyleft licence such as AGPL-3.0 if hosted derivatives should stay open.
+  The model weights have their own licences and are not part of the repository.
+- **Version.** Because the quality criteria are open (gate, real model, reviewed labels), `0.1.0`
+  described as a pre-release fits better than `1.0.0`.
 
 ## Steps once those are decided
 
