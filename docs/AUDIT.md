@@ -47,7 +47,7 @@ per-phase evidence tables are in [TESTING.md](TESTING.md). No target was changed
 | ID | Verdict | Measurement |
 |---|---|---|
 | NFR-01 | PASS | idle server 88 MiB (limit 150); 10⁴ chunks peak 81 MiB, 10⁵ chunks 276 MiB (limits 300 / 600) |
-| NFR-02 | environment PASS; database FAIL | environment without models: 82 MB core, 150 MB with every optional extra (limit 300 MB, no torch). Database: about 7–9× the source text against the target of about 3× (F-2) |
+| NFR-02 | environment PASS; database FAIL | environment without models: 82 MB core, 150 MB with every optional extra (limit 300 MB, no torch). Database: 5.6× the source text without vectors, 7.0× with them, against about 3× plus vectors; composition in F-2 |
 | NFR-03 | PASS | dense p95 25–54 ms at 10⁴, 216–255 ms at 10⁵ (limits 100 / 400 ms) |
 | NFR-04 | PASS | rescan of 1000 unchanged files 0.15 s (limit 5 s), 0 parser calls |
 | NFR-05 | PASS | incremental re-embedding test: a one-paragraph edit re-embeds at most 3 chunks |
@@ -72,6 +72,7 @@ Docker image 80 MB, non-root, healthy, refuses to start without a token; `make p
 | D-4 | CI actions were referenced by moving tags | pinned by commit SHA; Dependabot for actions, Docker and uv |
 | D-5 | The gate's policy "dense OR rerank" can never refuse more than the weaker signal; on held-out data dense alone refused 32.5 % of unanswerable questions, the reranker 72.5 % | the reranker logit now decides alone when it ran; dense, then lexical, otherwise (tests updated) |
 | D-6 | The generation evaluation reported only mechanical metrics, and "not measured" for the rest | `evaluation/llm_run.py` adds correctness, completeness, faithfulness, hallucination rate, citation precision and recall, the answered/refused matrix, latency and tokens; wired into `generation_eval.py` (also for an OpenAI-compatible endpoint) |
+| D-8 | A document with a chunk made only of punctuation (an ASCII table border, a rule) ended as a dead job, `E_INTEGRITY: chunks and embedding plan disagree`, so none of its text was searchable. Found by indexing real prose: 4 of 261 files | such a chunk is kept for coverage but not indexed; red/green tests at chunker and CLI level (`test_chunks_without_words.py`, `test_ingest_punctuation.py`) |
 | D-7 | No way for the owner to review 185 questions in one sitting | review kit (HTML page, CSV export, applying under a person's name), tested and tried in a browser |
 
 ## Findings not fixed
@@ -79,7 +80,7 @@ Docker image 80 MB, non-root, healthy, refuses to start without a token; `make p
 | # | Finding | Why not, and what is needed |
 |---|---|---|
 | F-1 | ~~No command writes the gate calibration~~ | **closed** by `rag calibrate` (see "F-1 re-audit" below) |
-| F-2 | Database about 7–9× the source text, target about 3× | a schema change (vector encoding or full-text options) is too risky for a hardening release; owner decision whether to relax the clause or schedule the work |
+| F-2 | Database about 5.6× the source text without vectors and 7.0× with them (real prose, 3.5 MB), target about 3× plus vectors. Measured composition below | a schema change (migration 0004) is too risky for a hardening release; owner decision: relax the clause, or schedule the work after the first release |
 | F-3 | Coverage gaps: the parser worker subprocess (0 % in-process, covered by e2e through the worker), `cli/ask_render.py` 72 % | acceptable for the release, listed here |
 | F-4 | The memory gate refuses the 4B model on this machine | by design; see L-1 |
 
@@ -97,6 +98,24 @@ Docker image 80 MB, non-root, healthy, refuses to start without a token; `make p
 | Reranker path end to end with the real cross-encoder | NOT VERIFIED | covered at unit level and by the same signal code the research used; no real reranker run in this change |
 | Lexical-only retrieval | not calibratable by design | refused with a message; gate stays open and warns |
 | Quality of a gate on real data | **FAIL / open** | unchanged, G-1: the command reports an estimate, it does not make the gate good |
+
+### F-2: where the bytes go
+
+`eval/scripts/db_size.py` indexes 3.5 MB of real Markdown and reStructuredText (package descriptions)
+through `rag ingest` with 384-dimension vectors; sizes are multiples of the source text.
+
+| Part | × source | Note |
+|---|---|---|
+| `chunks` table | 3.50 | leaf text 0.88, parent (section) text 0.64, analysed text for FTS 0.74, ids and hashes 0.29, headings and metadata 0.13, row overhead |
+| `embeddings` | 1.79 | 768 bytes of vector per chunk, theory 1.34×; the rest is the row key and metadata |
+| full-text index | 0.46 | external content, no second copy of the text |
+| `document_versions` | 0.39 | the normalised text, compressed |
+| secondary indexes | about 0.7 | three hash indexes and the unique constraints |
+| **total** | **6.97** | 5.62 without the vectors |
+
+Reaching about 3× would need the parent text derived from the document text instead of stored
+(−0.64), the analysed text kept only in the FTS index (−0.74), and a slimmer embeddings key; that
+makes about 4× at best, so the target as written is not reachable with this design.
 
 ## Quality targets
 

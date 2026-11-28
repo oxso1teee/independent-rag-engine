@@ -6,6 +6,10 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Final audit and release hardening
+- Fix: a chunk with no word character (an ASCII table border, a rule) is no longer indexed. It used
+  to stop the whole document from publishing (`E_INTEGRITY`, a dead job). Chunk coverage is unchanged.
+- `eval/scripts/db_size.py` (size per table and column) and a harder `eval/scripts/soak.py`
+  (`--workers`, `--churn-every`; file descriptors, threads, WAL and clean stop are criteria).
 - `rag calibrate run|show|clear` (ADR 0021): the sufficiency gate is calibrated on the installation's
   own index with a cross-validated estimate, an optional independent holdout, and a record bound to
   the model, the retrieval setup and the decision rule. Answers, `rag doctor` and the API warn when

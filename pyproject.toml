@@ -68,6 +68,10 @@ path = "src/rag_engine/__init__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["src/rag_engine"]
 
+[tool.hatch.build.targets.sdist]
+# local working files the version control ignores by other means must not ship in the archive
+exclude = ["/CLAUDE.md", "/.claude", "/.import_linter_cache", "/eval_runs", "/data"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
