@@ -73,3 +73,11 @@ passages) is still open. Its latency of about 3-4 s per query for a pool of 30 i
 - A smaller pool (10 to 15), a faster model or a quantised English-only one would be the way to
   meet the latency limit; each needs its own measurement under the same rule.
 - Evaluating whether the reranker helps at all is blocked on reviewed, harder evaluation questions.
+
+## Amendment (2026-11-28)
+
+On the harder, multilingual set the cross-encoder raised nDCG@10 by +0.16 (dense) and +0.37 (hybrid)
+on dev with intervals above zero ([ADR 0018](0018-hard-set-gate-and-reranker.md)); the mini set had
+been saturated. The labels are unreviewed, the test split was not read for it, p95 is still about
+4 s against the 1.5 s limit and the peak is about 2.4 GiB. The decision is therefore unchanged:
+off by default, recommended as an opt-in. It is revisited when reviewed labels and a test read exist.

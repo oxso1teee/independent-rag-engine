@@ -51,9 +51,67 @@ it agrees with a human-labelled sample at 90 % or more with Cohen's kappa of 0.8
 no language-model judge has been calibrated: that needs a human-labelled sample that does not
 exist yet and a judge model that fits in memory beside the generator.
 
+## The harder set (`retrieval-hard@v1`)
+
+`eval/corpus/hard_v1` (26 short documents, English and Russian) and `eval/datasets/retrieval_hard_v1.json`
+(141 questions, 68 on dev and 73 on test) are built by `eval/scripts/build_hard_dataset.py` from one
+fact table and checked in the tests. They are meant to be hard: hard negatives (pairs with the same
+structure and other numbers: database and laptop backups, travel and meal expenses), two pairs of
+contradictory policy versions (`conflicting`), every fact asked in its own language and in the other
+one (97 paraphrases, most of them across languages), five multi-document questions and 30
+unanswerable questions about topics next to the corpus. **Every record is `unreviewed`** (drafted by
+the assistant, not by a person), so everything measured on it is exploratory.
+
+### Sufficiency gate research (`eval/scripts/gate_research.py`)
+
+Every rule is fitted on dev only; the test split was read once (`--final`, counter: 1, still
+held out) and each fitted rule applied to it without refitting. Target: at most 10 % false refusals
+and at least 90 % correct refusals.
+
+| Rule (refuse below a threshold) | dev, fitted: false · correct | test: false refusals | test: correct refusals |
+|---|---|---|---|
+| dense cosine | 4/53 · 10/15 | 5/58 (8.6 %) | 11/15 (73.3 %) |
+| best lexical score | 5/53 · 10/15 | 9/58 (15.5 %) | 9/15 (60.0 %) |
+| dense margin | 4/53 · 6/15 | 7/58 (12.1 %) | 4/15 (26.7 %) |
+| lexical coverage | 5/53 · 3/15 | 9/58 (15.5 %) | 3/15 (20.0 %) |
+| dense OR coverage | 2/53 · 2/15 | 0/58 (0.0 %) | 2/15 (13.3 %) |
+| logistic regression | 4/53 · 14/15 | 11/58 (19.0 %) | 10/15 (66.7 %) |
+
+Five-fold cross-validation of the logistic rule on dev alone gave 4/53 false refusals and 12/15 correct refusals (80 %), against 14/15 when fitted and scored on the same data: the in-sample figure was overfitting.
+
+What this shows, with the limits stated. **No rule reached 90 % correct refusals on held-out data.** The
+dense cosine alone is the best of the simple rules (73.3 % correct, 8.6 % false refusals: the false-refusal
+target is met, the other is not). Combining signals did not help on held-out data: the logistic rule
+looked best on dev and was worse on test. A rule that accepts when either the dense or the coverage
+signal passes refuses almost nothing (2 of 15), so such an OR must not be used with a coverage
+threshold fitted this way. The unanswerable questions of this set are near misses, and a cosine
+between a question and a passage about a neighbouring topic is high. With 15 unanswerable
+questions per split one question is 6.7 percentage points, so even a good result here could not
+confirm a 90 % target. **The criterion stays open.** It needs a larger reviewed set and probably a
+signal that looks at the passage itself (the reranker's logit was not evaluated as a gate signal here).
+
+### Reranker on the harder set (dev, 53 answerable questions, pool of 30)
+
+Paired differences with 95 % intervals (`eval/scripts/rerank_bakeoff.py --split dev`):
+
+| | dense, without → with | hybrid, without → with |
+|---|---|---|
+| hit@1 | 0.698 → 0.943 (+0.245, [+0.132, +0.358]) | 0.509 → 0.943 (+0.434, [+0.302, +0.566]) |
+| MRR@10 | 0.779 → 0.972 (+0.193, [+0.115, +0.278]) | 0.562 → 0.972 (+0.410, [+0.299, +0.533]) |
+| nDCG@10 | 0.811 → 0.970 (+0.159, [+0.094, +0.236]) | 0.604 → 0.970 (+0.366, [+0.266, +0.480]) |
+| evidence@5 | 0.906 → 0.994 (+0.088, [+0.013, +0.182]) | 0.623 → 0.994 (+0.371, [+0.239, +0.509]) |
+
+On this set the cross-encoder improves every metric significantly, unlike on the saturated mini set
+(ADR 0014). The cost is unchanged: rerank stage p50 3.2 s and p95
+4.0 s against the 1.5 s limit, and a process peak of
+2.43 GiB. The numbers also show that hybrid retrieval is much worse than
+dense here (hit@1 0.509 against 0.698 before reranking), because the lexical channel cannot match a
+question to a document in the other language and its noise enters the fusion.
+
 ## What is not established
 
 - No metric over a *reviewed* dataset exists; the owner has not reviewed any label.
 - No real language model has been run through the pipeline (the memory gate refused it), so no
   faithfulness, hallucination rate or generation latency is measured.
-- The sufficiency gate does not meet its target (see the Phase 10 notes in [TESTING.md](TESTING.md)).
+- The sufficiency gate does not meet its target: best held-out result 73.3 % correct refusals at 8.6 % false refusals on an unreviewed set of 15 unanswerable test questions (above).
+- The reranker's gain on the harder set is on dev only and on unreviewed labels; it was not confirmed on test (reading the test split again would end its held-out status).

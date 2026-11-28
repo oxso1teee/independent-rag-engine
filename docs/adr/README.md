@@ -22,3 +22,4 @@ supersedes the old one.
 | [0015](0015-generation-contracts.md) | Generation contracts: refusal sentinel, provisional streaming, lexical overlap | Accepted |
 | [0016](0016-query-pipeline-contract.md) | Query pipeline: four statuses, one time budget, verified streaming | Accepted |
 | [0017](0017-http-api.md) | The HTTP API: a thin transport with a narrow write surface | Accepted |
+| [0018](0018-hard-set-gate-and-reranker.md) | What the harder set showed about the gate, the reranker and hybrid retrieval | Accepted (provisional) |
