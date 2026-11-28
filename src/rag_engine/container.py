@@ -30,7 +30,7 @@ from rag_engine.cli.context import (
     Services,
 )
 from rag_engine.config import IngestSettings, ParsingSettings, Settings, load_settings
-from rag_engine.config.settings import EmbeddingSettings, LlmSettings
+from rag_engine.config.settings import EmbeddingSettings, LlmSettings, LoggingSettings
 from rag_engine.context.builder import ContextBuilder, ContextPolicy
 from rag_engine.domain import (
     ChunkPolicy,
@@ -57,7 +57,7 @@ from rag_engine.ingestion.processing import DocumentProcessor
 from rag_engine.ingestion.service import IngestService
 from rag_engine.ingestion.sources import FilesystemSource
 from rag_engine.llm import OllamaChat, OpenAICompatChat
-from rag_engine.observability import configure_logging
+from rag_engine.observability import RotatingStream, configure_logging
 from rag_engine.parsing.cleaners import compile_cleaners
 from rag_engine.parsing.isolation import ParserWorker
 from rag_engine.parsing.registry import default_parsers
@@ -81,6 +81,16 @@ from rag_engine.storage.lexical import SqliteLexicalIndex
 from rag_engine.storage.sqlite import open_store, open_store_read_only
 from rag_engine.storage.vector_flat import FlatVectorIndex
 from rag_engine.system import SystemClock, system_id_factory, trim_heap
+
+
+def setup_logging(settings: LoggingSettings) -> None:
+    """Configure logging from the settings: standard error, or a size-rotated file."""
+    stream = (
+        None
+        if settings.file is None
+        else RotatingStream(settings.file, settings.rotate_mb * 1024 * 1024, settings.backups)
+    )
+    configure_logging(settings.level, json_output=settings.json_output, stream=stream)
 
 
 def run_sync[T](coroutine: Coroutine[Any, Any, T]) -> T:
@@ -299,7 +309,7 @@ class DefaultContainer:
     @contextmanager
     def open(self, config: Path | None, db: Path | None, *, read_only: bool) -> Iterator[Services]:
         settings = load_settings(config)
-        configure_logging(settings.logging.level, json_output=settings.logging.json_output)
+        setup_logging(settings.logging)
         path = db if db is not None else settings.storage.db_path
         clock = SystemClock()
         store = (
@@ -370,7 +380,7 @@ class DefaultContainer:
     @contextmanager
     def search(self, config: Path | None, db: Path | None) -> Iterator[SearchServices]:
         settings = load_settings(config)
-        configure_logging(settings.logging.level, json_output=settings.logging.json_output)
+        setup_logging(settings.logging)
         path = db if db is not None else settings.storage.db_path
         store = open_store_read_only(path)
         built = None
@@ -539,7 +549,7 @@ class DefaultContainer:
                 ErrorCode.E_CONFIG_INVALID, "the api extra is required: install rag[api]"
             ) from exc
         settings = load_settings(config)
-        configure_logging(settings.logging.level, json_output=settings.logging.json_output)
+        setup_logging(settings.logging)
         bind = settings.api.model_copy(
             update={"host": host or settings.api.host, "port": port or settings.api.port}
         )
@@ -550,7 +560,7 @@ class DefaultContainer:
 
     def processing(self, config: Path | None) -> Processing:
         settings = load_settings(config)
-        configure_logging(settings.logging.level, json_output=settings.logging.json_output)
+        setup_logging(settings.logging)
         return build_processing(settings, SystemClock(), system_id_factory())
 
 

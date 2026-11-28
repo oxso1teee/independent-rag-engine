@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPBearer
 from starlette.middleware.cors import CORSMiddleware
 
@@ -16,6 +18,7 @@ from rag_engine import __version__
 from rag_engine.api import problems, routes_manage, routes_query, schemas
 from rag_engine.api.auth import authorised, resolve_token
 from rag_engine.api.limits import BodyLimitMiddleware, IdempotencyStore
+from rag_engine.api.metrics import Metrics
 from rag_engine.api.state import ApiState
 from rag_engine.cli.context import Container
 from rag_engine.config import Settings
@@ -58,6 +61,16 @@ one of four statuses: `answered`, `insufficient_evidence`, `unverified` or `erro
 """
 
 
+def _template(request: Request) -> str:
+    """The route as a template: ``/v1/documents/{document_id}``, never a real identifier."""
+    if request.scope.get("route") is None:
+        return "unmatched"
+    template = request.url.path
+    for name, value in request.scope.get("path_params", {}).items():
+        template = template.replace(str(value), "{" + name + "}", 1)
+    return template
+
+
 def create_app(
     container: Container,
     config: Path | None,
@@ -80,6 +93,8 @@ def create_app(
         idempotency=IdempotencyStore(api_settings.idempotency_ttl_s),
     )
     ids = system_id_factory()
+    metrics = Metrics()
+    app_metrics_enabled = api_settings.metrics
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -111,8 +126,14 @@ def create_app(
     @app.middleware("http")
     async def request_id(request: Request, call_next: Any) -> Any:
         request.state.request_id = ids.request_id()
+        began = time.perf_counter()
         response = await call_next(request)
         response.headers["X-Request-ID"] = str(request.state.request_id)
+        if app_metrics_enabled:
+            template = _template(request)
+            metrics.request(
+                request.method, template, response.status_code, time.perf_counter() - began
+            )
         return response
 
     app.add_middleware(BodyLimitMiddleware, max_bytes=api_settings.max_body_bytes)
@@ -130,6 +151,13 @@ def create_app(
         # Health stays open for supervisors; everything else needs the token when one is set.
         if getattr(route, "path", "") != "/health":
             route.dependencies.append(protected)  # type: ignore[attr-defined]
+    if app_metrics_enabled:
+
+        @app.get("/v1/metrics", include_in_schema=False, dependencies=[protected])
+        def metrics_endpoint() -> PlainTextResponse:
+            return PlainTextResponse(metrics.render(), media_type="text/plain; version=0.0.4")
+
+    state.metrics = metrics if app_metrics_enabled else None
     app.include_router(open_router, prefix="/v1", responses=COMMON_ERRORS)
     app.include_router(
         routes_query.build_router(), prefix="/v1", dependencies=[protected], responses=COMMON_ERRORS

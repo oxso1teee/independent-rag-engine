@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from rag_engine.api.limits import IdempotencyStore
+from rag_engine.api.metrics import Metrics
 from rag_engine.cli.context import AskServices, Container, SearchServices
 from rag_engine.config import Settings
 from rag_engine.config.settings import ApiSettings
@@ -42,6 +43,7 @@ class ApiState:
     token: str | None
     managed_root: Path
     idempotency: IdempotencyStore
+    metrics: Metrics | None = None
     _stack: ExitStack = field(default_factory=ExitStack)
     _backend: QueryBackend | None = None
     _open_lock: threading.Lock = field(default_factory=threading.Lock)

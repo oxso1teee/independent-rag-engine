@@ -19,6 +19,7 @@ RAG_API_TOKEN="$(openssl rand -hex 24)" rag serve            # 127.0.0.1:8765
 | `max_question_chars` | 4000 | longer questions are refused with 400 |
 | `idempotency_ttl_s` | 86400 | how long an `Idempotency-Key` is remembered |
 | `cors_origins` | none | browser origins allowed by CORS; empty keeps CORS off |
+| `metrics` | off | serve Prometheus-format metrics at `GET /v1/metrics` (needs the token like everything else) |
 
 ## Security
 

@@ -109,3 +109,77 @@ def _types(
     _: AbstractContextManager[AskServices], __: Processing, ___: SearchServices, ____: Services
 ) -> None:
     return None  # keeps the imported names used by the type checker
+
+
+# ------------------------------------------------------------------------- backup and restore
+
+
+def make_database(tmp_path: Path) -> list[str]:
+    config = tmp_path / "rag.toml"
+    config.write_text("[parsing]\nisolate = []\n")
+    root = tmp_path / "notes"
+    root.mkdir()
+    (root / "a.md").write_text("# A\n\nSome text for the restore drill.\n")
+    prefix = ["--config", str(config), "--db", str(tmp_path / "rag.db")]
+    assert main([*prefix, "source", "add", "notes", str(root)]) == 0
+    assert main([*prefix, "ingest", "notes", "--json"]) == 0
+    return prefix
+
+
+def test_the_backup_restore_drill_ends_with_a_clean_doctor(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    prefix = make_database(tmp_path)
+    backup = tmp_path / "backups" / "copy.db"
+    assert main([*prefix, "backup", str(backup)]) == 0
+    capsys.readouterr()
+    assert main(["verify", str(backup), "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+    target = tmp_path / "restored" / "rag.db"
+    assert main(["--config", prefix[1], "--db", str(target), "restore", str(backup)]) == 0
+    capsys.readouterr()
+    assert (
+        main(["--config", prefix[1], "--db", str(target), "doctor", "--integrity", "--json"]) == 0
+    )
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+    assert main(["--config", prefix[1], "--db", str(target), "status", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["sources"][0]["name"] == "notes"
+
+
+def test_restore_never_overwrites_without_replace_and_keeps_the_old_database(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    prefix = make_database(tmp_path)
+    backup = tmp_path / "copy.db"
+    assert main([*prefix, "backup", str(backup)]) == 0
+    live = tmp_path / "rag.db"
+    before = live.read_bytes()
+    capsys.readouterr()
+    assert main([*prefix, "restore", str(backup)]) == 9  # refused: the database exists
+    assert live.read_bytes() == before and "--replace" in capsys.readouterr().err
+    assert main([*prefix, "restore", str(backup), "--replace", "--json"]) == 0
+    kept = Path(json.loads(capsys.readouterr().out)["previous"])
+    assert kept.name == "rag.db.before-restore" and kept.read_bytes() == before
+    assert (
+        main([*prefix, "restore", str(backup), "--replace"]) == 9
+    )  # an earlier copy is in the way
+
+
+def test_a_damaged_backup_fails_verification_and_is_never_restored(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    prefix = make_database(tmp_path)
+    backup = tmp_path / "copy.db"
+    assert main([*prefix, "backup", str(backup)]) == 0
+    data = bytearray(backup.read_bytes())
+    for offset in range(4096, min(len(data), 4096 * 3)):
+        data[offset] = 0xFF  # overwrite database pages
+    backup.write_bytes(bytes(data))
+    live = tmp_path / "rag.db"
+    before = live.read_bytes()
+    capsys.readouterr()
+    assert main(["verify", str(backup)]) == 9
+    assert main([*prefix, "restore", str(backup), "--replace"]) == 9
+    assert live.read_bytes() == before and not (tmp_path / "rag.db.before-restore").exists()
+    assert not list(tmp_path.glob("*.restore-partial"))
+    assert main(["verify", str(tmp_path / "missing.db")]) == 4

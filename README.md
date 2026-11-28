@@ -3,16 +3,27 @@
 Modular, local-first RAG engine for reliable knowledge retrieval, evidence-grounded
 generation, and reproducible evaluation.
 
-> **Status: early development.** The repository contains the core foundation (domain model,
-> error taxonomy, ports, configuration, logging, test doubles, CI) and document
-> ingestion: a SQLite store, source discovery, change detection, safe deletion and a
-> persistent job queue, driven by the `rag` command, and document processing: parsers for
-> Markdown, HTML, text, PDF and DOCX and three chunking strategies, previewed with
-> `rag chunks`. With a pinned Ollama or local ONNX embedding model, `rag ingest` now
-> publishes chunks, embeddings and an FTS5 index atomically, and `rag search` retrieves from it
-> (dense, lexical or hybrid, with metadata filters), `rag context` shows the evidence and token
-> budget a question would get, and an optional cross-encoder reranker is available (off by default).
-> Answer generation is a later phase.
+> **Status: functionally complete, quality not yet accepted.** Ingestion, hybrid retrieval,
+> reranking, context assembly, cited answers with refusals, a command line, an HTTP API,
+> an evaluation toolbox, backup and restore and a Docker image all exist and are tested without
+> any model or network. What is **not** established: the sufficiency gate refuses 73 % of
+> unanswerable questions on held-out (unreviewed) data against a 90 % target; no language model has
+> been run through the pipeline on this project's reference machine, so faithfulness, hallucination
+> rate and answer latency are unmeasured; and the evaluation labels have not been reviewed by a
+> person. [docs/TESTING.md](docs/TESTING.md) lists every criterion with its evidence and every one
+> that is open. The licence has not been chosen yet, so nothing here is licensed for reuse.
+
+## What it does
+
+Point it at folders of Markdown, HTML, text, PDF or DOCX files. It parses and chunks them,
+embeds the chunks (a local ONNX model or Ollama), and keeps everything in one SQLite file. Then:
+
+- `rag search` returns ranked passages (dense, lexical or hybrid, with filters) with their source,
+  heading and position;
+- `rag ask` answers from those passages, **cites them**, and says so when the documents do not
+  contain the answer; a citation that does not point at evidence the model was given is rejected,
+  and text whose citations fail is withheld;
+- `rag serve` exposes the same through an HTTP API with OpenAPI, tokens and server-sent events.
 
 ## Design goals
 
@@ -48,10 +59,27 @@ Markdown, HTML and plain text work out of the box. Optional formats are separate
 ```bash
 git clone https://github.com/puchkovs/independent-rag-engine.git
 cd independent-rag-engine
-uv sync --frozen
+uv sync --frozen --extra api
 uv run rag --version
-make check          # lint, types, architecture, tests
+make check          # lint, types, architecture, tests (no models, no network)
+
+uv run rag init --dir ~/rag-workspace         # a starter rag.toml and a data directory
+$EDITOR ~/rag-workspace/rag.toml              # enable [embedding] and, for answers, [llm]
+uv run rag --config ~/rag-workspace/rag.toml config check
 ```
+
+With an embedding model configured ([below](#embedding-model)) and, for answers, a language model
+(`[llm]`, for example Ollama with an explicit `context_window`):
+
+```bash
+uv run rag source add notes ~/Documents/notes
+uv run rag ingest notes
+uv run rag search "how are chunks stored"
+uv run rag ask "How long are database backups kept?" --sources
+RAG_API_TOKEN="$(openssl rand -hex 24)" uv run rag serve        # http://127.0.0.1:8765/v1
+```
+
+Or in a container (the image is about 80 MB and needs a token): see [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 Register a folder and preview parsing and chunking. With embedding enabled in the
 configuration, `rag ingest` processes the queue and publishes each complete version;
@@ -98,8 +126,13 @@ src/rag_engine/
   parsing/         normaliser, cleaners, parsers (md, html, txt, pdf, docx), isolated worker
   chunking/        token counters, splitting, packing, the fixed, recursive and
                    structure-aware chunkers
-  retrieval/       query processing, fusion, diversity and the search service
-  evaluation/      metrics, bootstrap intervals, dataset schema and the retrieval runner
+  retrieval/       query processing, fusion, diversity, the sufficiency gate and the search service
+  context/         the token budget and the numbered evidence handed to the model
+  generation/      the prompt, the model call, citation checks, refusal and resilience
+  llm/             Ollama and OpenAI-compatible chat adapters
+  pipeline/        the query pipeline: stages, time budget and the four answer statuses
+  api/             the HTTP API (extra `api`)
+  evaluation/      metrics, statistics, judge, run protocol, datasets and the regression gate
   storage/         SQLite store (WAL, single writer, unit of work) and SQL migrations
   lexical/         RU/EN Snowball analyzer shared by publication and FTS queries
   system/          real clock and identifier entropy
@@ -110,8 +143,9 @@ src/rag_engine/
   container.py     composition root and entry point
 tests/             unit, contract, architecture, integration, e2e, chaos, integrity and perf tests
 docs/              architecture and development notes
-eval/scripts/      reproducible reports (chunk grid, embedding bake-off, retrieval evaluation, benchmarks)
-eval/corpus/       the mini corpus of the retrieval evaluation
+eval/scripts/      reproducible reports (chunk grid, bake-offs, gate research, soak, smoke)
+eval/corpus/       the public corpora of the evaluations (mini and hard)
+baselines/         runs kept as regression references
 eval/datasets/     versioned question sets
 ```
 
@@ -119,7 +153,13 @@ eval/datasets/     versioned question sets
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Data model](docs/DATA_MODEL.md)
-- [Development guide](docs/DEVELOPMENT.md)
+- [Development guide](docs/DEVELOPMENT.md) and [contributing](CONTRIBUTING.md)
+- [HTTP API](docs/API.md) ([OpenAPI](docs/openapi.json)) and [command line](docs/CLI.md)
+- [Operations: Docker, backup and restore, logs, metrics](docs/OPERATIONS.md)
+- [Evaluation protocol](docs/EVALUATION.md)
+- [Security policy and threat model](SECURITY.md)
+- [Provenance of the code, data and models](PROVENANCE.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md) and [SBOM](sbom.cdx.json)
 - [Testing](docs/TESTING.md)
 - [Phase 4 embedding measurements](docs/EMBEDDING_BAKEOFF.md)
 - [Retrieval evaluation](docs/RETRIEVAL_EVALUATION.md)

@@ -73,10 +73,25 @@ jobs:
           --ignore-packages independent-rag-engine
           --partial-match --fail-on="GPL;AGPL;SSPL;Proprietary;Non-Commercial;UNKNOWN"
           --format=plain
+      - name: Third-party notices and SBOM are current
+        run: uv run python scripts/generate_notices.py --check
+      - name: Package builds and installs without extras
+        run: scripts/package_smoke.sh
       - name: Known vulnerabilities
         run: |
           uv export --frozen --all-groups --no-emit-project --format requirements-txt -o requirements-audit.txt
           uv run pip-audit -r requirements-audit.txt --disable-pip --no-deps
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build -t rag-engine:smoke .
+      - name: Smoke test (token, user, health, size)
+        run: scripts/docker_smoke.sh rag-engine:smoke
 
   secrets:
     name: Secret scan

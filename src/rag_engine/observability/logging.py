@@ -19,13 +19,14 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import logging.handlers
 import re
 import sys
 import traceback
 from collections.abc import Iterator, MutableMapping
 from contextlib import contextmanager
-from pathlib import PurePath
-from typing import Any, TextIO
+from pathlib import Path, PurePath
+from typing import Any, TextIO, cast
 
 import structlog
 from structlog.contextvars import bound_contextvars, merge_contextvars
@@ -175,11 +176,38 @@ def _timestamper(clock: Clock | None) -> Processor:
     return add_timestamp
 
 
+class RotatingStream:
+    """A text stream that writes to a file and rotates it by size (``max_bytes``, ``backups``).
+
+    The file is created readable by its owner only: logs can mention identifiers and error codes.
+    """
+
+    def __init__(self, path: Path, max_bytes: int, backups: int) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._handler = logging.handlers.RotatingFileHandler(
+            path, maxBytes=max_bytes, backupCount=backups, encoding="utf-8"
+        )
+        path.chmod(0o600)
+
+    def write(self, text: str) -> int:
+        if not text.strip("\n"):
+            return len(text)  # ``print`` writes the line and its newline separately
+        record = logging.LogRecord("rag", logging.INFO, "", 0, text.rstrip("\n"), None, None)
+        self._handler.handle(record)
+        return len(text)
+
+    def flush(self) -> None:
+        self._handler.flush()
+
+    def close(self) -> None:
+        self._handler.close()
+
+
 def configure_logging(
     level: str = "INFO",
     *,
     json_output: bool = True,
-    stream: TextIO | None = None,
+    stream: TextIO | RotatingStream | None = None,
     clock: Clock | None = None,
 ) -> None:
     """Configure structlog globally. Safe to call repeatedly."""
@@ -203,7 +231,7 @@ def configure_logging(
     structlog.configure(
         processors=processors,
         wrapper_class=structlog.make_filtering_bound_logger(levels[level.upper()]),
-        logger_factory=structlog.PrintLoggerFactory(file=stream or sys.stderr),
+        logger_factory=structlog.PrintLoggerFactory(file=cast(TextIO, stream or sys.stderr)),
         cache_logger_on_first_use=False,
     )
 
