@@ -216,6 +216,24 @@ def test_the_semantic_layer_doubts_evidence_that_ranks_low() -> None:
     assert flags(result, "soft") & {"dense-gold-not-first", "dense-gold-far"}
 
 
+def test_an_unanswerable_question_scoring_like_answerable_ones_is_doubtful_with_a_baseline() -> (
+    None
+):
+    baseline = [question(f"q{i}") for i in range(12)]
+    echo = unanswerable("echo", "When do the production database backups run?", ["dental"])
+    far = unanswerable("far", "What is the dental plan for contractors?", ["dental"])
+    results = audit(*baseline, echo, far, encoder=HashingEncoder())
+    assert "dense-looks-answerable" in flags(results["echo"], "soft")
+    assert "dense-no-close-passage" in results["far"].passed
+
+
+def test_a_cross_language_pair_is_ranked_among_passages_of_the_evidence_language() -> None:
+    text = "Within what time must the production database backups run every night?"
+    q = question("cross", language="en", question=text)
+    result = audit(q, encoder=HashingEncoder())["cross"]
+    assert result.metrics["dense_pool"] == 4  # the four English passages, not the Russian ones
+
+
 # --------------------------------------------------------------- it changes and reviews nothing
 
 

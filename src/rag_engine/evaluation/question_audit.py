@@ -42,7 +42,7 @@ SAME_LANGUAGE_LINK = 0.25
 OTHER_PASSAGE_MARGIN = 0.10
 UNSUPPORTED_WORDS = 0.5
 NEAR_NO_ANSWER_COVERAGE = 0.75
-DENSE_MARGIN = 0.02
+DENSE_MARGIN = 0.01
 NEAR_DUPLICATE = 0.85
 SHORT_ANCHOR = 12
 
@@ -233,7 +233,7 @@ def _dense_scores(
 def _typical_gold_cosine(
     questions: Sequence[Question], passages: Sequence[Passage], dense: list[list[float]]
 ) -> float | None:
-    """The 10th percentile of the best gold cosine of answerable questions: "looks relevant"."""
+    """The lower quartile of the best gold cosine of answerable questions: "looks as relevant"."""
     values: list[float] = []
     for question, scores in zip(questions, dense, strict=True):
         gold = _gold_passages(question, passages)
@@ -242,7 +242,7 @@ def _typical_gold_cosine(
     if len(values) < 10:
         return None
     values.sort()
-    return values[len(values) // 10]
+    return values[len(values) // 4]
 
 
 def _structure(run: _Run, passages: Sequence[Passage], corpus: Mapping[str, str]) -> None:
@@ -484,14 +484,13 @@ def _semantic(
     run: _Run, passages: Sequence[Passage], scores: Sequence[float], typical_gold: float | None
 ) -> None:
     q = run.question
-    order = sorted(range(len(passages)), key=lambda i: scores[i], reverse=True)
-    rank = {passage_index: r for r, passage_index in enumerate(order, start=1)}
-    run.metrics["dense_best"] = round(scores[order[0]], 3)
     if not q.answerable:
-        if typical_gold is not None and scores[order[0]] >= typical_gold:
+        best = max(range(len(passages)), key=lambda i: scores[i])
+        run.metrics["dense_best"] = round(scores[best], 3)
+        if typical_gold is not None and scores[best] >= typical_gold:
             run.soft(
                 "dense-looks-answerable",
-                f"{passages[order[0]].doc} scores {scores[order[0]]:.2f}, as high as the weakest tenth of answerable questions ({typical_gold:.2f})",
+                f"{passages[best].doc} scores {scores[best]:.2f}, as high as the lower quartile of answerable questions ({typical_gold:.2f})",
             )
         else:
             run.passed.append("dense-no-close-passage")
@@ -499,13 +498,19 @@ def _semantic(
     gold = _gold_passages(q, passages)
     if not gold:
         return
+    # The model prefers a passage in the question's own language, so a cross-language pair is
+    # ranked among the passages written in the evidence's language only.
+    languages = {p.language for p in gold}
+    pool = [p for p in passages if p.language in languages]
+    order = sorted(pool, key=lambda p: scores[p.index], reverse=True)
+    rank = {p.index: r for r, p in enumerate(order, start=1)}
     best_gold = min(rank[p.index] for p in gold)
     gold_score = max(scores[p.index] for p in gold)
-    other = max((scores[p.index] for p in passages if p not in gold), default=0.0)
+    other = max((scores[p.index] for p in pool if p not in gold), default=0.0)
     run.metrics["dense_gold_rank"] = best_gold
+    run.metrics["dense_pool"] = len(pool)
     run.metrics["dense_gold_score"] = round(gold_score, 3)
     run.metrics["dense_margin"] = round(gold_score - other, 3)
-    needed = min(len({r.doc for r in q.gold}), 3)
     if best_gold == 1 or (len(q.gold) > 1 and best_gold <= len(q.gold)):
         if gold_score - other < DENSE_MARGIN and len(q.gold) == 1:
             run.soft(
@@ -514,15 +519,15 @@ def _semantic(
             )
         else:
             run.passed.append("dense-gold-first")
-    elif best_gold <= max(3, needed):
+    elif best_gold <= max(3, min(len({r.doc for r in q.gold}), 3)):
         run.soft(
             "dense-gold-not-first",
-            f"the evidence ranks {best_gold} of {len(passages)} for this question",
+            f"the evidence ranks {best_gold} of {len(pool)} for this question",
         )
     else:
         run.soft(
             "dense-gold-far",
-            f"the evidence ranks {best_gold} of {len(passages)}: the quote may not answer the question",
+            f"the evidence ranks {best_gold} of {len(pool)}: the quote may not answer the question",
         )
 
 

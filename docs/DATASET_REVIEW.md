@@ -26,7 +26,7 @@ uv run python eval/scripts/review_kit.py build --audit eval_runs/question_audit_
 What it can and cannot do. The **lexical layer** compares stems, figures and identifiers. It is blind
 across languages and for paraphrases by design, so on its own it leaves those as "doubtful: the link
 could not be shown". The **semantic layer** ranks every passage of the corpus for each question with
-the E5 model and says whether the gold passage is the best match, or how far down it is; it refuses
+the E5 model and says whether the gold passage is the best match, or how far down it is (ranked among the passages written in the evidence's language, because the model prefers the question's own language; an unanswerable question is flagged when its best passage scores like the lower quartile of the answerable ones); it refuses
 to start below 2.3 GiB of free memory and a watchdog stops it if free memory falls under 0.45 GiB.
 Neither layer understands the question. "correct" means no automatic objection, **not** reviewed,
 and nothing here writes to a dataset, fills in a decision or marks a question as reviewed.
