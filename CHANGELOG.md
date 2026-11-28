@@ -6,6 +6,16 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Final audit and release hardening
+- Fix: a long-running server no longer leaks two file descriptors for every worker thread that ever
+  read (the store now closes the read connections of finished threads). Found by the hard soak.
+- Hard soak run once (concurrent searches, concurrent re-indexing, descriptors, threads, WAL, clean
+  stop; result and limits in `docs/TESTING.md`); its gate now accounts for the second model load and a
+  memory watchdog stops the processes it started. `docs/API.md` says that simultaneous searches with the
+  ONNX provider get a retryable 503.
+- `eval/scripts/llm_e2e.py`: an end-to-end check against a hosted OpenAI-compatible provider (public
+  corpus only, `--approved` required, the key is never printed); tested against a fake endpoint, not yet
+  run against a real provider (no key was available). `docs/GATE_PLAN.md`: how to reach 90/10 with
+  separate development, calibration and sealed final sets.
 - Retrieval baseline recomputed on `retrieval-hard@v2` and `retrieval-mini@v2` (dense, hybrid, lexical;
   hit@K, MRR, nDCG, recall, latency, memory), with a version 1 against version 2 comparison that
   attributes every movement to the corrected questions: `docs/BASELINE_V2.md`. No retrieval code or

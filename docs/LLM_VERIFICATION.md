@@ -49,6 +49,34 @@ of the Ollama process separately (`/usr/bin/time -v` or `ps`), since it runs out
 - Labels are unreviewed (`DATASET_REVIEW.md`); report results as exploratory until they are.
 - A real run is a separate result from the stub run; the stub only tests the wiring.
 
+## End-to-end through a hosted OpenAI-compatible provider
+
+`eval/scripts/llm_e2e.py` runs the whole pipeline against a real chat provider (Groq or any
+OpenAI-compatible endpoint) and checks ingestion, retrieval, generation with citation validation,
+refusal on insufficient evidence, streaming, cancellation, and three provider failures (a wrong key,
+an unknown model, an unreachable server). It was tested against a scripted fake endpoint
+(`tests/e2e/test_llm_e2e_script.py`); it **has not been run against a real provider**, because no key
+was configured for this project on the reference machine (2026-11-28) and none was used.
+
+```bash
+export GROQ_API_KEY=...        # supplied by the owner; read from the environment only
+uv run python eval/scripts/llm_e2e.py --approved \
+    --embed-dir data/models/multilingual-e5-small/<revision> \
+    --base-url https://api.groq.com/openai/v1 --model <model> --api-key-env GROQ_API_KEY \
+    --output eval_runs/llm_e2e_groq.json
+```
+
+Rules the script enforces: it refuses to start without `--approved` (the owner agreed to use this
+provider and its cost), refuses any corpus outside `eval/corpus` (public synthetic text only, nothing
+private is ever sent), never prints or stores the key and asserts that the key is in none of its
+output, and sends about 30 requests of at most 256 new tokens (the report gives the token totals).
+
+**What a hosted provider does not show.** It checks the OpenAI-compatible adapter and the pipeline.
+It says nothing about a local Ollama server (the native `/api/chat` adapter, `keep_alive`, the
+memory behaviour of a resident model, the resource gate): the 4B model on this machine is still
+unmeasured and needs the steps above. Hosted-model answers also say nothing about how a 4B model
+will cite or refuse.
+
 ## If this machine is too small
 
 1. Run the same three commands on another machine with the repository and the model files copied.

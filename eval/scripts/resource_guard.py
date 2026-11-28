@@ -13,6 +13,7 @@ import os
 import sys
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 GIB = 1024**3
@@ -44,13 +45,18 @@ def require(model_gib: float, *, what: str) -> None:
         sys.exit(3)
 
 
-def watchdog() -> None:
-    """Stop this process if free memory falls under ``STOP_BELOW_GIB`` (checked twice a second)."""
+def watchdog(on_trip: Callable[[], None] | None = None) -> None:
+    """Stop this process if free memory falls under ``STOP_BELOW_GIB`` (checked twice a second).
+
+    ``on_trip`` runs first, so a script that started child processes can stop them too.
+    """
 
     def watch() -> None:
         while True:
             if available() < STOP_BELOW_GIB * GIB:
                 sys.stderr.write("memory watchdog: free memory is too low, stopping\n")
+                if on_trip is not None:
+                    on_trip()
                 os._exit(7)
             time.sleep(0.5)
 

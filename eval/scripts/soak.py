@@ -41,6 +41,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import resource_guard
 from retrieval_eval import ROOT, write_config
 
 from rag_engine.cli.main import main as rag
@@ -49,6 +50,7 @@ from rag_engine.evaluation.dataset import load_dataset
 
 GIB = 1024**3
 MIN_AVAILABLE = int(2.5 * GIB)
+CHURN_MODEL_GIB = 1.2  # the model loaded again by the ingesting process
 TOKEN = "soak-token-0123456789abcdef"  # noqa: S105 - a throwaway token for a loopback test
 
 
@@ -91,6 +93,9 @@ def wal_mib(db: Path) -> float:
     return wal.stat().st_size / 1024**2 if wal.exists() else 0.0
 
 
+PROBLEMS: dict[str, int] = {}
+
+
 def search(port: int, text: str) -> tuple[int, float]:
     body = json.dumps({"query": text, "mode": "dense", "top_k": 5}).encode()
     request = urllib.request.Request(
@@ -104,6 +109,11 @@ def search(port: int, text: str) -> tuple[int, float]:
             response.read()
             return response.status, time.perf_counter() - began
     except urllib.error.HTTPError as error:
+        try:  # an RFC 9457 problem: its engine code says *why* (busy embedder, locked store, ...)
+            code = str(json.loads(error.read()).get("code", "?"))
+        except (ValueError, OSError, AttributeError):
+            code = "?"
+        PROBLEMS[f"{error.code} {code}"] = PROBLEMS.get(f"{error.code} {code}", 0) + 1
         return error.code, time.perf_counter() - began
     except (urllib.error.URLError, TimeoutError, OSError):
         return 0, time.perf_counter() - began
@@ -147,6 +157,7 @@ def build_report(
         "workers": args.workers,
         "churn_every_s": args.churn_every,
         "locked_503": locked,
+        "problem_codes": dict(PROBLEMS),
         "churn_ingests": {"ok": churn[0], "failed": churn[1]},
         "fds_first": fd_first,
         "fds_last": fd_last,
@@ -188,12 +199,17 @@ def main() -> None:
     )
     parser.add_argument("--output", type=Path, default=ROOT / "eval_runs" / "soak.json")
     args = parser.parse_args()
-    if meminfo("MemAvailable") < MIN_AVAILABLE:
+    # The server alone needs MIN_AVAILABLE. Concurrent indexing starts a second process that loads
+    # the same model (about 1.2 GiB): two runs on a machine with 2 to 3 GiB free were stopped by the
+    # watchdog at the first ingest, so that case needs the model's memory on top.
+    needed = MIN_AVAILABLE + (int(CHURN_MODEL_GIB * GIB) if args.churn_every > 0 else 0)
+    if meminfo("MemAvailable") < needed:
         print(
             json.dumps(
                 {
                     "result": "refused_by_resource_gate",
                     "mem_available_gib": round(meminfo("MemAvailable") / GIB, 2),
+                    "needed_gib": round(needed / GIB, 2),
                 }
             )
         )
@@ -225,6 +241,16 @@ def main() -> None:
         churn = [0, 0]  # succeeded, failed
         stop = threading.Event()
 
+        children: list[subprocess.Popen[bytes]] = []
+
+        def trip() -> None:
+            """The memory watchdog fired: stop everything this run started."""
+            for child in [*children, server]:
+                if child.poll() is None:
+                    child.kill()
+
+        resource_guard.watchdog(trip)
+
         def churner() -> None:
             document = sorted(corpus_dir.glob("*.md"))[0]
             number = 0
@@ -232,11 +258,17 @@ def main() -> None:
                 number += 1
                 with document.open("a", encoding="utf-8") as handle:
                     handle.write(f"\nSoak edit number {number}: a paragraph that is new.\n")
-                done = subprocess.run(  # noqa: S603
+                child = subprocess.Popen(  # noqa: S603
                     [sys.executable, "-m", "rag_engine", *prefix, "ingest", "corpus", "--json"],
-                    env=env, capture_output=True, check=False, timeout=600,
+                    env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 )  # fmt: skip
-                churn[0 if done.returncode == 0 else 1] += 1
+                children.append(child)
+                try:
+                    code = child.wait(timeout=600)
+                except subprocess.TimeoutExpired:
+                    child.kill()
+                    code = 1
+                churn[0 if code == 0 else 1] += 1
 
         worker = threading.Thread(target=churner, daemon=True) if args.churn_every > 0 else None
         started = time.time()

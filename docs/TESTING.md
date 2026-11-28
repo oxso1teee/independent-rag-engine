@@ -233,6 +233,43 @@ mocked model servers: open gate, calibrate, refuse, answer, doctor, stale setup,
 (the API sees the CLI's calibration). The corpus is synthetic and separable on purpose
 (`tests/calibration_support.py`), so these tests show the mechanism, not a quality.
 
+### Hard soak (2026-11-28, `eval/scripts/soak.py --workers 3 --churn-every 45`)
+
+The same real server and model, ten minutes, three clients searching at once every five seconds, and a
+second process re-indexing an edited document every 45 seconds (10 ingests), on the reference machine.
+
+| | result | criterion |
+|---|---|---|
+| requests | 357 in 119 rounds of three; **119 served, 238 refused with 503 `E_RESOURCE_GATE`** | |
+| errors other than the 503 above | 0 | below 2 % |
+| indexing by the second process | 10 of 10 succeeded; the server kept answering | all succeed |
+| resident memory | 1162 to 990 MiB (-14.7 %) | growth below 10 % |
+| threads | 12 to 13 | no leak |
+| write-ahead log, maximum | 2.1 MiB | below 64 MiB |
+| stop on `SIGTERM` | clean | clean |
+| lowest available memory on the machine | 0.51 GiB | (watchdog stops the run at 0.45 GiB) |
+| **file descriptors** | **19 to 62** (about +4.5 a minute) | **no leak: failed** |
+
+Two findings.
+
+1. **A descriptor leak, found and fixed.** Every thread that reads got its own SQLite read connection
+   (database and write-ahead log: two descriptors) and the store kept it until it closed, so a server whose
+   worker threads come and go leaked two descriptors per thread that ever read. `SqliteStore.reader()` now
+   closes the connections of finished threads when a new thread asks for one
+   (`tests/integration/test_store_reader_connections.py`, red before: 35 handles open after 30 finished
+   threads). Two shorter runs after the fix held the descriptors at 18 to 20 under the same concurrent
+   load, but **both were stopped by the memory watchdog at the first ingest**, so the full run with
+   concurrent indexing has **not** been repeated after the fix.
+2. **Simultaneous searches are refused, not queued.** The ONNX embedder serves one query at a time; a
+   second request that arrives meanwhile gets `503` with the code `E_RESOURCE_GATE` and `Retry-After: 1`
+   (two of three, in this run). That bounds memory by design and is documented in [API.md](API.md), but a
+   client must retry; the soak counts these apart from errors.
+
+**Resource rule learned.** The server alone needs 2.5 GiB available; concurrent indexing loads the
+model a second time, so that variant now needs 3.7 GiB (the gate says so) and was refused on this
+machine at 1.8 to 3.0 GiB. The watchdog (a shared rule: stop everything if available memory falls under
+0.45 GiB) fired twice and stopped the processes it had started.
+
 ## Failure injection (`tests/chaos`)
 
 A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test
