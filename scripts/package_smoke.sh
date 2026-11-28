@@ -13,11 +13,18 @@ uv build --out-dir "$WORK/dist" >/dev/null
 WHEEL="$(ls "$WORK"/dist/*.whl)"
 SDIST="$(ls "$WORK"/dist/*.tar.gz)"
 
-unzip -l "$WHEEL" | grep -q "rag_engine/py.typed"
-if unzip -l "$WHEEL" | grep -E " (tests|eval|docs|baselines)/" >/dev/null; then
+# listings go to files first: `grep -q` quits at the first match and would SIGPIPE a producer
+# that is still writing, which `pipefail` reports as a failure (exit 141)
+unzip -l "$WHEEL" > "$WORK/wheel.txt"
+tar -tzf "$SDIST" > "$WORK/sdist.txt"
+grep -q "rag_engine/py.typed" "$WORK/wheel.txt"
+if grep -E " (tests|eval|docs|baselines)/" "$WORK/wheel.txt" >/dev/null; then
   echo "the wheel contains tests, docs or evaluation data"; exit 1
 fi
-tar -tzf "$SDIST" | grep -q "pyproject.toml"
+grep -q "pyproject.toml" "$WORK/sdist.txt"
+if grep -E "/(CLAUDE\.md|\.claude/|\.import_linter_cache/|eval_runs/|data/|\.env)" "$WORK/sdist.txt" >/dev/null; then
+  echo "the source distribution contains local working files"; exit 1
+fi
 
 # A supported interpreter, whatever `python3` happens to be on the machine (the project needs 3.12 or 3.13).
 uv venv --quiet --python 3.12 "$WORK/venv"

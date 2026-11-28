@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 
 from rag_engine.domain import (
@@ -57,7 +58,8 @@ def check_chunks(
         assert chunk.token_count == counter.count(chunk.text)
         assert chunk.text == chunk.text.strip() and chunk.text
         assert not chunk.oversize
-        assert chunk.indexed == (chunk.level == 0 and not chunk.is_duplicate)
+        has_words = re.search(r"\w", chunk.text) is not None
+        assert chunk.indexed == (chunk.level == 0 and not chunk.is_duplicate and has_words)
     check_chunk_ids(chunks, fingerprint)
     check_chunk_layout(chunks)
     assert [c.ordinal for c in chunks] == list(range(len(chunks)))

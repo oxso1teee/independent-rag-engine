@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from bisect import bisect_right
 from dataclasses import dataclass, replace
 
@@ -20,6 +21,8 @@ from rag_engine.domain import (
     detect_language,
 )
 from rag_engine.ports import Chunker, TokenCounter
+
+_WORD = re.compile(r"\w", re.UNICODE)
 
 _KIND = {
     BlockKind.PARAGRAPH: ChunkKind.PARAGRAPH,
@@ -113,7 +116,9 @@ class ChunkAssembler:
             page_start=min(pages) if pages else None,
             page_end=max(pages) if pages else None,
             language=detect_language(text),
-            indexed=level == 0,
+            # a rule or a table border has nothing to search, embed or analyse; indexing it would
+            # stop the whole document from being published (an empty analysed text)
+            indexed=level == 0 and _WORD.search(text) is not None,
             oversize=level == 0 and tokens > self._policy.max_tokens,
         )
 
