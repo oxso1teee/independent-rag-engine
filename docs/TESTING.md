@@ -160,6 +160,25 @@ Not covered by an automated test: a real browser client, the `uvicorn` process u
 effect of client disconnects on a live socket (the in-process client cannot simulate them). The
 idempotency memory is per process by design.
 
+## Phase 10 acceptance: criteria and evidence
+
+| Criterion | Evidence |
+|---|---|
+| Generation metrics with hand-computed values (P10.1) | `tests/unit/test_generation_eval_metrics.py`: faithfulness proxy and judge, hallucination rate, citation precision/recall, correctness, no-answer matrix |
+| Judge behind a port, calibration with kappa (P10.2) | `evaluation/judge.py`, `tests/unit/test_generation_eval_metrics.py`, `tests/unit/test_eval_stats.py` (kappa by hand). **No judge is calibrated**: no human-labelled sample exists |
+| Paired tests, cluster bootstrap (P10.3) | `tests/unit/test_eval_stats.py`: McNemar exact, sign test, cluster bootstrap, Holm |
+| Saturation and N < 30 warnings (P10.4) | `tests/unit/test_eval_stats.py`, `tests/unit/test_eval_protocol.py` (report flags) |
+| Test split protection with an access counter (P10.5) | `tests/unit/test_eval_protocol.py`, `tests/e2e/test_eval_cli.py` (`--final` required, reads counted, a repeated read is reported as not held out) |
+| Run manifest, `compare`, `report` (P10.6) | `tests/unit/test_eval_protocol.py`, `tests/e2e/test_eval_cli.py` |
+| Baseline and regression gate in CI (P10.7) | `baselines/mini_hashing_dev_v1.json`; `tests/e2e/test_eval_cli.py`: the current code passes, a shallower search fails with exit 12 |
+| Harder set: `conflicting`, `out_of_scope`/`no_answer`, hard negatives, near duplicates, multilingual (P10.8) | `eval/datasets/retrieval_hard_v1.json`, `tests/unit/test_hard_dataset.py`. **Not met:** at least 100 *reviewed* questions. 141 questions exist and all are `unreviewed`; only the owner can review them |
+| Reranker on hard data | measured on dev: significant gain, cost unchanged, decision unchanged ([ADR 0018](adr/0018-hard-set-gate-and-reranker.md)) |
+| Gate on a separate calibration and held-out split | `eval/scripts/gate_research.py`: fitted on dev, read test once. **Not met:** best held-out 73.3 % correct refusals at 8.6 % false refusals (target 90 % / 10 %) |
+| Faithfulness, hallucination rate and generation latency on a real model | **Not measured**: the memory gate refused the 4B model and no judge is calibrated |
+
+**Phase 10 is implemented as a method and a toolbox, not accepted on quality.** Open, unchanged:
+the gate target, a reviewed dataset of at least 100 questions, a real-model measurement, faithfulness.
+
 ## Failure injection (`tests/chaos`)
 
 A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test

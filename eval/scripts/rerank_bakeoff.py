@@ -36,6 +36,7 @@ from rag_engine.evaluation.dataset import (
     load_dataset,
     validate_dataset,
 )
+from rag_engine.evaluation.protocol import TestSplitGuard
 from rag_engine.evaluation.runner import QuestionScore, RankedChunk, compare, score_question
 
 METRICS = ("hit@1", "mrr@10", "ndcg@10", "evidence@5")
@@ -90,6 +91,8 @@ def main() -> None:
         "--dataset", type=Path, default=ROOT / "eval/datasets/retrieval_mini_v1.json"
     )
     parser.add_argument("--include-unreviewed", action="store_true")
+    parser.add_argument("--split", choices=("dev", "test"), default="dev")
+    parser.add_argument("--final", action="store_true", help="read the held-out test split")
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
 
@@ -103,7 +106,13 @@ def main() -> None:
         if args.include_unreviewed
         else accepted_questions(dataset)
     )
-    questions = [q for q in pool if q.answerable]
+    questions = [q for q in pool if q.answerable and q.split == args.split]
+    if (
+        args.split == "test"
+    ):  # the held-out split is read only on request, and every read is counted
+        TestSplitGuard(ROOT / "eval_runs" / "test_access.json").read(
+            dataset.identifier, final=args.final
+        )
     if not questions:
         sys.exit("no accepted answerable questions; review the dataset or use --include-unreviewed")
     seed = int(dataset.manifest_hash[:8], 16)
@@ -147,6 +156,8 @@ def main() -> None:
                 }
     report["peak_rss_mib"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
     report["exploratory"] = args.include_unreviewed
+    report["dataset"] = dataset.identifier
+    report["split"] = args.split
     report["model"] = {"name": NAME, "fingerprint": fingerprint}
     text = json.dumps(report, indent=2, sort_keys=True)
     if args.output:
