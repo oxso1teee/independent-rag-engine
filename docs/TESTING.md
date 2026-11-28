@@ -179,6 +179,51 @@ idempotency memory is per process by design.
 **Phase 10 is implemented as a method and a toolbox, not accepted on quality.** Open, unchanged:
 the gate target, a reviewed dataset of at least 100 questions, a real-model measurement, faithfulness.
 
+## Phase 11 acceptance: criteria and evidence
+
+| Criterion | Evidence |
+|---|---|
+| Docker: multi-stage, pinned digests, non-root, healthcheck, at most 400 MB (P11.1) | `Dockerfile`; `scripts/docker_smoke.sh` in a CI job: 80 MB, user `rag` (uid 10001), refuses to start without a token, 401 without and 200 with it, healthy |
+| README quickstart in a clean container | the same smoke script runs init, config check, source add, ingest, status, backup, verify and doctor inside a fresh container |
+| Backup, restore, verify and a runbook; the restored database passes `doctor` (P11.2) | `tests/e2e/test_admin_cli.py` (the drill, the refusal to overwrite, a damaged backup never restored); [OPERATIONS.md](OPERATIONS.md) |
+| Health and readiness, metrics, log rotation (P11.3) | `tests/api/test_manage.py`, `tests/api/test_security.py` (metrics by route template, token required), `tests/unit/test_log_rotation.py` |
+| Soak, one search per minute for an hour: RSS growth under 10 %, errors under 2 %, no out-of-memory kill (P11.4) | **passed**, see below |
+| Documentation with a link checker (P11.5) | README, ARCHITECTURE, DEVELOPMENT, TESTING, CONTRIBUTING, SECURITY, PROVENANCE, CHANGELOG, ADRs; `tests/unit/test_docs_links.py` |
+| Licences, notices, SBOM, audit (P11.6) | `THIRD_PARTY_NOTICES.md` and `sbom.cdx.json` generated from `uv.lock` (54 components, none under a forbidden licence) and checked in CI; `pip-audit` and the licence check in CI |
+| Release v0.1.0 and the decision on publicity (P11.7) | **not done on purpose**: a checklist is in [RELEASE.md](RELEASE.md); the version, tag, licence and publication are the owner's decisions |
+| Optional adapters, LanceDB/ANN and MCP (P11.8) | not implemented; the vector index and the pipeline sit behind ports, so they can be added without touching the core |
+| Secret scan clean | gitleaks in CI, green on every pull request |
+| Performance budgets (NFR-04 and the Phase 3 parse and chunk budgets) | `pytest -m perf` on the quiet reference machine, 2026-11-28: 14 of 14 within budget, for example a rescan of 1000 unchanged files in 0.15 s (budget 5 s) and 25 MB peak for a 2 MB document (budget 150 MB) |
+| Concurrency | `tests/api/test_concurrency.py`: parallel readers and a writer give only 200, 202 or the retryable 503 `E_STORE_LOCKED`; an idempotent burst leaves one document |
+
+### Soak (2026-11-28, `eval/scripts/soak.py`)
+
+A real `rag serve` process with the real `multilingual-e5-small` model, an index of the hard corpus
+(26 documents), one dense search per minute for 60 minutes, on the reference machine (4 vCPU, 7.8 GiB,
+shared with a desktop session). **Scope: search only.** No language model ran, so this says nothing
+about answers.
+
+| | result | criterion |
+|---|---|---|
+| requests | 60 (all HTTP 200) | |
+| error rate | 0.0 % | below 2 % |
+| server died, out-of-memory kill | no, none in the kernel log during the run | none |
+| resident memory, first request / third request / last | 1162 / 1139 / 1101 MiB | |
+| growth, third request to last | -3.3 % (trend -36 MiB per hour) | below +10 % |
+| resident memory, minimum / median / maximum | 1100 / 1112 / 1162 MiB | |
+| search latency p50 / p95 / maximum | 64 ms / 163 ms / 6.3 s | |
+| lowest available memory on the machine | 1.26 GiB | |
+
+The slowest request (6.3 s) is the first one, which loads the model's session on first use;
+the next slowest is 257 ms. Memory declined gradually from 1162 to 1101 MiB over the hour (the allocator returning pages after
+the model's first use) and never rose; from the twentieth request on it moved within 16 MiB. Limits of this evidence: one run, one corpus of 26 short documents, one query
+per minute (no concurrency), a warm file cache, and a process that had no ingestion going on.
+
+**MVP-2 is functionally in place and its packaging criteria are met; it is not quality-accepted and not
+released.** The open criteria are unchanged: the sufficiency gate (best held-out 73.3 % correct
+refusals against 90 %), no real-model measurement (answer latency, faithfulness, hallucination
+rate), no reviewed evaluation labels and no calibrated judge.
+
 ## Failure injection (`tests/chaos`)
 
 A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test
