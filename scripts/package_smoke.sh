@@ -19,8 +19,9 @@ if unzip -l "$WHEEL" | grep -E " (tests|eval|docs|baselines)/" >/dev/null; then
 fi
 tar -tzf "$SDIST" | grep -q "pyproject.toml"
 
-python3 -m venv "$WORK/venv"
-"$WORK/venv/bin/pip" install --quiet "$WHEEL"
+# A supported interpreter, whatever `python3` happens to be on the machine (the project needs 3.12 or 3.13).
+uv venv --quiet --python 3.12 "$WORK/venv"
+uv pip install --quiet --python "$WORK/venv/bin/python" "$WHEEL"
 "$WORK/venv/bin/rag" --version
 "$WORK/venv/bin/python" -c "import rag_engine; print('import ok', rag_engine.__version__)"
 cd "$WORK"
