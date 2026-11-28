@@ -1125,7 +1125,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -1136,7 +1136,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -1147,7 +1147,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -1158,7 +1158,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -1169,7 +1169,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -1180,7 +1180,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -1191,7 +1191,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -1202,7 +1202,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -1213,7 +1213,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -1224,7 +1224,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -1235,7 +1235,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -1334,7 +1334,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -1345,7 +1345,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -1356,7 +1356,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -1367,7 +1367,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -1378,7 +1378,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -1389,7 +1389,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -1400,7 +1400,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -1411,7 +1411,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -1422,7 +1422,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -1433,7 +1433,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -1444,7 +1444,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -1509,7 +1509,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -1520,7 +1520,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -1531,7 +1531,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "description": "Idempotency-Key reused with a different body"
@@ -1545,7 +1545,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -1556,7 +1556,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -1567,7 +1567,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -1578,7 +1578,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -1589,7 +1589,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -1600,7 +1600,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -1611,7 +1611,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -1659,7 +1659,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -1670,7 +1670,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -1681,7 +1681,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -1692,7 +1692,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -1703,7 +1703,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -1714,7 +1714,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -1725,7 +1725,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -1736,7 +1736,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -1747,7 +1747,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -1758,7 +1758,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -1769,7 +1769,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -1815,7 +1815,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -1826,7 +1826,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -1837,7 +1837,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -1848,7 +1848,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -1859,7 +1859,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -1870,7 +1870,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -1881,7 +1881,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -1892,7 +1892,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -1903,7 +1903,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -1914,7 +1914,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -1925,7 +1925,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -1962,7 +1962,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -1973,7 +1973,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -1984,7 +1984,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -1995,7 +1995,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -2006,7 +2006,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -2017,7 +2017,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -2028,7 +2028,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -2039,7 +2039,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -2050,7 +2050,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -2061,7 +2061,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -2072,7 +2072,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "summary": "Liveness",
@@ -2150,7 +2150,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -2161,7 +2161,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -2172,7 +2172,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -2183,7 +2183,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -2194,7 +2194,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -2205,7 +2205,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -2216,7 +2216,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -2227,7 +2227,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -2238,7 +2238,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -2249,7 +2249,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -2260,7 +2260,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -2308,7 +2308,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -2319,7 +2319,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -2330,7 +2330,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -2341,7 +2341,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -2352,7 +2352,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -2363,7 +2363,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -2374,7 +2374,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -2385,7 +2385,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -2396,7 +2396,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -2407,7 +2407,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -2418,7 +2418,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -2455,7 +2455,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -2466,7 +2466,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -2477,7 +2477,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -2488,7 +2488,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -2499,7 +2499,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -2510,7 +2510,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -2521,7 +2521,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -2532,7 +2532,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -2543,7 +2543,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -2564,7 +2564,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -2611,7 +2611,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -2622,7 +2622,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -2633,7 +2633,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -2644,7 +2644,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -2655,7 +2655,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -2666,7 +2666,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -2677,7 +2677,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -2688,7 +2688,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -2699,7 +2699,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -2710,7 +2710,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -2721,7 +2721,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -2762,7 +2762,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -2773,7 +2773,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -2784,7 +2784,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -2795,7 +2795,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -2806,7 +2806,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -2817,7 +2817,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -2828,7 +2828,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -2839,7 +2839,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -2850,7 +2850,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -2861,7 +2861,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -2872,7 +2872,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -2917,7 +2917,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -2928,7 +2928,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -2939,7 +2939,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -2950,7 +2950,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -2961,7 +2961,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -2972,7 +2972,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -2983,7 +2983,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -2994,7 +2994,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -3005,7 +3005,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -3016,7 +3016,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -3027,7 +3027,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -3075,7 +3075,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -3086,7 +3086,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -3097,7 +3097,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -3108,7 +3108,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -3119,7 +3119,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -3130,7 +3130,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -3141,7 +3141,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -3152,7 +3152,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -3163,7 +3163,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -3174,7 +3174,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -3185,7 +3185,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -3243,7 +3243,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -3254,7 +3254,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -3265,7 +3265,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -3276,7 +3276,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -3287,7 +3287,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -3298,7 +3298,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -3309,7 +3309,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -3320,7 +3320,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -3331,7 +3331,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -3342,7 +3342,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -3353,7 +3353,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [
@@ -3390,7 +3390,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Request"
+            "description": "The request is invalid (for example a bad filter or cursor)"
           },
           "401": {
             "content": {
@@ -3401,7 +3401,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unauthorized"
+            "description": "A valid bearer token is required"
           },
           "404": {
             "content": {
@@ -3412,7 +3412,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Not Found"
+            "description": "Nothing matches the request"
           },
           "409": {
             "content": {
@@ -3423,7 +3423,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Conflict"
+            "description": "The request conflicts with the current state"
           },
           "413": {
             "content": {
@@ -3434,7 +3434,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Request Entity Too Large"
+            "description": "The request body exceeds the size limit"
           },
           "422": {
             "content": {
@@ -3445,7 +3445,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Unprocessable Entity"
+            "description": "The request does not match the schema"
           },
           "429": {
             "content": {
@@ -3456,7 +3456,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Too Many Requests"
+            "description": "A model server is rate limiting"
           },
           "500": {
             "content": {
@@ -3467,7 +3467,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Internal Server Error"
+            "description": "An internal error occurred"
           },
           "502": {
             "content": {
@@ -3478,7 +3478,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Bad Gateway"
+            "description": "A model server failed or returned an unusable answer"
           },
           "503": {
             "content": {
@@ -3489,7 +3489,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Service Unavailable"
+            "description": "The service is not ready, not configured, locked or out of resources"
           },
           "504": {
             "content": {
@@ -3500,7 +3500,7 @@
               },
               "application/problem+json": {}
             },
-            "description": "Gateway Timeout"
+            "description": "A stage ran out of time"
           }
         },
         "security": [

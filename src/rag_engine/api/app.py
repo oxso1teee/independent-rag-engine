@@ -26,9 +26,28 @@ __all__ = ["create_app", "resolve_token"]
 
 _bearer = HTTPBearer(auto_error=False, description="Bearer token from the api.token_env variable")
 
+# Fixed wording: the standard library's phrases differ between Python versions (422 changed in
+# 3.13), which would make the committed OpenAPI snapshot depend on the interpreter.
+_ERROR_DESCRIPTIONS = {
+    400: "The request is invalid (for example a bad filter or cursor)",
+    401: "A valid bearer token is required",
+    404: "Nothing matches the request",
+    409: "The request conflicts with the current state",
+    413: "The request body exceeds the size limit",
+    422: "The request does not match the schema",
+    429: "A model server is rate limiting",
+    500: "An internal error occurred",
+    502: "A model server failed or returned an unusable answer",
+    503: "The service is not ready, not configured, locked or out of resources",
+    504: "A stage ran out of time",
+}
 COMMON_ERRORS: dict[int | str, dict[str, Any]] = {
-    code: {"model": schemas.Problem, "content": {"application/problem+json": {}}}
-    for code in (400, 401, 404, 409, 413, 422, 429, 500, 502, 503, 504)
+    code: {
+        "model": schemas.Problem,
+        "description": text,
+        "content": {"application/problem+json": {}},
+    }
+    for code, text in _ERROR_DESCRIPTIONS.items()
 }
 DESCRIPTION = """\
 Local-first retrieval-augmented generation over your own documents.
