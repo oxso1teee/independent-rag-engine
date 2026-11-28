@@ -6,6 +6,10 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Final audit and release hardening
+- Datasets: `retrieval_hard_v2` and `retrieval_mini_v2` correct the labelling errors the audit found
+  (root cause fixed in `build_hard_dataset.py`, which now refuses a dataset the audit finds wrong on
+  its face); version 1 is frozen, the history is in `eval/datasets/CHANGES_v2.json`, nothing is
+  marked reviewed. Audit after the fix: 170 correct, 15 doubtful, 0 incorrect.
 - Preliminary automatic audit of evaluation questions (`eval/scripts/audit_questions.py`,
   `evaluation/question_audit.py`): correct / doubtful / incorrect, lexical and optional semantic
   layer; and a batch-review table in the review page with group accept and reject that act only on

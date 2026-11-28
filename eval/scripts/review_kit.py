@@ -23,7 +23,7 @@ from rag_engine.domain import RagError
 from rag_engine.evaluation.review_kit import apply_kit_sheet, build_kit, load_source
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT = ("retrieval_hard_v1", "retrieval_mini_v1")
+DEFAULT = ("retrieval_hard_v2", "retrieval_mini_v2")
 
 
 def main() -> None:
@@ -35,6 +35,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--audit", type=Path, help="a report of audit_questions.py: adds the audit column and table"
+    )
+    parser.add_argument(
+        "--notes",
+        type=Path,
+        help="a JSON file of key -> note (a deep audit's reading per question)",
     )
     parser.add_argument("--sheet", type=Path)
     parser.add_argument("--reviewer")
@@ -49,7 +54,10 @@ def main() -> None:
             if args.audit is not None:
                 report = json.loads(args.audit.read_text(encoding="utf-8"))
                 audits = {item["key"]: item for item in report["audits"]}
-            args.output.write_text(build_kit(sources, audits=audits), encoding="utf-8")
+            notes = None
+            if args.notes is not None:
+                notes = json.loads(args.notes.read_text(encoding="utf-8"))
+            args.output.write_text(build_kit(sources, audits=audits, notes=notes), encoding="utf-8")
             total = sum(len(s.dataset.questions) for s in sources)
             print(f"{total} questions from {len(sources)} datasets written to {args.output}")
             return

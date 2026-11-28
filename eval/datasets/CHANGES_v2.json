@@ -1,0 +1,1264 @@
+{
+  "revision": 2,
+  "date": "2026-11-28",
+  "datasets": {
+    "retrieval-hard": {
+      "from": 1,
+      "to": 2,
+      "changes": [
+        {
+          "id": "en_travel-1-cross",
+          "kind": "ambiguity",
+          "fields": [
+            "question"
+          ],
+          "reason": "'отчёт о командировочных расходах' also matched the trip report of ru_travel (10 working days); it now asks for the filing of expenses and names the policy's own term, Travel expenses",
+          "before": {
+            "question": "В какой срок после поездки нужно подать отчёт о командировочных расходах?"
+          },
+          "after": {
+            "question": "Сколько дней после поездки отводится на подачу заявки на возмещение командировочных расходов (Travel expenses)?"
+          }
+        },
+        {
+          "id": "en_release-1-cross",
+          "kind": "ambiguity",
+          "fields": [
+            "question"
+          ],
+          "reason": "the Russian question also matched the Thursday schedule of ru_release; it now names UTC, which only en_release uses",
+          "before": {
+            "question": "В какой день и время выходят релизы в продакшн?"
+          },
+          "after": {
+            "question": "В какой день и в какое время по UTC выходят релизы в продакшн?"
+          }
+        },
+        {
+          "id": "ru_office_hours-2-same",
+          "kind": "anchor",
+          "fields": [
+            "type",
+            "gold",
+            "reference_facts"
+          ],
+          "reason": "the quote 'офис закрыт' was too short to identify the evidence",
+          "before": {
+            "type": "paraphrase",
+            "gold": [
+              {
+                "doc": "ru_office_hours.md",
+                "anchor": "офис закрыт",
+                "min_support": 1
+              }
+            ],
+            "reference_facts": [
+              "офис закрыт"
+            ]
+          },
+          "after": {
+            "type": "keyword",
+            "gold": [
+              {
+                "doc": "ru_office_hours.md",
+                "anchor": "В субботу и воскресенье офис закрыт",
+                "min_support": 1
+              }
+            ],
+            "reference_facts": [
+              "В субботу и воскресенье офис закрыт"
+            ]
+          }
+        },
+        {
+          "id": "ru_office_hours-2-cross",
+          "kind": "anchor",
+          "fields": [
+            "gold",
+            "reference_facts"
+          ],
+          "reason": "the quote 'офис закрыт' was too short to identify the evidence",
+          "before": {
+            "gold": [
+              {
+                "doc": "ru_office_hours.md",
+                "anchor": "офис закрыт",
+                "min_support": 1
+              }
+            ],
+            "reference_facts": [
+              "офис закрыт"
+            ]
+          },
+          "after": {
+            "gold": [
+              {
+                "doc": "ru_office_hours.md",
+                "anchor": "В субботу и воскресенье офис закрыт",
+                "min_support": 1
+              }
+            ],
+            "reference_facts": [
+              "В субботу и воскресенье офис закрыт"
+            ]
+          }
+        },
+        {
+          "id": "ru_travel-1-cross",
+          "kind": "ambiguity",
+          "fields": [
+            "question"
+          ],
+          "reason": "'trip report' also matched the expense filing of en_travel (14 days); it now says working days and a business trip report",
+          "before": {
+            "question": "Within what time must a trip report be handed in?"
+          },
+          "after": {
+            "question": "Within how many working days must a business trip report be submitted?"
+          }
+        },
+        {
+          "id": "ru_travel-2-cross",
+          "kind": "ambiguity",
+          "fields": [
+            "question"
+          ],
+          "reason": "'daily travel allowance' also matched the meal limit per day of en_meals; it now asks for the per diem in roubles",
+          "before": {
+            "question": "How much is the daily travel allowance?"
+          },
+          "after": {
+            "question": "How many roubles of per diem are paid for each day of a business trip?"
+          }
+        },
+        {
+          "id": "ru_training-2-same",
+          "kind": "anchor",
+          "fields": [
+            "type",
+            "gold",
+            "reference_facts"
+          ],
+          "reason": "the quote 'за 14 дней' was too short to identify the evidence; the question type is recomputed from the longer quote",
+          "before": {
+            "type": "paraphrase",
+            "gold": [
+              {
+                "doc": "ru_training.md",
+                "anchor": "за 14 дней",
+                "min_support": 1
+              }
+            ],
+            "reference_facts": [
+              "за 14 дней"
+            ]
+          },
+          "after": {
+            "type": "keyword",
+            "gold": [
+              {
+                "doc": "ru_training.md",
+                "anchor": "согласовать с руководителем за 14 дней",
+                "min_support": 1
+              }
+            ],
+            "reference_facts": [
+              "согласовать с руководителем за 14 дней"
+            ]
+          }
+        },
+        {
+          "id": "ru_training-2-cross",
+          "kind": "anchor",
+          "fields": [
+            "gold",
+            "reference_facts"
+          ],
+          "reason": "the quote 'за 14 дней' was too short to identify the evidence; the question type is recomputed from the longer quote",
+          "before": {
+            "gold": [
+              {
+                "doc": "ru_training.md",
+                "anchor": "за 14 дней",
+                "min_support": 1
+              }
+            ],
+            "reference_facts": [
+              "за 14 дней"
+            ]
+          },
+          "after": {
+            "gold": [
+              {
+                "doc": "ru_training.md",
+                "anchor": "согласовать с руководителем за 14 дней",
+                "min_support": 1
+              }
+            ],
+            "reference_facts": [
+              "согласовать с руководителем за 14 дней"
+            ]
+          }
+        },
+        {
+          "id": "ru_release-1-cross",
+          "kind": "ambiguity",
+          "fields": [
+            "question"
+          ],
+          "reason": "the English question also matched the Tuesday schedule of en_release; it now names Moscow time, which only ru_release uses",
+          "before": {
+            "question": "When do releases go out?"
+          },
+          "after": {
+            "question": "On which day and at what Moscow time do releases go out?"
+          }
+        },
+        {
+          "id": "ru_it-2-cross",
+          "kind": "ambiguity",
+          "fields": [
+            "question"
+          ],
+          "reason": "'critical requests' could be taken for the severity 1 incidents of en_incident; it now says IT support requests",
+          "before": {
+            "question": "How fast are critical requests handled?"
+          },
+          "after": {
+            "question": "How fast are critical IT support requests handled?"
+          }
+        },
+        {
+          "id": "multi_doc-3",
+          "kind": "gold",
+          "fields": [
+            "question",
+            "gold",
+            "reference_answer",
+            "reference_facts"
+          ],
+          "reason": "the third gold quote (office hours) had nothing to do with the question; it was added only to satisfy 'two documents'. The question now needs two real documents",
+          "before": {
+            "question": "Сколько хранятся копии почтового сервера и в какое время их создают?",
+            "gold": [
+              {
+                "doc": "ru_mail_backup.md",
+                "anchor": "хранятся 21 день",
+                "min_support": 1
+              },
+              {
+                "doc": "ru_mail_backup.md",
+                "anchor": "каждую ночь в 03:20 по московскому времени",
+                "min_support": 1
+              },
+              {
+                "doc": "ru_office_hours.md",
+                "anchor": "с 9:00 до 18:00",
+                "min_support": 1
+              }
+            ],
+            "reference_answer": "Копии хранятся 21 день и создаются каждую ночь в 03:20.",
+            "reference_facts": [
+              "хранятся 21 день",
+              "каждую ночь в 03:20 по московскому времени",
+              "с 9:00 до 18:00"
+            ]
+          },
+          "after": {
+            "question": "Сколько хранятся копии почтового сервера и резервные копии базы данных?",
+            "gold": [
+              {
+                "doc": "ru_mail_backup.md",
+                "anchor": "хранятся 21 день",
+                "min_support": 1
+              },
+              {
+                "doc": "en_db_backup.md",
+                "anchor": "kept for 30 days",
+                "min_support": 1
+              }
+            ],
+            "reference_answer": "Копии почтового сервера хранятся 21 день, резервные копии базы данных - 30 дней.",
+            "reference_facts": [
+              "хранятся 21 день",
+              "kept for 30 days"
+            ]
+          }
+        },
+        {
+          "id": "multi_doc-5",
+          "kind": "gold",
+          "fields": [
+            "question",
+            "gold",
+            "reference_answer",
+            "reference_facts"
+          ],
+          "reason": "the third gold quote (critical requests) was unrelated to the release question; the question now asks about rollback and critical requests, one document each",
+          "before": {
+            "question": "Когда выходят релизы и в какой срок можно откатить релиз?",
+            "gold": [
+              {
+                "doc": "ru_release.md",
+                "anchor": "каждый четверг в 16:00 по московскому времени",
+                "min_support": 1
+              },
+              {
+                "doc": "ru_release.md",
+                "anchor": "в течение 24 часов",
+                "min_support": 1
+              },
+              {
+                "doc": "ru_it.md",
+                "anchor": "в течение 15 минут",
+                "min_support": 1
+              }
+            ],
+            "reference_answer": "Релизы выходят по четвергам в 16:00; откат допускается в течение 24 часов.",
+            "reference_facts": [
+              "каждый четверг в 16:00 по московскому времени",
+              "в течение 24 часов",
+              "в течение 15 минут"
+            ]
+          },
+          "after": {
+            "question": "В какой срок допускается откат релиза и за какое время обрабатываются критичные заявки?",
+            "gold": [
+              {
+                "doc": "ru_release.md",
+                "anchor": "в течение 24 часов",
+                "min_support": 1
+              },
+              {
+                "doc": "ru_it.md",
+                "anchor": "в течение 15 минут",
+                "min_support": 1
+              }
+            ],
+            "reference_answer": "Откат релиза допускается в течение 24 часов; критичные заявки обрабатываются в течение 15 минут.",
+            "reference_facts": [
+              "в течение 24 часов",
+              "в течение 15 минут"
+            ]
+          }
+        },
+        {
+          "id": "conflicting-7",
+          "kind": "completeness",
+          "fields": [
+            "reference_answer"
+          ],
+          "reason": "the expected answer left out that version 2 replaces version 1 (the English twin conflicting-6 has it), so the current rule was missing",
+          "before": {
+            "reference_answer": "Version 1 gave 20 days; version 2 gives 25 days."
+          },
+          "after": {
+            "reference_answer": "Version 1 gave 20 days; version 2 gives 25 days and replaces version 1 from 1 January 2025."
+          }
+        },
+        {
+          "id": "conflicting-9",
+          "kind": "completeness",
+          "fields": [
+            "reference_answer"
+          ],
+          "reason": "the expected answer left out that the 2024 policy replaces the 2023 one (the English twin conflicting-8 has it)",
+          "before": {
+            "reference_answer": "2 days in 2023; up to 3 days in 2024."
+          },
+          "after": {
+            "reference_answer": "2 days under the 2023 policy; up to 3 days under the 2024 policy, which replaces it."
+          }
+        },
+        {
+          "id": "no-answer-1",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "dental",
+              "insurance"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "dental",
+              "insurance",
+              "стоматолог",
+              "страхов"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-2",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "abroad"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "abroad",
+              "за границ",
+              "за рубеж"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-3",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "gym"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "gym",
+              "спортзал",
+              "фитнес"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-4",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "dress code"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "dress code",
+              "дресс-код",
+              "одежд"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-5",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "parental"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "parental",
+              "декрет",
+              "родительск"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-6",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "protection officer"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "protection officer",
+              "защите данных",
+              "уполномоченн"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-7",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "salary"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "salary",
+              "зарплат",
+              "оклад"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-8",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "stock option"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "stock option",
+              "опцион",
+              "акци"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-9",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "resignation"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "resignation",
+              "увольнени",
+              "заявление об уходе"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-10",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "bicycle"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "bicycle",
+              "велосипед",
+              "велопарков"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-11",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "standing desk"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "standing desk",
+              "стол с регулировк"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-12",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "wi-fi"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "wi-fi",
+              "гостев"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-13",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "language course"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "language course",
+              "языковые курсы",
+              "иностранн"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-14",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "monitor"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "monitor",
+              "монитор"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-15",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "payroll"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "payroll",
+              "расчётн",
+              "зарплатн"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-16",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "страховк"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "страховк",
+              "insurance",
+              "medical"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-17",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "рождении ребёнка"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "рождении ребёнка",
+              "childbirth",
+              "birth",
+              "maternity"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-18",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "премии"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "премии",
+              "bonus"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-19",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "увольнени"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "увольнени",
+              "resign",
+              "dismissal",
+              "termination"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-20",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "велосипед"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "велосипед",
+              "bicycle",
+              "bike"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-21",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "wi-fi"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "wi-fi",
+              "гостев",
+              "guest network"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-22",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "столов"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "столов",
+              "canteen",
+              "cafeteria",
+              "lunch"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-23",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "бухгалтерск"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "бухгалтерск",
+              "accounting"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-24",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "аттестаци"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "аттестаци",
+              "appraisal",
+              "performance review"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-25",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "охран"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "охран",
+              "occupational safety",
+              "safety officer"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-26",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "испытательн"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "испытательн",
+              "probation"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-27",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "фитнес"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "фитнес",
+              "fitness",
+              "gym"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-28",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "канцеляр"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "канцеляр",
+              "stationery",
+              "office supplies"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-29",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "конфликт"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "конфликт",
+              "conflict of interest"
+            ]
+          }
+        },
+        {
+          "id": "no-answer-30",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "из дома"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "из дома",
+              "work from home",
+              "working from home"
+            ]
+          }
+        }
+      ]
+    },
+    "retrieval-mini": {
+      "from": 1,
+      "to": 2,
+      "changes": [
+        {
+          "id": "en-m1",
+          "kind": "facts",
+          "fields": [
+            "reference_facts"
+          ],
+          "reason": "the expected answer joins two evidence quotes, so it is now listed as one fact per quote",
+          "before": {
+            "reference_facts": [
+              "Daily backups 14 days; application logs 30 days."
+            ]
+          },
+          "after": {
+            "reference_facts": [
+              "Daily backups 14 days",
+              "application logs 30 days"
+            ]
+          }
+        },
+        {
+          "id": "en-m2",
+          "kind": "facts",
+          "fields": [
+            "reference_facts"
+          ],
+          "reason": "the expected answer joins two evidence quotes, so it is now listed as one fact per quote",
+          "before": {
+            "reference_facts": [
+              "The on-call engineer within 5 minutes; the release rolls back automatically above 2 percent errors."
+            ]
+          },
+          "after": {
+            "reference_facts": [
+              "The on-call engineer within 5 minutes",
+              "the release rolls back automatically above 2 percent errors"
+            ]
+          }
+        },
+        {
+          "id": "en-m3",
+          "kind": "facts",
+          "fields": [
+            "reference_facts"
+          ],
+          "reason": "the expected answer joins two evidence quotes, so it is now listed as one fact per quote",
+          "before": {
+            "reference_facts": [
+              "Backup copies are encrypted with AES-256; exports are available for 7 days."
+            ]
+          },
+          "after": {
+            "reference_facts": [
+              "Backup copies are encrypted with AES-256",
+              "exports are available for 7 days"
+            ]
+          }
+        },
+        {
+          "id": "ru-m1",
+          "kind": "facts",
+          "fields": [
+            "reference_facts"
+          ],
+          "reason": "the expected answer joins two evidence quotes, so it is now listed as one fact per quote",
+          "before": {
+            "reference_facts": [
+              "Права раз в полгода; восстановление раз в квартал."
+            ]
+          },
+          "after": {
+            "reference_facts": [
+              "Права раз в полгода",
+              "восстановление раз в квартал"
+            ]
+          }
+        },
+        {
+          "id": "ru-m2",
+          "kind": "facts",
+          "fields": [
+            "reference_facts"
+          ],
+          "reason": "the expected answer joins two evidence quotes, so it is now listed as one fact per quote",
+          "before": {
+            "reference_facts": [
+              "60 тысяч рублей в год на обучение; суточные 1000 рублей в день."
+            ]
+          },
+          "after": {
+            "reference_facts": [
+              "60 тысяч рублей в год на обучение",
+              "суточные 1000 рублей в день"
+            ]
+          }
+        },
+        {
+          "id": "ru-m3",
+          "kind": "facts",
+          "fields": [
+            "reference_facts"
+          ],
+          "reason": "the expected answer joins two evidence quotes, so it is now listed as one fact per quote",
+          "before": {
+            "reference_facts": [
+              "По понедельникам в 10:00; в праздничные дни отключаются оповещения низкой важности."
+            ]
+          },
+          "after": {
+            "reference_facts": [
+              "По понедельникам в 10:00",
+              "в праздничные дни отключаются оповещения низкой важности"
+            ]
+          }
+        },
+        {
+          "id": "en-n1",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "dogs",
+              "pets"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "dogs",
+              "pets",
+              "собак"
+            ]
+          }
+        },
+        {
+          "id": "en-n2",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "bonus"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "bonus",
+              "премия",
+              "премии"
+            ]
+          }
+        },
+        {
+          "id": "en-n3",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "cloud provider",
+              "kubernetes"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "cloud provider",
+              "kubernetes",
+              "облачн",
+              "хостинг"
+            ]
+          }
+        },
+        {
+          "id": "en-n4",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "parental"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "parental",
+              "декрет",
+              "родительск"
+            ]
+          }
+        },
+        {
+          "id": "ru-n1",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "премия",
+              "премии"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "премия",
+              "премии",
+              "bonus"
+            ]
+          }
+        },
+        {
+          "id": "ru-n2",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "столовая",
+              "столовой"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "столовая",
+              "столовой",
+              "canteen",
+              "cafeteria"
+            ]
+          }
+        },
+        {
+          "id": "ru-n3",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "python",
+              "java"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "python",
+              "java",
+              "язык программирования",
+              "бэкенд",
+              "programming language",
+              "backend"
+            ]
+          }
+        },
+        {
+          "id": "ru-n4",
+          "kind": "absence",
+          "fields": [
+            "absence_terms"
+          ],
+          "reason": "absence terms now cover both languages, because the corpus has documents in both",
+          "before": {
+            "absence_terms": [
+              "декрет"
+            ]
+          },
+          "after": {
+            "absence_terms": [
+              "декрет",
+              "parental",
+              "maternity"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

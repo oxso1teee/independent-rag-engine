@@ -131,12 +131,18 @@ def build_kit(
     *,
     title: str = "Evaluation question review",
     audits: Mapping[str, Mapping[str, Any]] | None = None,
+    notes: Mapping[str, str] | None = None,
 ) -> str:
-    """The review page. ``audits`` maps ``dataset:id`` to an audit (``QuestionAudit.as_dict()``)."""
+    """The review page. ``audits`` maps ``dataset:id`` to an audit (``QuestionAudit.as_dict()``);
+    ``notes`` maps it to a short reading by whoever audited the question in depth."""
     cards = [question_card(s, q) for s in sources for q in s.dataset.questions]
     if audits is not None:
         for card in cards:
             card["audit"] = audits.get(card["key"])
+    if notes is not None:
+        for card in cards:
+            if card["key"] in notes:
+                card["note"] = notes[card["key"]]
     documents = {f"{s.name}/{doc}": text for s in sources for doc, text in s.corpus.items()}
     payload = {
         "title": title,

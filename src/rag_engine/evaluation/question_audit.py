@@ -120,6 +120,11 @@ def _script(text: str) -> str:
     return "ru" if cyrillic >= latin else "en"
 
 
+def _both_languages(terms: Sequence[str]) -> bool:
+    """Whether the absence terms are given in English and in Russian."""
+    return {_script(t) for t in terms} >= {"ru", "en"}
+
+
 def split_passages(corpus: Mapping[str, str]) -> list[Passage]:
     """Paragraphs of every document, in order; a heading is kept with the paragraph after it."""
     out: list[Passage] = []
@@ -429,6 +434,8 @@ def _no_answer(
             )
     if not q.absence_terms:
         run.soft("no-absence-terms", "nothing records why this question has no answer")
+    elif _both_languages(q.absence_terms):
+        run.passed.append("absence-terms-in-both-languages")
     wanted = _terms(q.question)
     best, where = 0.0, ""
     for p in passages:
@@ -487,7 +494,16 @@ def _semantic(
     if not q.answerable:
         best = max(range(len(passages)), key=lambda i: scores[i])
         run.metrics["dense_best"] = round(scores[best], 3)
-        if typical_gold is not None and scores[best] >= typical_gold:
+        if (
+            typical_gold is not None
+            and scores[best] >= typical_gold
+            and _both_languages(q.absence_terms)
+        ):
+            run.info(
+                "dense-near-miss",
+                f"{passages[best].doc} scores {scores[best]:.2f} (a near-miss topic), but the absence terms in both languages are absent from the corpus",
+            )
+        elif typical_gold is not None and scores[best] >= typical_gold:
             run.soft(
                 "dense-looks-answerable",
                 f"{passages[best].doc} scores {scores[best]:.2f}, as high as the lower quartile of answerable questions ({typical_gold:.2f})",
@@ -507,6 +523,12 @@ def _semantic(
     best_gold = min(rank[p.index] for p in gold)
     gold_score = max(scores[p.index] for p in gold)
     other = max((scores[p.index] for p in pool if p not in gold), default=0.0)
+    own = [
+        p for p in passages if p.language is Language(q.language) and p.language not in languages
+    ]
+    if own:  # shown to the reviewer, never a flag: the model favours the question's own language
+        rival = max(own, key=lambda p: scores[p.index])
+        run.metrics["dense_own_language_best"] = f"{rival.doc} {scores[rival.index]:.3f}"
     run.metrics["dense_gold_rank"] = best_gold
     run.metrics["dense_pool"] = len(pool)
     run.metrics["dense_gold_score"] = round(gold_score, 3)
