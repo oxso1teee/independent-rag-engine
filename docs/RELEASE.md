@@ -32,8 +32,8 @@ These are not packaging problems; they are the project's open criteria and none 
 
 ## Decisions for the owner
 
-- **Licence.** None is chosen; until one is, no licence is granted. `pyproject.toml` and the README
-  say so. Choosing one also needs a `LICENSE` file and the licence field of the package.
+- **Licence.** MIT (`LICENSE`, `pyproject.toml` and the README agree). Dependency licences are
+  listed in `THIRD_PARTY_NOTICES.md`.
 - **Version and tag.** The package says `0.0.1`. Whether the first release is `v0.1.0` and whether
   it is called a pre-release is the owner's call.
 - **Publication.** Making the repository public, publishing the image or the package, and the

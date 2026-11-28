@@ -3,6 +3,9 @@ name = "independent-rag-engine"
 dynamic = ["version"]
 description = "Modular, local-first RAG engine for reliable knowledge retrieval, evidence-grounded generation, and reproducible evaluation."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "Sergey Puchkov"}]
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "charset-normalizer>=3.4",

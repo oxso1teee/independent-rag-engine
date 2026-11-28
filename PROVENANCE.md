@@ -36,4 +36,5 @@ Listed with their licences in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) a
 
 ## Licence of this project
 
-Not chosen. Until the owner chooses one, no licence is granted.
+MIT, Copyright (c) 2026 Sergey Puchkov; see [LICENSE](LICENSE). Third-party licences stay
+with their packages (see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and `docs/licenses/`).

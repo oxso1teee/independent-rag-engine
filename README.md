@@ -11,7 +11,7 @@ generation, and reproducible evaluation.
 > been run through the pipeline on this project's reference machine, so faithfulness, hallucination
 > rate and answer latency are unmeasured; and the evaluation labels have not been reviewed by a
 > person. [docs/TESTING.md](docs/TESTING.md) lists every criterion with its evidence and every one
-> that is open. The licence has not been chosen yet, so nothing here is licensed for reuse.
+> that is open. Licensed under the [MIT licence](LICENSE).
 
 ## What it does
 
