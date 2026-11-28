@@ -10,7 +10,7 @@ per-phase evidence tables are in [TESTING.md](TESTING.md). No target was changed
 
 | | |
 |---|---|
-| Functional requirements FR-01…19 | all PASS except FR-14 (the gate stage), see F-1 and G-1 |
+| Functional requirements FR-01…19 | all PASS; FR-14's pre-generation gate is implemented and calibratable (F-1 closed) but its quality target is FAIL (G-1) |
 | FR-20…22 (MCP, ANN, agentic search) | DEFERRED, outside the first release |
 | NFR-01, 03–12 | PASS (NFR-12: Linux verified, macOS NOT VERIFIED) |
 | NFR-02 | environment PASS, database-size clause FAIL (F-2) |
@@ -35,7 +35,7 @@ per-phase evidence tables are in [TESTING.md](TESTING.md). No target was changed
 | FR-11 | PASS | packer and builder tests, truncation report in diagnostics |
 | FR-12 | PASS (stub and scripted) | generation, streaming, retries, resilience: `tests/unit`, `tests/e2e`; **no real model run, see L-1** |
 | FR-13 | PASS | citation parsing and validation levels 1–2 (lexical overlap is a screen, not entailment: documented) |
-| FR-14 | PARTIAL | statuses, post-checks and refusal marker PASS; the pre-generation gate is available but never calibrated for a user (F-1) and misses its quality target (G-1) |
+| FR-14 | PASS (mechanism); quality FAIL | statuses, post-checks, refusal marker and the gate with `rag calibrate` ([ADR 0021](adr/0021-rag-calibrate.md), `tests/e2e/test_calibrate_cli.py`); the gate misses its quality target (G-1) |
 | FR-15 | PASS | versions, soft delete, GC: `tests/integrity` |
 | FR-16 | PASS | CLI exit codes and RFC 9457 problems; committed OpenAPI snapshot `docs/openapi.json` checked in tests |
 | FR-17 | PASS | protocol with split guard, paired statistics, baselines, regression gate |
@@ -78,10 +78,25 @@ Docker image 80 MB, non-root, healthy, refuses to start without a token; `make p
 
 | # | Finding | Why not, and what is needed |
 |---|---|---|
-| F-1 | **No command writes the gate calibration.** `index_state.calibration` is read but only the research scripts compute thresholds, so a user's gate is always open and says `uncalibrated` | designed in [ADR 0021](adr/0021-rag-calibrate.md) (`rag calibrate` over the user's own questions, cross-validated estimate); not implemented yet. Recommended before any claim about refusing weak evidence |
+| F-1 | ~~No command writes the gate calibration~~ | **closed** by `rag calibrate` (see "F-1 re-audit" below) |
 | F-2 | Database about 7–9× the source text, target about 3× | a schema change (vector encoding or full-text options) is too risky for a hardening release; owner decision whether to relax the clause or schedule the work |
 | F-3 | Coverage gaps: the parser worker subprocess (0 % in-process, covered by e2e through the worker), `cli/ask_render.py` 72 % | acceptable for the release, listed here |
 | F-4 | The memory gate refuses the 4B model on this machine | by design; see L-1 |
+
+### F-1 re-audit (after `rag calibrate`)
+
+| Question | Verdict | Evidence |
+|---|---|---|
+| Can a user obtain a calibrated gate by documented steps, from indexing to `rag ask`? | PASS | `tests/e2e/test_calibrate_cli.py::test_the_whole_story_*`: ingest, ask (open gate, warned), calibrate with a holdout, show, ask (weak refused with no model call, strong answered), doctor quiet; [CALIBRATION.md](CALIBRATION.md) |
+| Bound to model, retrieval configuration and rule version? | PASS | `binding` digest of chunker, analyser, reranker revision and pool, mode, `top_k`, `candidate_k`, reranked; `algorithm`; `test_a_bound_record_*`, `test_a_different_retrieval_setup_*` |
+| Atomic save, safe against a concurrent ingest or model switch? | PASS | one writer transaction, generation and model re-checked inside, rollback on failure, other keys preserved: `test_saving_is_atomic_*`, `test_other_calibration_keys_*` |
+| Holdout independence enforced? | PASS | exact, normalised and near-duplicate (Jaccard 0.8) detection, same-file refusal: `test_overlap_*`, `test_overlapping_holdout_*` |
+| Missing, stale and below-target calibration announced? | PASS | `gate_warnings` in answers (CLI text, `--json`, API), `doctor` for missing, foreign model, old rule, resized index, below target |
+| CLI, API and `RagPipeline` agree? | PASS | one decision path (`SufficiencyGate`), `tests/api/test_calibration.py`, pipeline shape computed from the query |
+| No question text stored or printed? | PASS | tests assert it for output and for `index_state` |
+| Reranker path end to end with the real cross-encoder | NOT VERIFIED | covered at unit level and by the same signal code the research used; no real reranker run in this change |
+| Lexical-only retrieval | not calibratable by design | refused with a message; gate stays open and warns |
+| Quality of a gate on real data | **FAIL / open** | unchanged, G-1: the command reports an estimate, it does not make the gate good |
 
 ## Quality targets
 

@@ -6,6 +6,10 @@ project until a release is cut.
 ## [Unreleased]
 
 ### Final audit and release hardening
+- `rag calibrate run|show|clear` (ADR 0021): the sufficiency gate is calibrated on the installation's
+  own index with a cross-validated estimate, an optional independent holdout, and a record bound to
+  the model, the retrieval setup and the decision rule. Answers, `rag doctor` and the API warn when
+  the gate is open, stale or below its targets. Guide: `docs/CALIBRATION.md`.
 - `docs/AUDIT.md` (every requirement and phase with a verdict and its evidence) and
   `docs/REQUIREMENTS.md`; `docs/LLM_VERIFICATION.md` (how to measure a real model).
 - Security: the OpenAPI document is served behind the token like every other route.

@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 
 from rag_engine.domain import ChunkId, DocumentVersionId, EmbeddingModelId, RagError
+from rag_engine.domain.models import SUFFICIENCY_ALGORITHM
 from rag_engine.storage.sqlite.connection import connect
 
 
@@ -29,15 +30,42 @@ class IntegrityReport:
         return not self.errors
 
 
-def _calibration_warnings(state: sqlite3.Row, active: str | None) -> list[str]:
-    """A calibration made for another embedding model no longer describes this index."""
+def _calibration_warnings(state: sqlite3.Row, active: str | None, documents: int) -> list[str]:
+    """Missing, foreign, outdated, resized or below-target calibration, in words."""
     try:
         stored = json.loads(state["calibration_json"] or "{}").get("sufficiency")
     except (ValueError, AttributeError):
         return ["the stored calibration cannot be read"]
-    if isinstance(stored, dict) and active is not None and stored.get("model_id") != active:
-        return ["the sufficiency calibration was made for another embedding model; recalibrate"]
-    return []
+    if active is None:
+        return []
+    if not isinstance(stored, dict):
+        return ["the sufficiency gate is not calibrated, so weak evidence is not refused before "
+                "generation; run `rag calibrate run QUESTIONS`"]  # fmt: skip
+    out: list[str] = []
+    if stored.get("model_id") != active:
+        out.append("the sufficiency calibration was made for another embedding model; recalibrate")
+    if stored.get("algorithm") != SUFFICIENCY_ALGORITHM:
+        out.append("the sufficiency calibration was made for an older decision rule; recalibrate")
+    details = stored.get("details")
+    made = details.get("documents") if isinstance(details, dict) else None
+    if (
+        isinstance(made, int)
+        and not isinstance(made, bool)
+        and made > 0
+        and abs(documents - made) / made > 0.5
+    ):
+        out.append(
+            f"the index has changed a lot since the calibration ({made} documents then, "
+            f"{documents} now); recalibrate"
+        )
+    if stored.get("below_target") is True:
+        out.append("the sufficiency calibration's estimate was below its targets")
+    return out
+
+
+def _active_documents(conn: sqlite3.Connection) -> int:
+    row = conn.execute("SELECT COUNT(*) FROM documents WHERE status = 'active'").fetchone()
+    return int(row[0])
 
 
 def check_integrity(database: Path) -> IntegrityReport:
@@ -191,7 +219,11 @@ def check_integrity(database: Path) -> IntegrityReport:
             if model is not None and model["normalized"] and abs(norm - 1.0) >= 1e-3:
                 errors.append(f"unnormalized vector: {key}")
         return IntegrityReport(
-            tuple(errors), published, count, generation, tuple(_calibration_warnings(state, active))
+            tuple(errors),
+            published,
+            count,
+            generation,
+            tuple(_calibration_warnings(state, active, _active_documents(conn))),
         )
     except sqlite3.Error as exc:
         errors.append(f"SQLite integrity query failed: {exc}")

@@ -74,7 +74,11 @@ from rag_engine.ports import (
 from rag_engine.retrieval.query import QueryProcessor
 from rag_engine.retrieval.rerank import RerankStage
 from rag_engine.retrieval.service import FusionSettings, IndexSnapshot, RetrievalService
-from rag_engine.retrieval.sufficiency import SufficiencyGate, thresholds_from_metadata
+from rag_engine.retrieval.sufficiency import (
+    SufficiencyGate,
+    gate_environment,
+    thresholds_from_metadata,
+)
 from rag_engine.storage.content import SqliteChunkContentReader
 from rag_engine.storage.filters import SqliteChunkCatalog, SqliteChunkFilter
 from rag_engine.storage.lexical import SqliteLexicalIndex
@@ -445,6 +449,17 @@ class DefaultContainer:
                 max_per_document=retrieval.max_per_document,
             )
 
+            def environment() -> str:
+                metadata = store.reader().get_index_metadata()
+                if metadata is None:
+                    return ""
+                return gate_environment(
+                    metadata.chunker_default_fingerprint,
+                    metadata.lexical_analyzer_id,
+                    rerank.revision if stage is not None else None,
+                    rerank.pool_size if stage is not None else None,
+                )
+
             def gate() -> SufficiencyGate:
                 metadata = store.reader().get_index_metadata()
                 if metadata is None:
@@ -453,6 +468,7 @@ class DefaultContainer:
                 return SufficiencyGate(
                     thresholds_from_metadata(metadata.calibration),
                     None if model_id is None else str(model_id),
+                    environment(),
                 )
 
             def release_models() -> None:
@@ -481,6 +497,7 @@ class DefaultContainer:
                 llm_window=settings.llm.context_window,
                 llm_max_new=settings.llm.max_new_tokens,
                 gate=gate,
+                gate_environment=environment,
                 release_models=release_models,
             )
         finally:

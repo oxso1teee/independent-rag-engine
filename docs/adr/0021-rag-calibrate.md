@@ -1,6 +1,6 @@
 # 0021. `rag calibrate`: the gate is calibrated on the user's own index
 
-Status: Proposed (2026-11-28). Not implemented. The audit ([AUDIT.md](../AUDIT.md), F-1) found that
+Status: Accepted and implemented (2026-11-28); see "As built" below. The audit ([AUDIT.md](../AUDIT.md), F-1) found that
 nothing writes `index_state.calibration`, so the sufficiency gate of a real installation is always
 open and reports `uncalibrated`. This record designs the missing command.
 
@@ -128,3 +128,28 @@ released when the command ends. On a machine that cannot hold the reranker the c
 - The user has to bring unanswerable questions. The documentation says how to write good ones
   (near misses of real topics, not nonsense) and that they must be reviewed by a person.
 - Estimated work: one pull request, about 400 lines of code and 300 of tests.
+
+## As built (2026-11-28)
+
+Implemented as designed, with these changes found while building it:
+
+- **Binding is wider than the model.** The record carries a digest of the decision-rule version,
+  the chunker and lexical-analyser fingerprints, the reranker revision and pool size, and the
+  query's retrieval shape (mode, `top_k`, `candidate_k`, whether the reranker ran). A query whose
+  shape differs is let through as `calibration_stale` instead of being judged by foreign scores.
+  The rule's version (`SUFFICIENCY_ALGORITHM`, now 2) invalidates records made under the old rule;
+  a record without one is outdated.
+- **Lexical coverage is not calibrated.** The pipeline derives it from the assembled context, which
+  needs a language model's window; the command does not load one. Lexical-only retrieval therefore
+  cannot be calibrated and says so.
+- **Index size is counted in active documents**, not chunks (the store exposes no cheap chunk
+  count). `doctor` warns when it moved by more than half.
+- **Atomic write.** One writer transaction re-reads the index state and refuses (`E_STORE_LOCKED`,
+  retryable) if the generation or active model differs from what was measured; other keys of the
+  calibration object are preserved; a failure rolls back.
+- **Warnings.** Every answer of an open, stale or below-target gate carries a warning in
+  `diagnostics.warnings`, in the CLI text, `--json` and the API. `doctor` also warns when there is no
+  calibration at all.
+- **Holdout independence** is enforced: the same file, an equal question after normalisation, or a
+  near duplicate (token Jaccard 0.8) is refused.
+- Datasets from the repository work as a question source (their `dev` split).

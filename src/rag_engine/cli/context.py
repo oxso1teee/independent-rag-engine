@@ -77,6 +77,8 @@ class SearchServices:
     llm_max_new: int
     gate: Callable[[], SufficiencyGate] = lambda: SufficiencyGate(None, None)
     """The sufficiency gate for the index as it is now (its calibration is read each time)."""
+    gate_environment: Callable[[], str] = lambda: ""
+    """The setup besides the embedding model that a gate calibration is bound to."""
     release_models: Callable[[], None] = lambda: None
     """Drops the in-process embedder and reranker; the services are unusable for search after."""
 

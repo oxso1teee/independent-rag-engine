@@ -75,6 +75,7 @@ With an embedding model configured ([below](#embedding-model)) and, for answers,
 uv run rag source add notes ~/Documents/notes
 uv run rag ingest notes
 uv run rag search "how are chunks stored"
+uv run rag calibrate run questions.jsonl     # teach the gate your documents; see docs/CALIBRATION.md
 uv run rag ask "How long are database backups kept?" --sources
 RAG_API_TOKEN="$(openssl rand -hex 24)" uv run rag serve        # http://127.0.0.1:8765/v1
 ```
@@ -164,6 +165,7 @@ eval/datasets/     versioned question sets
 - [Phase 4 embedding measurements](docs/EMBEDDING_BAKEOFF.md)
 - [Retrieval evaluation](docs/RETRIEVAL_EVALUATION.md)
 - [Reviewing an evaluation dataset](docs/DATASET_REVIEW.md)
+- [Calibrating the sufficiency gate](docs/CALIBRATION.md)
 - [Verifying a real language model](docs/LLM_VERIFICATION.md)
 - [Requirements and audit](docs/REQUIREMENTS.md)
 - [Changelog](CHANGELOG.md)

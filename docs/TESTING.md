@@ -224,6 +224,15 @@ released.** The open criteria are unchanged: the sufficiency gate (best held-out
 refusals against 90 %), no real-model measurement (answer latency, faithfulness, hallucination
 rate), no reviewed evaluation labels and no calibrated judge.
 
+## Gate calibration (`rag calibrate`)
+
+`tests/unit/test_gate_calibration.py` (question files, overlap, fitting, cross-validation, the bound
+record and its warnings), `tests/e2e/test_calibrate_cli.py` (the whole story on a real index with
+mocked model servers: open gate, calibrate, refuse, answer, doctor, stale setup, below target,
+`--require-target`, dry run, clear, atomic save, concurrent index change), `tests/api/test_calibration.py`
+(the API sees the CLI's calibration). The corpus is synthetic and separable on purpose
+(`tests/calibration_support.py`), so these tests show the mechanism, not a quality.
+
 ## Failure injection (`tests/chaos`)
 
 A child process (`tests/chaos/child.py`) kills itself with `SIGKILL` at one point; the test
