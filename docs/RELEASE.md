@@ -24,14 +24,18 @@ These are not packaging problems; they are the project's open criteria and none 
 
 1. **Sufficiency gate:** 72.5 % correct refusals at 4.2 % false refusals on an independent held-out,
    unreviewed set with the reranker, 32.5 % with dense alone, against targets of 90 % and 10 %
-   ([EVALUATION.md](EVALUATION.md), [AUDIT.md](AUDIT.md)); and no command calibrates the gate for a
-   user's own index yet.
+   ([EVALUATION.md](EVALUATION.md), [AUDIT.md](AUDIT.md)). A user can now calibrate the gate on their
+   own index (`rag calibrate`, [CALIBRATION.md](CALIBRATION.md)); until they do it is open and says so.
 2. **No real language model has run through the pipeline**, so answer latency, faithfulness and
    hallucination rate are unmeasured; the memory gate refused the 4B model on the reference machine
    ([LLM_VERIFICATION.md](LLM_VERIFICATION.md) says how to run it elsewhere).
 3. **No evaluation label has been reviewed by a person**; the criterion of 100 reviewed questions is
    unmet and no judge is calibrated.
-4. **The one-hour soak** covers search only; see [TESTING.md](TESTING.md) for its result.
+4. **The one-hour soak** covers search only; see [TESTING.md](TESTING.md) for its result. The harder
+   variant (`--workers`, `--churn-every`) exists but has not been run: it needs 2.5 GiB of free
+   memory and the reference machine had 1.9–2.4 GiB while the desktop was in use.
+5. **The database is about 5.6× the source text without vectors** against a target of about 3×
+   ([AUDIT.md](AUDIT.md), F-2); decide whether to relax the target or schedule the schema work.
 
 ## Decisions for the owner
 
