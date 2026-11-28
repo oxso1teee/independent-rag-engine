@@ -132,7 +132,7 @@ criterion is unmet, and no judge is calibrated. The review kit is in [DATASET_RE
 | 8 Pipeline | PASS | gate quality FAIL (G-1) |
 | 9 Evaluation | PASS | protocol; labels NOT VERIFIED |
 | 10 API | PASS | D-1 fixed |
-| 11 Operations and release | PASS for packaging; release itself is the owner's | licence, version, tag, publication not chosen |
+| 11 Operations and release | PASS for packaging; release itself is the owner's | MIT licence added by the owner; version, tag and publication not chosen |
 
 ## Public hygiene and licences
 
@@ -141,4 +141,4 @@ internal-research, other-project and preparation-history wording; findings (D-3)
 is unchanged. Attribution and provenance are kept ([PROVENANCE.md](../PROVENANCE.md)). Dependencies:
 54 components, none under a forbidden licence (MPL-2.0 components are listed in
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)); SBOM is regenerated and checked in CI. The project's
-own licence is not chosen and so none is granted.
+own licence is MIT (added by the owner after this audit began; `LICENSE`, `pyproject.toml` and the README agree).

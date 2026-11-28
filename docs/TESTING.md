@@ -190,7 +190,7 @@ the gate target, a reviewed dataset of at least 100 questions, a real-model meas
 | Soak, one search per minute for an hour: RSS growth under 10 %, errors under 2 %, no out-of-memory kill (P11.4) | **passed**, see below |
 | Documentation with a link checker (P11.5) | README, ARCHITECTURE, DEVELOPMENT, TESTING, CONTRIBUTING, SECURITY, PROVENANCE, CHANGELOG, ADRs; `tests/unit/test_docs_links.py` |
 | Licences, notices, SBOM, audit (P11.6) | `THIRD_PARTY_NOTICES.md` and `sbom.cdx.json` generated from `uv.lock` (54 components, none under a forbidden licence) and checked in CI; `pip-audit` and the licence check in CI |
-| Release v0.1.0 and the decision on publicity (P11.7) | **not done on purpose**: a checklist is in [RELEASE.md](RELEASE.md); the version, tag, licence and publication are the owner's decisions |
+| Release v0.1.0 and the decision on publicity (P11.7) | **not done on purpose**: a checklist is in [RELEASE.md](RELEASE.md); the version, tag and publication are the owner's decisions (the licence, MIT, is chosen) |
 | Optional adapters, LanceDB/ANN and MCP (P11.8) | not implemented; the vector index and the pipeline sit behind ports, so they can be added without touching the core |
 | Secret scan clean | gitleaks in CI, green on every pull request |
 | Performance budgets (NFR-04 and the Phase 3 parse and chunk budgets) | `pytest -m perf` on the quiet reference machine, 2026-11-28: 14 of 14 within budget, for example a rescan of 1000 unchanged files in 0.15 s (budget 5 s) and 25 MB peak for a 2 MB document (budget 150 MB) |

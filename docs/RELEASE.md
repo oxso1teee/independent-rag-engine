@@ -44,12 +44,10 @@ These are not packaging problems; they are the project's open criteria and none 
 - **Review of the datasets** (`docs/DATASET_REVIEW.md`), which is what would make the evaluation
   numbers more than exploratory.
 
-### Options for the two decisions (a recommendation, not a choice)
+### Version: a recommendation, not a choice
 
-- **Licence.** Dependencies are permissive plus MPL-2.0 (file-level copyleft), so any of these is
-  compatible: MIT or Apache-2.0 (permissive; Apache-2.0 adds an explicit patent grant and requires
-  keeping notices), or a copyleft licence such as AGPL-3.0 if hosted derivatives should stay open.
-  The model weights have their own licences and are not part of the repository.
+- **Licence.** Decided by the owner (MIT). The model weights have their own licences and are not
+  part of the repository.
 - **Version.** Because the quality criteria are open (gate, real model, reviewed labels), `0.1.0`
   described as a pre-release fits better than `1.0.0`.
 
@@ -58,7 +56,7 @@ These are not packaging problems; they are the project's open criteria and none 
 1. Merge everything; `main` green.
 2. Set the version in `src/rag_engine/__init__.py`, move `CHANGELOG.md`'s Unreleased section under
    the version and date.
-3. Add `LICENSE` and the licence metadata; regenerate the notices.
+3. Regenerate the notices (`scripts/generate_notices.py`); the `LICENSE` file is already in place.
 4. Run the Docker, package and soak checks on the exact commit.
 5. Tag, create the GitHub release with the wheel, the SBOM and the notices attached.
 6. Publish the image or the package only if the owner chose to.
