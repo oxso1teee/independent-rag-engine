@@ -73,6 +73,50 @@ def search(port: int, text: str) -> tuple[int, float]:
         return 0, time.perf_counter() - began
 
 
+def build_report(
+    samples: list[dict[str, float]],
+    failures: int,
+    died: bool,
+    min_available: int,
+    args: argparse.Namespace,
+    *,
+    complete: bool,
+) -> dict[str, object]:
+    steady = samples[2:] or samples
+    growth = (steady[-1]["rss_mib"] / steady[0]["rss_mib"] - 1) if len(steady) > 1 else 0.0
+    latencies = sorted(s["seconds"] for s in samples)
+    error_rate = failures / len(samples) if samples else 1.0
+    return {
+        "complete": complete,
+        "requests": len(samples),
+        "minutes": args.minutes,
+        "interval_s": args.interval,
+        "server_died": died,
+        "error_rate": error_rate,
+        "rss_first_mib": steady[0]["rss_mib"] if steady else None,
+        "rss_last_mib": steady[-1]["rss_mib"] if steady else None,
+        "rss_max_mib": max((s["rss_mib"] for s in samples), default=None),
+        "rss_growth": growth,
+        "latency_p50_s": statistics.median(latencies) if latencies else None,
+        "latency_max_s": latencies[-1] if latencies else None,
+        "min_mem_available_gib": round(min_available / GIB, 2),
+        "criteria": {
+            "rss_growth_below_10_percent": growth < 0.10,
+            "errors_below_2_percent": error_rate < 0.02,
+            "server_survived": not died,
+        },
+        "scope": "search only (real embedding model); no language model was run",
+        "samples": samples,
+    }
+
+
+def write_report(report: dict[str, object], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    partial = path.with_name(path.name + ".tmp")
+    partial.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    partial.replace(path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--embed-dir", type=Path, required=True)
@@ -138,6 +182,9 @@ def main() -> None:
                     }
                 )
                 n += 1
+                # a run can be watched, and an interrupted one still leaves its samples behind
+                partial = build_report(samples, failures, died, min_available, args, complete=False)
+                write_report(partial, args.output)
                 time.sleep(max(0.0, args.interval - seconds))
         finally:
             server.terminate()
@@ -146,33 +193,8 @@ def main() -> None:
             except subprocess.TimeoutExpired:
                 server.kill()
 
-    steady = samples[2:] or samples
-    growth = (steady[-1]["rss_mib"] / steady[0]["rss_mib"] - 1) if len(steady) > 1 else 0.0
-    latencies = sorted(s["seconds"] for s in samples)
-    error_rate = failures / len(samples) if samples else 1.0
-    report = {
-        "requests": len(samples),
-        "minutes": args.minutes,
-        "interval_s": args.interval,
-        "server_died": died,
-        "error_rate": error_rate,
-        "rss_first_mib": steady[0]["rss_mib"] if steady else None,
-        "rss_last_mib": steady[-1]["rss_mib"] if steady else None,
-        "rss_max_mib": max((s["rss_mib"] for s in samples), default=None),
-        "rss_growth": growth,
-        "latency_p50_s": statistics.median(latencies) if latencies else None,
-        "latency_max_s": latencies[-1] if latencies else None,
-        "min_mem_available_gib": round(min_available / GIB, 2),
-        "criteria": {
-            "rss_growth_below_10_percent": growth < 0.10,
-            "errors_below_2_percent": error_rate < 0.02,
-            "server_survived": not died,
-        },
-        "scope": "search only (real embedding model); no language model was run",
-        "samples": samples,
-    }
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    report = build_report(samples, failures, died, min_available, args, complete=True)
+    write_report(report, args.output)
     print(json.dumps({k: v for k, v in report.items() if k != "samples"}, indent=2))
 
 

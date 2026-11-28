@@ -72,8 +72,10 @@ question. There is no push, no trace export and no third-party service.
 
 `eval/scripts/soak.py` starts a real server, sends one search per minute for an hour and reads its
 resident memory from `/proc`. Pass criteria: growth under 10 %, fewer than 2 % errors, no death.
-It soaks search (the real embedding model); no language model has run on this machine. The result
-of the last run is in [TESTING.md](TESTING.md).
+It soaks search (the real embedding model); no language model has run on this machine. The one-hour
+run of 2026-11-28 passed (60 requests, no error, resident memory 1162 down to 1101 MiB); see
+[TESTING.md](TESTING.md). The script writes its report only at the end; to watch a run, read the
+server's resident memory from `/proc/<pid>/status`.
 
 ## Upgrading
 
